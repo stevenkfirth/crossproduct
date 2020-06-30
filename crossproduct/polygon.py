@@ -70,34 +70,28 @@ class Polygon():
         return tuple(list(self.points) + [self.points[0]])
     
     
-    def intersect_line(self,line):
-        """Intersection of this polygon with a line
+    def _intersect_results(self,ipts,isegments):
+        """Sorts and cleans the intersection results
         
-        :param line Line2D: a 2D line 
+        :param ipts list: a list of intersection points
+        :param isegments list: a list of intersection segments
         
-        :return tuple: (list of points, list of segments)
-                    
+        :return result: a tuple of (points,segments)
+            - if a point exists in a segment, then it is removed
+            - if a union of two segments exist, then this is added and the individual segments removed
+        :rtype tuple:
+        
         """
-        ipts=[]
-        isegments={}
-        for tri in self.triangles:
-            
-            #print(tri)
-            #print(line)
-            result=tri.intersect_line(line)
-            #print(result)
-            if isinstance(result,Point):
-                if not result in ipts:
-                    ipts.append(result)
-            elif isinstance(result,Segment):
-                min_t=min([line.calculate_t_from_point(result.P0),
-                           line.calculate_t_from_point(result.P1)])
-                isegments[min_t]=result
+        
+        # order segments so P0 < P1
+        isegments=[s.order for s in isegments]     
                 
-        #print(isegments)
-            
-        # sort segments and join together if needed    
-        l=[isegments[x] for x in sorted(isegments)]
+        # sort segments by P0 and P1
+        d={(s.P0.coordinates,s.P1.coordinates):s for s in isegments}
+        isegments=[d[c] for c in sorted(d)]
+        
+        # join segments if applicable
+        l=isegments
         n=None
         while not len(l)==n:
             n=len(l)
@@ -107,6 +101,7 @@ class Polygon():
                     l[i]=u
                     l.pop(i+1)
                     break
+        isegments=l
                 
         # remove points which exist in the segments
         l1=[]
@@ -118,8 +113,133 @@ class Polygon():
                     break
             if flag:
                 l1.append(ipt)
+        ipts=l1
                 
-        return l1, l
+        if len(ipts)==0 and len(isegments)==0:
+            
+            return None
+        
+        else:
+        
+            return ipts, isegments
+    
+    
+    def intersect_halfline(self,halfline):
+        """Intersection of this polygon with a halfline
+        
+        :param halfline HalfLine: a halfline 
+        
+        :return tuple: (list of points, list of segments) or None
+        
+                    
+        """
+        ipts=[]
+        isegments=[]
+        for tri in self.triangles:
+            
+            #print(tri)
+            #print(line)
+            result=tri.intersect_halfline(halfline)
+            #print(result)
+            if isinstance(result,Point):
+                if not result in ipts:
+                    ipts.append(result)
+            elif isinstance(result,Segment):
+                isegments.append(result)
+                
+        #print(isegments)
+        return self._intersect_results(ipts,isegments)
+    
+    
+    def intersect_line(self,line):
+        """Intersection of this polygon with a line
+        
+        :param line Line: a line 
+        
+        :return tuple: (list of points, list of segments) or None
+                    
+        """
+        ipts=[]
+        isegments=[]
+        for tri in self.triangles:
+            
+            #print(tri)
+            #print(line)
+            result=tri.intersect_line(line)
+            #print(result)
+            if isinstance(result,Point):
+                if not result in ipts:
+                    ipts.append(result)
+            elif isinstance(result,Segment):
+                isegments.append(result)
+                
+        #print(isegments)
+        return self._intersect_results(ipts,isegments)
+    
+        
+    def intersect_segment(self,segment):
+        """Intersection of this polygon with a segment
+        
+        :param segment Segment: a segment 
+        
+        :return tuple: (list of points, list of segments) or None
+                    
+        """
+        ipts=[]
+        isegments=[]
+        for tri in self.triangles:
+            
+            #print('tri',tri)
+            #print('segment',segment)
+            result=tri.intersect_segment(segment)
+            #print('result',result)
+            if isinstance(result,Point):
+                if not result in ipts:
+                    ipts.append(result)
+            elif isinstance(result,Segment):
+                isegments.append(result)
+                
+        #print('ipts',ipts)
+        #print('isegments',isegments)
+        return self._intersect_results(ipts,isegments)
+    
+    
+    def intersect_polygon(self,polygon):
+        """
+        """
+        ipts=[]
+        isegments=[]
+        for tri in self.triangles:
+            #print('tri',tri)
+            
+            for segment in polygon.polyline.segments:
+                #print('segment',segment)
+                
+                result=tri.intersect_segment(segment) # ipts,isegments
+                #print('result',result)
+                
+                if result is None:
+                    
+                    continue
+                
+                else:
+                
+                    for ipt in result[0]:
+                        if not ipt in ipts:
+                            ipts.append(ipt)
+                    
+                    isegments+=result[1]
+                
+        #print('ipts',ipts)
+        #print('isegments',isegments)
+       
+        return self._intersect_results(ipts,isegments)
+        
+        
+    def union_polygon(self,polygon):
+        """
+        """
+    
         
     
     def next_index(self,i):
@@ -138,6 +258,18 @@ class Polygon():
         else:
             return i+1
     
+    
+    def plot(self,ax,**kwargs):
+        """Plots the segment on the supplied axes
+        
+        :param ax: an Axes or Axes3D instance
+            - matplotlib.axes.Axes (for 2D)
+            - mpl_toolkits.mplot3d.axes3d.Axes3D (for 3D)
+        :param **kwargs: keyword arguments to be supplied to the matplotlib plot call
+                    
+        """
+        self.polyline.plot(ax,**kwargs)
+        
     
     def previous_index(self,i):
         """Returns the previous point index in the polygon

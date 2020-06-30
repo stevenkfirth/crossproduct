@@ -79,6 +79,20 @@ class Polyline2D(Polyline):
         """
         return 'Polyline2D(%s)' % ','.join([str(p) for p in self.points])
     
+    
+    def plot(self,ax,**kwargs):
+        """Plots the polyline on the supplied axes
+        
+        :param ax matplotlib.axes.Axes: an Axes instance
+        :param **kwargs: keyword arguments to be supplied to the Axes.plot call
+                    
+        
+        """
+        x=[p.x for p in self.points]
+        y=[p.y for p in self.points]
+        ax.plot(x,y,**kwargs)
+        
+    
     @property
     def segments(self):
         """Returns a list of segments in the polyline
@@ -101,6 +115,20 @@ class Polyline3D(Polyline):
             
         """
         return 'Polyline3D(%s)' % ','.join([str(p) for p in self.points])
+
+
+    def plot(self,ax,**kwargs):
+        """Plots the segment on the supplied axes
+        
+        :param ax mpl_toolkits.mplot3d.axes3d.Axes3D: an Axes3D instance
+        :param **kwargs: keyword arguments to be supplied to the Axes3D.plot call
+                    
+        
+        """
+        x=[p.x for p in self.points]
+        y=[p.y for p in self.points]
+        z=[p.z for p in self.points]
+        ax.plot(x,y,z,**kwargs)
 
 
     @property

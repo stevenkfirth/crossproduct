@@ -155,6 +155,23 @@ class Segment():
         """
         return self.line.is_collinear(linelike_obj)
         
+    
+    @property
+    def order(self):
+        """Returns the segment with ordered points such that P0 is less than P1
+        
+        :return segment:
+            
+        """
+        if self.P0 < self.P1 :
+            
+            return self
+        
+        else:
+            
+            return self.reverse
+        
+        
 
     @property
     def points(self):
@@ -162,9 +179,18 @@ class Segment():
         
         :return points: (P0,P1)
         :rtype tuple:
+            
         """
         return self.P0, self.P1
     
+    @property
+    def reverse(self):
+        """Returns the segment in reverse
+        
+        :return segment:
+        
+        """
+        return self.__class__(self.P1,self.P0)
     
     @property
     def vL(self):
@@ -172,6 +198,7 @@ class Segment():
         
         :return vector:
         :rtype Vector2D:
+            
         """
         return self.P1-self.P0
     
@@ -305,6 +332,19 @@ class Segment2D(Segment,Line2D):
         :rtype Line2D:
         """
         return Line2D(self.P0,self.vL)
+    
+    
+    def plot(self,ax,**kwargs):
+        """Plots the segment on the supplied axes
+        
+        :param ax matplotlib.axes.Axes: an Axes instance
+        :param **kwargs: keyword arguments to be supplied to the Axes.plot call
+                    
+        
+        """
+        x=[p.x for p in self.points]
+        y=[p.y for p in self.points]
+        ax.plot(x,y,**kwargs)
     
     
     def union(self,segment):
@@ -560,6 +600,20 @@ class Segment3D(Segment,Line3D):
         :rtype Line3D:
         """
         return Line3D(self.P0,self.vL)
+    
+    
+    def plot(self,ax,**kwargs):
+        """Plots the segment on the supplied axes
+        
+        :param ax mpl_toolkits.mplot3d.axes3d.Axes3D: an Axes3D instance
+        :param **kwargs: keyword arguments to be supplied to the Axes3D.plot call
+                    
+        
+        """
+        x=[p.x for p in self.points]
+        y=[p.y for p in self.points]
+        z=[p.z for p in self.points]
+        ax.plot(x,y,z,**kwargs)
     
     
     def project_2D(self,i):

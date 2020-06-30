@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import matplotlib.pyplot as plt
+import mpl_toolkits.mplot3d
+
 from crossproduct import Point2D, Point3D,Vector2D, Vector3D, \
     HalfLine2D, HalfLine3D, Line2D, Line3D, Segment2D, Segment3D, \
     Polyline2D, Polyline3D
@@ -29,6 +32,14 @@ class Test_Polyline2D(unittest.TestCase):
         self.assertTrue(pl==Polyline2D(Point2D(1,1),
                                        Point2D(0,1),
                                        Point2D(0,0)))
+        
+        
+    def test_plot(self):
+        ""
+        pl=Polyline2D(*points)
+        fig, ax = plt.subplots()
+        pl.plot(ax)
+        
         
           
     def test___repr__(self):
@@ -81,6 +92,14 @@ class Test_Polyline3D(unittest.TestCase):
         self.assertTrue(pl==Polyline3D(Point3D(1,1,0),
                                        Point3D(0,1,0),
                                        Point3D(0,0,0)))
+    
+    
+    def test_plot(self):
+        ""
+        pl=Polyline3D(*points)
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        pl.plot(ax)
     
         
     def test___repr__(self):

@@ -66,6 +66,7 @@ class ConvexPolygon2D(Polygon2D):
         
         """
         result=self.intersect_line_t_values(halfline.line)
+        #print(result)
         if len(result)==0:
             return None
         elif len(result)==1:
@@ -82,7 +83,10 @@ class ConvexPolygon2D(Polygon2D):
                 P1=halfline.calculate_point(result[1])
             except ValueError:
                 return None    
-            return Segment2D(P0,P1)        
+            if P0==P1:
+                return P0
+            else:
+                return Segment2D(P0,P1)        
         
         
     def intersect_line(self,line):
@@ -171,6 +175,7 @@ class ConvexPolygon2D(Polygon2D):
         
         """
         result=self.intersect_line_t_values(segment.line)
+        #print(result)
         if len(result)==0:
             return None
         elif len(result)==1:
@@ -239,7 +244,7 @@ class ConvexPolygon2D(Polygon2D):
                 else:
                     segments=[s]+segments
                     
-            # convert segements to polyline
+            # convert segments to polyline
             points=[s.P0 for s in segments]
             points+=[segments[-1].P1]
             return Polyline2D(*points)

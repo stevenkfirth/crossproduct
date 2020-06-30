@@ -2,7 +2,7 @@
 
 import unittest
 from crossproduct import Point2D, Point3D, Vector2D, Vector3D, \
-    Line2D, Line3D, Triangle2D, Triangle3D, Plane3D, Segment3D
+    Line2D, Line3D, Triangle2D, Triangle3D, Plane3D, Segment2D, Segment3D
 
 class Test_Triangle2D(unittest.TestCase):
     """
@@ -33,11 +33,22 @@ class Test_Triangle2D(unittest.TestCase):
         self.assertEqual(tr.area,0.5)
         
         
+    def test_intersect_segment(self):
+        
+        tr=Triangle2D(Point2D(1,1), Vector2D(1,1), Vector2D(-1,1))
+        s=Segment2D(Point2D(1.5,0), Point2D(1.5,10))
+        
+#        print(tr)
+#        print(s)
+#        print(s.vL)
+#        print(tr.intersect_segment(s))
+        
+        
     def test_intersect_line(self):
         ""
         tr=Triangle2D(Point2D(0,0), Vector2D(1,1), Vector2D(0,2))
         l=Line2D(Point2D(1.5,0), Vector2D(0,1))
-        print(tr.intersect_line(l))
+#        print(tr.intersect_line(l))
         
     def test_orientation(self):
         ""

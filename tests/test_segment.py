@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import matplotlib.pyplot as plt
+import mpl_toolkits.mplot3d
+
 from crossproduct import Point2D, Point3D,Vector2D, Vector3D, \
     HalfLine2D, HalfLine3D, Line2D, Line3D, Segment2D, Segment3D
 
-
+plot=False
 
 class Test_Segment2D(unittest.TestCase):
     """
@@ -237,11 +240,26 @@ class Test_Segment2D(unittest.TestCase):
                          Line2D(P0,s.vL))
         
         
+    def test_plot(self):
+        ""
+        if plot:
+            s=Segment2D(P0,P1)
+            fig, ax = plt.subplots()
+            s.plot(ax)
+    
+    
     def test_points(self):
         ""
         s=Segment2D(P0,P1)
         self.assertEqual(s.points,
                          (P0,P1))
+        
+        
+    def reverse(self):
+        ""
+        s=Segment2D(P0,P1)
+        self.assertEqual(s.reverse,
+                         Segment2D(P1,P0))
         
         
     def test_union(self):
@@ -397,11 +415,38 @@ class Test_Segment3D(unittest.TestCase):
                          Line3D(P0,s.vL))
         
         
+    def test_order(self):
+        ""
+        s=Segment3D(P0,P1)
+        self.assertEqual(s.order.points,
+                         s.points)
+        
+        s=Segment3D(P1,P0)
+        self.assertEqual(s.order.points,
+                        (Point3D(0,0,0), Point3D(1,1,1)))
+        
+        
+    def test_plot(self):
+        ""
+        if plot:
+            s=Segment3D(P0,P1)
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+            s.plot(ax)
+        
+        
     def test_points(self):
         ""
         s=Segment3D(P0,P1)
         self.assertEqual(s.points,
                          (P0,P1))
+        
+        
+    def reverse(self):
+        ""
+        s=Segment3D(P0,P1)
+        self.assertEqual(s.reverse,
+                         Segment3D(P1,P0))
         
         
     def test_vL(self):

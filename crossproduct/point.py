@@ -7,8 +7,7 @@ SMALL_NUM=0.00000001
 
 class Point():
     " A n-D point"
-    
-    
+
     
     def distance_point(self,point):
         """Returns the distance to the supplied point
@@ -69,6 +68,23 @@ class Point2D(Point):
         else:
             return False
     
+    
+    def __lt__(self,point):
+        """Tests is the coordinates of this point are lower than the supplied point
+        
+        """
+        if isinstance(point,Point2D):
+            if self.x < point.x:
+                return True
+            else:
+                if self.x == point.x and self.y < point.y:
+                    return True
+                else:
+                    return False
+        
+        else:
+            raise TypeError
+        
     
     def __repr__(self):
         """The string of this point for printing
@@ -180,6 +196,25 @@ class Point3D(Point):
         else:
             return False
             
+        
+    def __lt__(self,point):
+        """Tests is the coordinates of this point are lower than the supplied point
+        
+        """
+        if isinstance(point,Point3D):
+            if self.x < point.x:
+                return True
+            else:
+                if self.x == point.x and self.y < point.y:
+                    return True
+                else:
+                    if self.y == point.y and self.z < point.z:
+                        return True
+                    else:
+                        return False
+        else:
+            raise TypeError
+        
     
     def __repr__(self):
         """The string of this point for printing

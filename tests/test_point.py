@@ -31,6 +31,16 @@ class Test_Point2D(unittest.TestCase):
         self.assertFalse(pt==pt1)
         
         
+    def test___lt__(self):
+        ""
+        pt=Point2D(0,0)
+        self.assertFalse(pt<Point2D(0,0))
+        self.assertTrue(pt<Point2D(1,0))
+        self.assertFalse(pt<Point2D(-1,0))
+        self.assertTrue(pt<Point2D(0,1))
+        self.assertFalse(pt<Point2D(0,-1))
+        
+        
     def test___repr__(self):
         ""
         pt=Point2D(0,0)
@@ -90,6 +100,18 @@ class Test_Point3D(unittest.TestCase):
         
         pt1=Point3D(1,0,0)
         self.assertFalse(pt==pt1)
+        
+        
+    def test___lt__(self):
+        ""
+        pt=Point3D(0,0,0)
+        self.assertFalse(pt<Point3D(0,0,0))
+        self.assertTrue(pt<Point3D(1,0,0))
+        self.assertFalse(pt<Point3D(-1,0,0))
+        self.assertTrue(pt<Point3D(0,1,0))
+        self.assertFalse(pt<Point3D(0,-1,0))
+        self.assertTrue(pt<Point3D(0,0,1))
+        self.assertFalse(pt<Point3D(0,0,-1))
         
         
     def test___repr__(self):
