@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d
 
 from crossproduct import Point2D, Point3D,Vector2D, Vector3D, \
-    HalfLine2D, HalfLine3D, Line2D, Line3D, Segment2D, Segment3D
+    HalfLine2D, HalfLine3D, Line2D, Line3D, Segment2D, Segment3D, \
+    Polyline2D
 
 plot=False
 
@@ -277,10 +278,22 @@ class Test_Segment2D(unittest.TestCase):
                          Segment2D(Point2D(0,0),
                                    Point2D(2,2)))
             
-        # two non-collinear segment
+        # two non-collinear segment - 
         self.assertEqual(s.union(Segment2D(Point2D(1,1),
                                            Point2D(2,1))),
-                         None)
+                         Polyline2D(Point2D(0,0),Point2D(1,1),Point2D(2,1)))
+            
+        self.assertEqual(s.union(Segment2D(Point2D(2,1),
+                                           Point2D(1,1))),
+                         Polyline2D(Point2D(0,0),Point2D(1,1),Point2D(2,1)))
+            
+        self.assertEqual(s.union(Segment2D(Point2D(-1,0),
+                                           Point2D(0,0))),
+                         Polyline2D(Point2D(-1,0),Point2D(0,0),Point2D(1,1)))
+            
+        self.assertEqual(s.union(Segment2D(Point2D(0,0),
+                                           Point2D(-1,0))),
+                         Polyline2D(Point2D(-1,0),Point2D(0,0),Point2D(1,1)))
             
         # two collinear non-adjacent segments
         self.assertEqual(s.union(Segment2D(Point2D(2,2),

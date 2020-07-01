@@ -8,7 +8,7 @@ from crossproduct import Point2D, Point3D,Vector2D, Vector3D, \
     HalfLine2D, HalfLine3D, Line2D, Line3D, Segment2D, Segment3D, \
     Polyline2D, Polyline3D
 
-
+plot=False
 
 class Test_Polyline2D(unittest.TestCase):
     """
@@ -36,9 +36,10 @@ class Test_Polyline2D(unittest.TestCase):
         
     def test_plot(self):
         ""
-        pl=Polyline2D(*points)
-        fig, ax = plt.subplots()
-        pl.plot(ax)
+        if plot:
+            pl=Polyline2D(*points)
+            fig, ax = plt.subplots()
+            pl.plot(ax)
         
         
           
@@ -68,8 +69,49 @@ class Test_Polyline2D(unittest.TestCase):
                                     Point2D(1,1))))
     
     
-    
+    def test_union(self):
+        ""
+        pl=Polyline2D(*points)
         
+        # no union
+        self.assertEqual(pl.union(Polyline2D(Point2D(2,2),
+                                             Point2D(3,3))),
+                         None)
+    
+        # union
+        self.assertEqual(pl.union(Polyline2D(Point2D(1,1),
+                                             Point2D(1,2),
+                                             Point2D(2,2))),
+                         Polyline2D(Point2D(0,0),
+                                    Point2D(0,1),
+                                    Point2D(1,1),
+                                    Point2D(1,2),
+                                    Point2D(2,2)))
+        
+        self.assertEqual(pl.union(Polyline2D(Point2D(2,2),
+                                             Point2D(1,2),
+                                             Point2D(1,1))),
+                         Polyline2D(Point2D(0,0),
+                                    Point2D(0,1),
+                                    Point2D(1,1),
+                                    Point2D(1,2),
+                                    Point2D(2,2)))
+            
+        self.assertEqual(pl.union(Polyline2D(Point2D(0,1),
+                                             Point2D(0,0))),
+                         Polyline2D(Point2D(0,1),
+                                    Point2D(0,0),
+                                    Point2D(0,1),
+                                    Point2D(1,1)))
+            
+        self.assertEqual(pl.union(Polyline2D(Point2D(0,0),
+                                             Point2D(0,1))),
+                         Polyline2D(Point2D(0,1),
+                                    Point2D(0,0),
+                                    Point2D(0,1),
+                                    Point2D(1,1)))
+        
+            
 class Test_Polyline3D(unittest.TestCase):
     """
     points=(Point2D(0,0,0),
@@ -96,10 +138,11 @@ class Test_Polyline3D(unittest.TestCase):
     
     def test_plot(self):
         ""
-        pl=Polyline3D(*points)
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        pl.plot(ax)
+        if plot:
+            pl=Polyline3D(*points)
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+            pl.plot(ax)
     
         
     def test___repr__(self):

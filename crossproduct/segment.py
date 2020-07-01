@@ -192,6 +192,44 @@ class Segment():
         """
         return self.__class__(self.P1,self.P0)
     
+    
+    def union(self,segment):
+        """Returns the union of two segments
+        
+        :return result:
+            - Segment2D, the union of the two collinear segments if 
+                they have a same start or end point
+            - Polyline2D, the union of two non-collinear segments if they have 
+                a same start point or end point
+            - None, for segments that don't have a union        
+        
+        """
+        if self.is_collinear(segment):
+            
+            if (self.P0 in segment
+                or self.P1 in segment): # if they overlap
+                
+                line=self.line
+                t_values=[line.calculate_t_from_point(self.P0),
+                          line.calculate_t_from_point(self.P1),
+                          line.calculate_t_from_point(segment.P0),
+                          line.calculate_t_from_point(segment.P1)]
+                return self.__class__(line.calculate_point(min(t_values)),
+                                      line.calculate_point(max(t_values)))
+                
+            else:
+                
+                return None
+            
+        else: # not collinear - look for a polyline union
+            
+            result=self.polyline.union(segment.polyline)
+            if result is None:
+                return None
+            else:
+                return result
+            
+    
     @property
     def vL(self):
         """Return the vector from P0 to P1
@@ -347,37 +385,18 @@ class Segment2D(Segment,Line2D):
         ax.plot(x,y,**kwargs)
     
     
-    def union(self,segment):
-        """Returns the union of two segments
+    @property
+    def polyline(self):
+        """Returns a polyline of the segment
         
-        :return result:
-            - Segment2D, the union of the two segments if they have a same start or end point
-            - None, for segments that don't have a union        
+        :return polyline:
+        :rtype Polyline2D:        
         
         """
-        if not self.is_collinear(segment):
-            
-            return None
+        from .polyline import Polyline2D
+        return Polyline2D(self.P0,self.P1)
         
-        else:
-            
-            if (self.P0 in segment
-                or self.P1 in segment): # if they overlap
-                
-                line=self.line
-                t_values=[line.calculate_t_from_point(self.P0),
-                          line.calculate_t_from_point(self.P1),
-                          line.calculate_t_from_point(segment.P0),
-                          line.calculate_t_from_point(segment.P1)]
-                return Segment2D(line.calculate_point(min(t_values)),
-                                 line.calculate_point(max(t_values)))
-                
-            else:
-                
-                return None
     
-        
-        
     
 class Segment3D(Segment,Line3D):
     """A 3D segment
@@ -614,6 +633,18 @@ class Segment3D(Segment,Line3D):
         y=[p.y for p in self.points]
         z=[p.z for p in self.points]
         ax.plot(x,y,z,**kwargs)
+    
+    
+    @property
+    def polyline(self):
+        """Returns a polyline of the segment
+        
+        :return polyline:
+        :rtype Polyline3D:        
+        
+        """
+        from .polyline import Polyline3D
+        return Polyline3D(self.P0,self.P1)
     
     
     def project_2D(self,i):

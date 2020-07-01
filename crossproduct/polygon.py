@@ -97,7 +97,7 @@ class Polygon():
             n=len(l)
             for i in range(len(l)-1):
                 u=l[i].union(l[i+1])
-                if u:
+                if u and isinstance(u,Segment):
                     l[i]=u
                     l.pop(i+1)
                     break
@@ -115,13 +115,13 @@ class Polygon():
                 l1.append(ipt)
         ipts=l1
                 
-        if len(ipts)==0 and len(isegments)==0:
-            
-            return None
+#        if len(ipts)==0 and len(isegments)==0:
+#            
+#            return None
+#        
+#        else:
         
-        else:
-        
-            return ipts, isegments
+        return ipts, isegments
     
     
     def intersect_halfline(self,halfline):
@@ -205,7 +205,14 @@ class Polygon():
     
     
     def intersect_polygon(self,polygon):
-        """
+        """Intersection of this polygon with another polygon
+        
+        :param polygon Polygon: a polygon 
+        
+        :return result: one of
+            - tuple -> (list of points, list of segments)
+            - None
+                    
         """
         ipts=[]
         isegments=[]
@@ -218,17 +225,11 @@ class Polygon():
                 result=tri.intersect_segment(segment) # ipts,isegments
                 #print('result',result)
                 
-                if result is None:
-                    
-                    continue
-                
-                else:
-                
-                    for ipt in result[0]:
-                        if not ipt in ipts:
-                            ipts.append(ipt)
-                    
-                    isegments+=result[1]
+                if isinstance(result,Point):
+                    if not result in ipts:
+                        ipts.append(result)
+                elif isinstance(result,Segment):
+                    isegments.append(result)
                 
         #print('ipts',ipts)
         #print('isegments',isegments)
@@ -237,8 +238,75 @@ class Polygon():
         
         
     def union_polygon(self,polygon):
+        """Returns the union of this polygon with another polygon
+        
+        :param polygon Polygon: a polygon 
+        
+        :return result: one of
+            - tuple -> (list of points, list of segments, list of polygons)
+            - None        
+        
         """
-        """
+        if self==polygon:
+            
+            return self
+        
+        else:
+        
+            result=self.intersect_polygon(polygon)
+            
+            result2=polygon.intersect_polygon(self)
+            
+            ipts=result[0]
+            for p in result2[0]:
+                if not p in ipts:
+                    ipts.append(p)
+                    
+            isegments=result[1]
+            for s in result2[1]:
+                if not s in isegments:
+                    isegments.append(s)
+            
+            # do any of the segments form polylines?
+            test_polylines=[s.polyline for s in isegments]
+            n=len(test_polylines)
+            
+            if n>1:
+                
+                i=0
+                while True:
+                    j=i+1
+                    test_polyline=test_polylines[i]
+                    while True:
+                        u=test_polyline.union(test_polylines[j])
+                        #print('u',u)
+                        if u is None:
+                            j+=1
+                        else:
+                            test_polylines[i]=u
+                            test_polylines.pop(j)
+                            break
+                        if j>=n:
+                            i+=1
+                            break
+                    n=len(test_polylines)
+                    #print(test_polylines)
+                    #print(i,n)
+                    if i>=n-1:
+                        break
+            
+             # do any of the polylines form polygons?
+            isegments=[]
+            ipolygons=[]
+            for pl in test_polylines:
+                if pl.points[0]==pl.points[-1]:
+                    polygon=self.__class__(*pl.points[:-1])
+                    ipolygons.append(polygon)
+                else:
+                    isegments+=pl.segments
+            
+            
+            return tuple(ipts), tuple(isegments), tuple(ipolygons)
     
         
     

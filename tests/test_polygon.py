@@ -270,47 +270,106 @@ class Test_Polygon2D(unittest.TestCase):
         
         # no intersection
         pg1=Polygon2D(Point2D(-2,0),
-                            Point2D(-1,0),
-                            Point2D(-1,1),
-                            Point2D(-2,1))
+                       Point2D(-1,0),
+                       Point2D(-1,1),
+                       Point2D(-2,1))
         self.assertEqual(pg.intersect_polygon(pg1),
-                         None)
+                         ([],
+                          []))
         
-#        # point intersection
-#        pg1=Polygon2D(Point2D(-1,-1),
-#                            Point2D(0,-1),
-#                            Point2D(0,0),
-#                            Point2D(-1,0))
-#        self.assertEqual(pg.intersect_polygon(pg1),
-#                         Point2D(0,0))
-#    
-#        # edge intersection
-#        pg1=Polygon2D(Point2D(-1,0),
-#                            Point2D(0,0),
-#                            Point2D(0,1),
-#                            Point2D(-1,1))
-#        self.assertEqual(pg.intersect_polygon(pg1),
-#                         Polyline2D(Point2D(0,0),Point2D(0,1)))
-#        
-#        # overlap intersection - same polygon
-#        self.assertEqual(pg.intersect_polygon(pg),
-#                         pg.polyline)
-#    
-#        
-#        # overlap intersection
-#        pg1=Polygon2D(Point2D(-0.5,-0.5),
-#                            Point2D(0.5,-0.5),
-#                            Point2D(0.5,0.5),
-#                            Point2D(-0.5,0.5))
-#        self.assertEqual(pg.intersect_polygon(pg1),
-#                         Polyline2D(Point2D(0.5,0),
-#                                    Point2D(0.5,0.5),
-#                                    Point2D(0,0.5)))
-#        self.assertEqual(pg1.intersect_polygon(pg),
-#                         Polyline2D(Point2D(0,0.5),
-#                                    Point2D(0,0),
-#                                    Point2D(0.5,0)))
+        # point intersection
+        pg1=Polygon2D(Point2D(-1,-1),
+                      Point2D(0,-1),
+                      Point2D(0,0),
+                      Point2D(-1,0))
+        self.assertEqual(pg.intersect_polygon(pg1),
+                         ([Point2D(0,0)],
+                         []))
     
+        # edge intersection
+        pg1=Polygon2D(Point2D(-1,0),
+                      Point2D(0,0),
+                      Point2D(0,1),
+                      Point2D(-1,1))
+        self.assertEqual(pg.intersect_polygon(pg1),
+                         ([],
+                         [Segment2D(Point2D(0,0),Point2D(0,1))]))
+        
+        # overlap intersection - same polygon
+        self.assertEqual(pg.intersect_polygon(pg),
+                         ([], 
+                          [Segment2D(Point2D(0.0,0.0), Point2D(0.0,1.0)), 
+                           Segment2D(Point2D(0.0,0.0), Point2D(1.0,0.0)), 
+                           Segment2D(Point2D(0.0,1.0), Point2D(1.0,1.0)), 
+                           Segment2D(Point2D(1.0,0.0), Point2D(1.0,1.0))]))  
+        
+        # overlap intersection
+        pg1=Polygon2D(Point2D(-0.5,-0.5),
+                      Point2D(0.5,-0.5),
+                      Point2D(0.5,0.5),
+                      Point2D(-0.5,0.5))
+        self.assertEqual(pg.intersect_polygon(pg1),
+                         ([],
+                          [Segment2D(Point2D(0,0.5), Point2D(0.5,0.5)), 
+                           Segment2D(Point2D(0.5,0), Point2D(0.5,0.5))]))  
+        self.assertEqual(pg1.intersect_polygon(pg),
+                         ([],
+                          [Segment2D(Point2D(0,0), Point2D(0,0.5)), 
+                           Segment2D(Point2D(0,0), Point2D(0.5,0))]))  
+    
+    
+    def test_union_polygon(self):
+        ""
+        pg=Polygon2D(*points)
+        
+        # no intersection
+        pg1=Polygon2D(Point2D(-2,0),
+                      Point2D(-1,0),
+                      Point2D(-1,1),
+                      Point2D(-2,1))
+        self.assertEqual(pg.union_polygon(pg1),
+                         ((),
+                          (),
+                          ()))
+        
+        # point intersection
+        pg1=Polygon2D(Point2D(-1,-1),
+                       Point2D(0,-1),
+                        Point2D(0,0),
+                        Point2D(-1,0))
+        self.assertEqual(pg.union_polygon(pg1),
+                         ((Point2D(0,0),),
+                           (),
+                           ()))
+        
+        # edge intersection
+        pg1=Polygon2D(Point2D(-1,0),
+                        Point2D(0,0),
+                        Point2D(0,1),
+                        Point2D(-1,1))
+        self.assertEqual(pg.union_polygon(pg1),
+                         ((),
+                          (Segment2D(Point2D(0,0),
+                                     Point2D(0,1)),),
+                          ()))
+                         
+        
+        # overlap intersection - same polygon
+        self.assertEqual(pg.union_polygon(pg),
+                         pg)
+
+        # overlap intersection
+        pg1=Polygon2D(Point2D(-0.5,-0.5),
+                            Point2D(0.5,-0.5),
+                            Point2D(0.5,0.5),
+                            Point2D(-0.5,0.5))
+        self.assertEqual(pg.union_polygon(pg1),
+                         ((), 
+                          (), 
+                          (Polygon2D(Point2D(0.0,0.0),
+                                     Point2D(0.0,0.5),
+                                     Point2D(0.5,0.5),
+                                     Point2D(0.5,0.0)),)))
     
         
     def test_next_index(self):
