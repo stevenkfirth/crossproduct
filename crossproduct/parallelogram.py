@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .point import Point, Point2D, Point3D
-from .convex_polygon import ConvexPolygon2D, ConvexPolygon3D
+from .simple_convex_polygon import SimpleConvexPolygon2D, SimpleConvexPolygon3D
 from .vector import Vector, Vector2D, Vector3D
 from .quadrilateral import Quadrilateral2D, Quadrilateral3D
 

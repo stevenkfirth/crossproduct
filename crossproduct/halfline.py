@@ -9,7 +9,7 @@ from .vector import Vector, Vector2D
 SMALL_NUM=0.00000001
 
 
-class HalfLine():
+class Halfline():
     "A n-D halfline"
     
            
@@ -49,7 +49,7 @@ class HalfLine():
     def __eq__(self,halfline):
         """Tests if this halfline and the supplied halfline are equal
         
-        :param line HalfLine: a halfline
+        :param line Halfline: a halfline
         
         :return result: 
             - True if 
@@ -59,7 +59,7 @@ class HalfLine():
         :rtype bool:
             
         """
-        if isinstance(halfline,HalfLine):
+        if isinstance(halfline,Halfline):
             return self.P0==halfline.P0 and self.vL.is_codirectional(halfline.vL)
         else:
             return False
@@ -105,7 +105,7 @@ class HalfLine():
         
         :return result:
             - return value can be:
-                - HalfLine -> a halfline (for a halfline that lies on the line) 
+                - Halfline -> a halfline (for a halfline that lies on the line) 
                 - Point -> a point (for skew halfline and line that intersect)
                 - None -> no intersection (for parallel line and halfline, 
                     or skew halfline and line that don't intersect)
@@ -127,7 +127,7 @@ class HalfLine():
     def is_collinear(self,linelike_obj):
         """Tests if this halfline and the supplied line-like object are collinear
         
-        :param linelike_obj: a Line, HalfLine or Segment
+        :param linelike_obj: a Line, Halfline or Segment
         
         :return result: the result of the test
             - returns True if the linkline_obj is collinear to this halfline
@@ -149,14 +149,14 @@ class HalfLine():
         :rtype bool:
             
         """
-        if isinstance(halfline,HalfLine):
+        if isinstance(halfline,Halfline):
             return self.vL.is_codirectional(halfline.vL)
         else:
             return TypeError
             
         
 
-class HalfLine2D(HalfLine,Line2D):
+class Halfline2D(Halfline,Line2D):
     """A 2D halfline
     
     Equation of the halfline is P(t) = P0 + vL*t
@@ -175,17 +175,17 @@ class HalfLine2D(HalfLine,Line2D):
         :rtype str:
             
         """
-        return 'HalfLine2D(%s, %s)' % (self.P0,self.vL)
+        return 'Halfline2D(%s, %s)' % (self.P0,self.vL)
              
      
     def intersect_halfline(self,halfline):
         """Returns the intersection of this halfline with the supplied halfline
         
-        :param halfline HalfLine2D: a 2D halfline 
+        :param halfline Halfline2D: a 2D halfline 
         
         :return result:
             - return value can be:
-                - HalfLine2D -> a halfline (for equal halflines) 
+                - Halfline2D -> a halfline (for equal halflines) 
                 - Point2D -> a point (for skew halflines that intersect, 
                     or collinear but non-codirectional halflines that start at the same point)
                 - Segment2D -> a segment (for collinear but non-codirectional 
@@ -230,7 +230,7 @@ class HalfLine2D(HalfLine,Line2D):
     
     
     
-class HalfLine3D(HalfLine,Line3D):
+class Halfline3D(Halfline,Line3D):
     """A 3D halfline
     
     Equation of the halfline is P(t) = P0 + vL*t
@@ -249,7 +249,7 @@ class HalfLine3D(HalfLine,Line3D):
         :rtype str:
             
         """
-        return 'HalfLine3D(%s, %s)' % (self.P0,self.vL)
+        return 'Halfline3D(%s, %s)' % (self.P0,self.vL)
             
     
     def distance_line(self,line):
@@ -260,11 +260,11 @@ class HalfLine3D(HalfLine,Line3D):
     def intersect_halfline(self,halfline):
         """Returns the intersection of this halfline with the supplied halfline
         
-        :param halfline HalfLine3D: a 3D halfline 
+        :param halfline Halfline3D: a 3D halfline 
         
         :return result:
             - return value can be:
-                - HalfLine3D -> a halfline (for equal halflines) 
+                - Halfline3D -> a halfline (for equal halflines) 
                 - Point3D -> a point (for skew halflines that intersect, 
                     or collinear but non-codirectional halflines that start at the same point)
                 - Segment3D -> a segment (for collinear but non-codirectional 
@@ -318,18 +318,18 @@ class HalfLine3D(HalfLine,Line3D):
                 - 2 for z
                 
         :return halfline: 
-        :rtype HalfLine2D:
+        :rtype Halfline2D:
             
         """
         
         if i==0:
-            return HalfLine2D(Point2D(self.P0.y,self.P0.z),
+            return Halfline2D(Point2D(self.P0.y,self.P0.z),
                               Vector2D(self.vL.y,self.vL.z))
         elif i==1:
-            return HalfLine2D(Point2D(self.P0.z,self.P0.x),
+            return Halfline2D(Point2D(self.P0.z,self.P0.x),
                               Vector2D(self.vL.z,self.vL.x))
         elif i==2:
-            return HalfLine2D(Point2D(self.P0.x,self.P0.y),
+            return Halfline2D(Point2D(self.P0.x,self.P0.y),
                               Vector2D(self.vL.x,self.vL.y))
         else:
             raise Exception

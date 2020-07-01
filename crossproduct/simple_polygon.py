@@ -2,17 +2,23 @@
 
 import itertools
 
-from .halfline import HalfLine3D
+from .halfline import Halfline3D
 from .line import Line3D
 from .segment import Segment, Segment3D
 from .point import Point, Point2D, Point3D
-from .polyline import Polyline2D, Polyline3D
+from .simple_polyline import SimplePolyline, SimplePolyline2D, SimplePolyline3D
 from .plane import Plane3D
+from .vector import Vector3D
 
 
 
-class Polygon():
-    """A n-D polygon
+class SimplePolygon():
+    """A n-D simple polygon
+    
+    The polygon does not self intersect
+    
+    Adjacent polygon segments are not collinear.
+    
     """
     
     def __init__(self,*points):
@@ -23,11 +29,10 @@ class Polygon():
         
         """
         
-        for pt in points:
-            if not isinstance(pt,Point):
-                raise TypeError
+        # converting to a polyline checks for point types and adjacent segment collinearity
+        pl=SimplePolyline(*points,points[0])
         
-        self.points=tuple(points)
+        self.points=tuple(pl.points[:-1])
     
         self.triangles=self.triangulate
         
@@ -35,7 +40,7 @@ class Polygon():
     def __eq__(self,polygon):
         """Tests if this polygon and the supplied polygon are equal
         
-        :param line Polygon2D: a 2D polygon
+        :param line SimplePolygon2D: a 2D polygon
         
         :return result: 
             - True if 
@@ -46,7 +51,7 @@ class Polygon():
         :rtype bool:
             
         """
-        if isinstance(polygon,Polygon):
+        if isinstance(polygon,SimplePolygon):
             
             for i in range(len(self.points)):
                 if self.reorder(i).points==polygon.points:
@@ -114,12 +119,6 @@ class Polygon():
             if flag:
                 l1.append(ipt)
         ipts=l1
-                
-#        if len(ipts)==0 and len(isegments)==0:
-#            
-#            return None
-#        
-#        else:
         
         return ipts, isegments
     
@@ -127,7 +126,7 @@ class Polygon():
     def intersect_halfline(self,halfline):
         """Intersection of this polygon with a halfline
         
-        :param halfline HalfLine: a halfline 
+        :param halfline Halfline: a halfline 
         
         :return tuple: (list of points, list of segments) or None
         
@@ -147,7 +146,7 @@ class Polygon():
             elif isinstance(result,Segment):
                 isegments.append(result)
                 
-        #print(isegments)
+        #print(ipts,isegments)
         return self._intersect_results(ipts,isegments)
     
     
@@ -207,7 +206,7 @@ class Polygon():
     def intersect_polygon(self,polygon):
         """Intersection of this polygon with another polygon
         
-        :param polygon Polygon: a polygon 
+        :param polygon SimplePolygon: a polygon 
         
         :return result: one of
             - tuple -> (list of points, list of segments)
@@ -240,7 +239,7 @@ class Polygon():
     def union_polygon(self,polygon):
         """Returns the union of this polygon with another polygon
         
-        :param polygon Polygon: a polygon 
+        :param polygon SimplePolygon: a polygon 
         
         :return result: one of
             - tuple -> (list of points, list of segments, list of polygons)
@@ -327,7 +326,7 @@ class Polygon():
             return i+1
     
     
-    def plot(self,ax,**kwargs):
+    def plot(self,ax,normal=False,**kwargs):
         """Plots the segment on the supplied axes
         
         :param ax: an Axes or Axes3D instance
@@ -337,6 +336,23 @@ class Polygon():
                     
         """
         self.polyline.plot(ax,**kwargs)
+        
+        if normal:
+            c=self.centroid
+            N=self.plane.N
+            
+            x0,x1=ax.get_xlim()
+            y0,y1=ax.get_ylim()
+            z0,z1=ax.get_zlim()
+            ax_vector=Vector3D(x1-x0,y1-y0,z1-z0)
+                        
+            x=abs(N.dot(ax_vector)/N.length)
+           
+            ax.quiver(*c.coordinates,*N.coordinates, 
+                      length=x*0.2,
+                      lw=3)
+        
+            
         
     
     def previous_index(self,i):
@@ -374,7 +390,7 @@ class Polygon():
         """Return a polygon with the points reversed
         
         :return polygon:
-        :rtype Polygon:
+        :rtype SimplePolygon:
         """
         points=[self.points[i] 
                 for i in range(len(self.points)-1,-1,-1)]
@@ -391,9 +407,9 @@ class Polygon():
         
         
         """
-        if isinstance(self,Polygon2D):
+        if isinstance(self,SimplePolygon2D):
             from .triangle import Triangle2D as t
-        elif isinstance(self,Polygon3D):
+        elif isinstance(self,SimplePolygon3D):
             from .triangle import Triangle3D as t
         else:
             raise Exception
@@ -457,7 +473,7 @@ class Polygon():
         return result
        
 
-class Polygon2D(Polygon):
+class SimplePolygon2D(SimplePolygon):
     """A 2D polygon
     """
     
@@ -466,7 +482,7 @@ class Polygon2D(Polygon):
         """Tests if the polygon contains the object
         
         :param obj: a 2D geometric object 
-            - Point2D, Segement2D, Polygon2D etc.
+            - Point2D, Segement2D, SimplePolygon2D etc.
             
         :return result:
             - for point, 
@@ -494,7 +510,7 @@ class Polygon2D(Polygon):
         :rtype str:
             
         """
-        return 'Polygon2D(%s)' % ','.join([str(p) for p in self.points])
+        return 'SimplePolygon2D(%s)' % ','.join([str(p) for p in self.points])
     
     
     @property
@@ -507,6 +523,19 @@ class Polygon2D(Polygon):
         """
         return abs(self.signed_area)
     
+    
+    @property
+    def centroid(self):
+        """Returns the centroid of the polygon
+        
+        :return point:
+        :rtype Point2D:
+                
+        """
+        x=sum([pt.x for pt in self.points])/len(self.points)
+        y=sum([pt.y for pt in self.points])/len(self.points)
+        return Point2D(x,y)        
+        
     
     def crossing_number(self,point):
         """Returns the crossing number for the supplied point
@@ -556,7 +585,7 @@ class Polygon2D(Polygon):
     
     @property
     def polyline(self):
-        return Polyline2D(*self.closed_points)
+        return SimplePolyline2D(*self.closed_points)
     
     
     @property
@@ -627,7 +656,7 @@ class Polygon2D(Polygon):
                     
         
     
-class Polygon3D(Polygon):
+class SimplePolygon3D(SimplePolygon):
     """A 3D polygon
     """
     
@@ -636,7 +665,7 @@ class Polygon3D(Polygon):
         """Tests if the polygon contains the object
         
         :param obj: a 3D geometric object 
-            - Point3D, Segement3D, Polygon3D etc.
+            - Point3D, Segement3D, SimplePolygon3D etc.
             
         :return result:
             - for point, True if the point lies within the polygon (including on an edge)
@@ -671,7 +700,7 @@ class Polygon3D(Polygon):
         :rtype str:
             
         """
-        return 'Polygon3D(%s)' % ','.join([str(p) for p in self.points])
+        return 'SimplePolygon3D(%s)' % ','.join([str(p) for p in self.points])
     
     
     @property
@@ -697,114 +726,128 @@ class Polygon3D(Polygon):
     
     
     @property
+    def centroid(self):
+        """Returns the centroid of the polygon
+        
+        :return point:
+        :rtype Point3D:
+                
+        """
+        x=sum([pt.x for pt in self.points])/len(self.points)
+        y=sum([pt.y for pt in self.points])/len(self.points)
+        z=sum([pt.z for pt in self.points])/len(self.points)
+        return Point3D(x,y,z)    
+    
+    
+    @property
     def class_2D(self):
-        return Polygon2D  
+        return SimplePolygon2D  
     
     
-    def intersect_halfline(self,halfline):
-        """Returns the intersection of this polygon and a halfline
-        
-        :param line HalfLine3D: a 3D halfline 
-        
-        :return result:
-            - no intersection (None): 
-                - for parallel, non-coplanar polygon plane and halfline
-                - for skew polygon plane and halfline which do not intersect
-            - a segment:
-                - for a coplanar halfline which intersects the polygon at two points
-            - a point: 
-                - for a halfline skew to the polygon plane which intersects the polygon at a point
-                - for a coplanar halfline which intersects the polygon one point
-        
-        """
-        result=self.plane.intersect_line(halfline) # intersection of triangle plane with halfline
-        
-        if result is None:
-            return None
-        
-        elif isinstance(result,Point3D):
-            if result in self:
-                return result
-            else:
-                return None
-            
-        elif isinstance(result,HalfLine3D):
-            # coplanar, look for intersections on 2D plane
-            raise Exception('Not implemented yet')
-    
-        else:
-            raise Exception
-    
-    
-    def intersect_line(self,line):
-        """Returns the intersection of this polygon and a line
-        
-        :param line Line3D: a 3D line 
-        
-        :return result:
-            - no intersection (None): 
-                - for parallel, non-coplanar polygon plane and line
-                - for skew polygon plane and line which do not intersect
-            - a segment:
-                - for a coplanar line which intersects the polygon at two points
-            - a point: 
-                - for a line skew to the polygon plane which intersects the polygon at a point
-                - for a coplanar line which intersects the polygon at a vertex
-        
-        """
-        result=self.plane.intersect_line(line) # intersection of triangle plane with line
-        
-        if result is None:
-            return None
-        
-        elif isinstance(result,Point3D):
-            if result in self:
-                return result
-            else:
-                return None
-            
-        elif isinstance(result,Line3D):
-            # coplanar, look for intersections on 2D plane
-            raise Exception('Not implemented yet')
-    
-        else:
-            raise Exception
-    
-    
-    def intersect_segment(self,segment):
-        """Returns the intersection of this polygon and a segment
-        
-        :param line Segment3D: a 3D segment 
-        
-        :return result:
-            - no intersection (None): 
-                - for parallel, non-coplanar polygon plane and segment
-                - for skew polygon plane and segment which do not intersect
-            - a segment:
-                - for a coplanar segment which intersects the polygon at two points
-                - for a coplanar segment which is inside the polygon
-            - a point: 
-                - for a segment skew to the polygon plane which intersects the polygon at a point
-                - for a coplanar segment which intersects the polygon one point
-        
-        """
-        result=self.plane.intersect_line(segment) # intersection of triangle plane with segment
-        
-        if result is None:
-            return None
-        
-        elif isinstance(result,Point3D):
-            if result in self:
-                return result
-            else:
-                return None
-            
-        elif isinstance(result,Segment3D):
-            # coplanar, look for intersections on 2D plane
-            raise Exception('Not implemented yet')
-    
-        else:
-            raise Exception
+#    def intersect_halfline(self,halfline):
+#        """Returns the intersection of this polygon and a halfline
+#        
+#        :param line Halfline3D: a 3D halfline 
+#        
+#        :return result:
+#            - no intersection (None): 
+#                - for parallel, non-coplanar polygon plane and halfline
+#                - for skew polygon plane and halfline which do not intersect
+#            - a segment:
+#                - for a coplanar halfline which intersects the polygon at two points
+#            - a point: 
+#                - for a halfline skew to the polygon plane which intersects the polygon at a point
+#                - for a coplanar halfline which intersects the polygon one point
+#        
+#        """
+#        result=self.plane.intersect_line(halfline) # intersection of triangle plane with halfline
+#        
+#        if result is None:
+#            return None
+#        
+#        elif isinstance(result,Point3D):
+#            if result in self:
+#                return result
+#            else:
+#                return None
+#            
+#        elif isinstance(result,Halfline3D):
+#            # coplanar, look for intersections on 2D plane
+#            raise Exception('Not implemented yet')
+#    
+#        else:
+#            raise Exception
+#    
+#    
+#    def intersect_line(self,line):
+#        """Returns the intersection of this polygon and a line
+#        
+#        :param line Line3D: a 3D line 
+#        
+#        :return result:
+#            - no intersection (None): 
+#                - for parallel, non-coplanar polygon plane and line
+#                - for skew polygon plane and line which do not intersect
+#            - a segment:
+#                - for a coplanar line which intersects the polygon at two points
+#            - a point: 
+#                - for a line skew to the polygon plane which intersects the polygon at a point
+#                - for a coplanar line which intersects the polygon at a vertex
+#        
+#        """
+#        result=self.plane.intersect_line(line) # intersection of triangle plane with line
+#        
+#        if result is None:
+#            return None
+#        
+#        elif isinstance(result,Point3D):
+#            if result in self:
+#                return result
+#            else:
+#                return None
+#            
+#        elif isinstance(result,Line3D):
+#            # coplanar, look for intersections on 2D plane
+#            raise Exception('Not implemented yet')
+#    
+#        else:
+#            raise Exception
+#    
+#    
+#    def intersect_segment(self,segment):
+#        """Returns the intersection of this polygon and a segment
+#        
+#        :param line Segment3D: a 3D segment 
+#        
+#        :return result:
+#            - no intersection (None): 
+#                - for parallel, non-coplanar polygon plane and segment
+#                - for skew polygon plane and segment which do not intersect
+#            - a segment:
+#                - for a coplanar segment which intersects the polygon at two points
+#                - for a coplanar segment which is inside the polygon
+#            - a point: 
+#                - for a segment skew to the polygon plane which intersects the polygon at a point
+#                - for a coplanar segment which intersects the polygon one point
+#        
+#        """
+#        result=self.plane.intersect_line(segment) # intersection of triangle plane with segment
+#        
+#        if result is None:
+#            return None
+#        
+#        elif isinstance(result,Point3D):
+#            if result in self:
+#                return result
+#            else:
+#                return None
+#            
+#        elif isinstance(result,Segment3D):
+#            # coplanar, look for intersections on 2D plane
+#            raise Exception('Not implemented yet')
+#    
+#        else:
+#            raise Exception
             
         
     @property
@@ -822,7 +865,7 @@ class Polygon3D(Polygon):
     
     @property
     def polyline(self):
-        return Polyline3D(*self.closed_points)
+        return SimplePolyline3D(*self.closed_points)
     
     
     @property
@@ -875,7 +918,7 @@ class Polygon3D(Polygon):
     
     
     
-#class Polygon3D():
+#class SimplePolygon3D():
 #    ""
 #    
 #    def __init__(self,*points):
@@ -883,7 +926,7 @@ class Polygon3D(Polygon):
 #        self.points=tuple(points)
 #    
 #    def __repr__(self):
-#        return 'Polygon2D(%s)' % ','.join([str(p) for p in self.points])
+#        return 'SimplePolygon2D(%s)' % ','.join([str(p) for p in self.points])
 #    
 #    @property
 #    def points_closed(self):
@@ -899,13 +942,13 @@ class Polygon3D(Polygon):
 #        i=absolute_coords.index(max(absolute_coords)) # the coordinate to ignore for projection
 #        
 #        if i=='0':
-#            pg=Polygon2D([Point2D(pt.y,pt.z) for pt in self.points])
+#            pg=SimplePolygon2D([Point2D(pt.y,pt.z) for pt in self.points])
 #            return pg.area*(normal_vector.length/(2*normal_vector.x))
 #        if i=='1':
-#            pg=Polygon2D([Point2D(pt.x,pt.z) for pt in self.points])
+#            pg=SimplePolygon2D([Point2D(pt.x,pt.z) for pt in self.points])
 #            return pg.area*(normal_vector.length/(2*normal_vector.y))
 #        if i=='2':
-#            pg=Polygon2D([Point2D(pt.x,pt.y) for pt in self.points])
+#            pg=SimplePolygon2D([Point2D(pt.x,pt.y) for pt in self.points])
 #            return pg.area*(normal_vector.length/(2*normal_vector.z))
 #        
 #        
@@ -942,7 +985,7 @@ class Polygon3D(Polygon):
 #        for ps in self.polygon_segments:
 #            
 #            # finds the intersections of the halfline, line or segment with the polygon segments
-#            if isinstance(linelike_obj,HalfLine2D):
+#            if isinstance(linelike_obj,Halfline2D):
 #                result=ps.intersect_halfline(linelike_obj)
 #            elif isinstance(linelike_obj,Line2D):
 #                result=ps.intersect_line(linelike_obj)
@@ -969,7 +1012,7 @@ class Polygon3D(Polygon):
 #                
 #        # add start and end points for halfline and segments if they are 
 #        #  inside the polygon and don't intersect with a polygon segment
-#        if isinstance(linelike_obj,HalfLine2D):
+#        if isinstance(linelike_obj,Halfline2D):
 #            if not 0 in d:
 #                if linelike_obj.P0 in self:
 #                    linelike_obj.P0._polygon_segment=None
@@ -998,7 +1041,7 @@ class Polygon3D(Polygon):
 #        #   - a list of unique points with intersect the polygon
 #        #   - ordered according to their position on the intersection halfline, line or segment
 #        #   - points have the attributes 
-#        #       ._polygon_segment (the PolygonSegment or None)
+#        #       ._polygon_segment (the SimplePolygonSegment or None)
 #        #       ._crossing_point (bool) - True is a crossing point occurs, or if the point is inside the polygon and not on an edge
 #        #       ._vertex (bool) - True if the point is a polygon point
 #        #       ._v0_collinear (bool) - True if the entering polygon segment is collinear with linelike_obj

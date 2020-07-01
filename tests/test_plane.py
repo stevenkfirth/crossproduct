@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from crossproduct import Point3D, Vector3D, Line3D, Plane3D, HalfLine3D, Segment3D
+from crossproduct import Point3D, Vector3D, Line3D, Plane3D, Halfline3D, Segment3D
 
 
 class Test_Plane3D(unittest.TestCase):
@@ -69,26 +69,26 @@ class Test_Plane3D(unittest.TestCase):
         pl=Plane3D(P0,N)
         
         # halfline in plane
-        self.assertEqual(pl.intersect_halfline(HalfLine3D(P0,
+        self.assertEqual(pl.intersect_halfline(Halfline3D(P0,
                                                           Vector3D(1,0,0))),
-                         HalfLine3D(P0,
+                         Halfline3D(P0,
                                     Vector3D(1,0,0)))
             
         # parallel halfline not in plane
-        self.assertEqual(pl.intersect_halfline(HalfLine3D(P0+N,
+        self.assertEqual(pl.intersect_halfline(Halfline3D(P0+N,
                                                           Vector3D(1,0,0))),
                          None)
             
         # perpendicular halfline passing through P0
-        self.assertEqual(pl.intersect_halfline(HalfLine3D(P0,
+        self.assertEqual(pl.intersect_halfline(Halfline3D(P0,
                                                           N)),
                          P0)
-        self.assertEqual(pl.intersect_halfline(HalfLine3D(P0+N,
+        self.assertEqual(pl.intersect_halfline(Halfline3D(P0+N,
                                                           N.opposite)),
                          P0)
         
         # perpendicular line not passing through plane
-        self.assertEqual(pl.intersect_halfline(HalfLine3D(P0+N,
+        self.assertEqual(pl.intersect_halfline(Halfline3D(P0+N,
                                                           N)),
                          None)
         

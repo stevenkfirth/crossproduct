@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from crossproduct import Point2D, Vector2D, Line2D, HalfLine2D, Segment2D, \
-    Point3D, Vector3D, Line3D, HalfLine3D, Segment3D
+from crossproduct import Point2D, Vector2D, Line2D, Halfline2D, Segment2D, \
+    Point3D, Vector3D, Line3D, Halfline3D, Segment3D
 
 
 class Test_Line2D(unittest.TestCase):
@@ -32,10 +32,10 @@ class Test_Line2D(unittest.TestCase):
         self.assertFalse(P0+vL.perp_vector in l)
         
         # halfline
-        self.assertTrue(HalfLine2D(P0,vL) in l)
-        self.assertTrue(HalfLine2D(P0+vL,vL) in l)
-        self.assertFalse(HalfLine2D(P0+vL.perp_vector,vL) in l)
-        self.assertFalse(HalfLine2D(P0,vL.perp_vector) in l)
+        self.assertTrue(Halfline2D(P0,vL) in l)
+        self.assertTrue(Halfline2D(P0+vL,vL) in l)
+        self.assertFalse(Halfline2D(P0+vL.perp_vector,vL) in l)
+        self.assertFalse(Halfline2D(P0,vL.perp_vector) in l)
         
         # segment
         self.assertTrue(Segment2D(P0,P0+vL) in l)
@@ -186,10 +186,10 @@ class Test_Line3D(unittest.TestCase):
         self.assertFalse(P0+Vector3D(1,-1,0) in l)
         
 #        # halfline
-#        self.assertTrue(HalfLine3D(P0,vL) in l)
-#        self.assertTrue(HalfLine3D(P0+vL,vL) in l)
-#        self.assertFalse(HalfLine3D(P0+Vector3D(1,-1,0),vL) in l)
-#        self.assertFalse(HalfLine3D(P0,Vector3D(1,-1,0)) in l)
+#        self.assertTrue(Halfline3D(P0,vL) in l)
+#        self.assertTrue(Halfline3D(P0+vL,vL) in l)
+#        self.assertFalse(Halfline3D(P0+Vector3D(1,-1,0),vL) in l)
+#        self.assertFalse(Halfline3D(P0,Vector3D(1,-1,0)) in l)
 #        
 #        # segment
 #        self.assertTrue(Segment3D(P0,P0+vL) in l)

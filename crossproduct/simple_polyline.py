@@ -1,25 +1,76 @@
 # -*- coding: utf-8 -*-
 
+import itertools
+
 from .point import Point
 from .segment import Segment, Segment2D, Segment3D
 
 
+#class Polyline():
+#    """A n-D polyline
+#    
+#    
+#    """
+#    def __init__(self,*points):
+#        """
+#        
+#        param points: an array of points 
+#                    
+#        """
+#        
+#        for pt in points:
+#            if not isinstance(pt,Point):
+#                raise TypeError
+#        
+#        self.points=tuple(points)
+#        
+#        
+#    @property
+#    def is_intersecting(self):
+#        """
+#        
+#        this doesn't work for a polyline that self-intersects at a vertex
+#        
+#        """
+#        for s in itertools.combinations(self.segments,2):
+#            result=s[0].intersect_segment(s[1])
+#            if isinstance(result,Segment):
+#                return True
+#            elif isinstance(result,Point):
+#                if result==s[0].P0 or result==s[0].P1:
+#                    pass
+#                else:
+#                    return True
+#        return False
 
-class Polyline():
+
+
+
+class SimplePolyline():
     """A n-D polyline
+    
+    In this implementation of a polyline
+    
     """
     
     def __init__(self,*points):
         """
         
         param points: an array of points 
-            - the first point is not repeated at the end of the array
-        
+                    
         """
         
         for pt in points:
             if not isinstance(pt,Point):
                 raise TypeError
+        
+        # check for collinear adjacent segments
+        if len(points)>2:
+            for i in range(1,len(points)-1):
+                u=points[i]-points[i-1]
+                v=points[i+1]-points[i]
+                if u.is_collinear(v):
+                    raise ValueError('Adjacent segments in simple polylines cannot be collinear')
         
         self.points=tuple(points)
         
@@ -38,7 +89,7 @@ class Polyline():
         :rtype bool:
             
         """
-        if isinstance(polyline,Polyline):
+        if isinstance(polyline,SimplePolyline):
             
             if self.points==polyline.points or self.points==polyline.reverse.points:
                 
@@ -58,7 +109,7 @@ class Polyline():
         """Return a polyline with the points reversed
         
         :return polyline:
-        :rtype Polyline:
+        :rtype SimplePolyline:
         """
         points=[self.points[i] 
                 for i in range(len(self.points)-1,-1,-1)]
@@ -68,11 +119,11 @@ class Polyline():
     def union(self,polyline):
         """Returns the union of this polyline and another polyline
         
-        :param polyline Polyline: a polyline
+        :param polyline SimplePolyline: a polyline
             - for the union of a polyline and a segment, first convert the segment to a 1-item polyline
         
         :return result:
-            - Polyline2D/3D, the union of the polylines if they have 
+            - SimplePolyline2D/3D, the union of the polylines if they have 
                 a same start point or end point
             - None, for polylines that don't have a union        
         
@@ -95,7 +146,7 @@ class Polyline():
     
         
         
-class Polyline2D(Polyline):
+class SimplePolyline2D(SimplePolyline):
     """A 2-D polyline
     """
     
@@ -106,7 +157,7 @@ class Polyline2D(Polyline):
         :rtype str:
             
         """
-        return 'Polyline2D(%s)' % ','.join([str(p) for p in self.points])
+        return 'SimplePolyline2D(%s)' % ','.join([str(p) for p in self.points])
     
     
     def plot(self,ax,**kwargs):
@@ -132,7 +183,7 @@ class Polyline2D(Polyline):
         return tuple(Segment2D(self.points[i],self.points[i+1]) for i in range(n-1))
         
     
-class Polyline3D(Polyline):
+class SimplePolyline3D(SimplePolyline):
     """A 3-D polyline
     """
     
@@ -143,7 +194,7 @@ class Polyline3D(Polyline):
         :rtype str:
             
         """
-        return 'Polyline3D(%s)' % ','.join([str(p) for p in self.points])
+        return 'SimplePolyline3D(%s)' % ','.join([str(p) for p in self.points])
 
 
     def plot(self,ax,**kwargs):

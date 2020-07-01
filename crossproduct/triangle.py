@@ -2,7 +2,7 @@
 
 from .line import Line3D
 from .point import Point, Point2D, Point3D
-from .convex_polygon import ConvexPolygon, ConvexPolygon2D, ConvexPolygon3D
+from .simple_convex_polygon import SimpleConvexPolygon, SimpleConvexPolygon2D, SimpleConvexPolygon3D
 from .segment import Segment3D
 from .vector import Vector, Vector2D, Vector3D
 
@@ -99,7 +99,7 @@ class Triangle():
                               points[2]-points[0])
 
 
-class Triangle2D(Triangle,ConvexPolygon2D):
+class Triangle2D(Triangle,SimpleConvexPolygon2D):
     """A 2D Triangle
     """
     
@@ -189,7 +189,7 @@ class Triangle2D(Triangle,ConvexPolygon2D):
     
     
     
-class Triangle3D(Triangle,ConvexPolygon3D):
+class Triangle3D(Triangle,SimpleConvexPolygon3D):
     """"A 3D Triangle
     """
         

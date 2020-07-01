@@ -53,7 +53,7 @@ class Line():
             pt=self.calculate_point(t)           
             return obj==pt 
                     
-        elif isinstance(obj,crossproduct.halfline.HalfLine):
+        elif isinstance(obj,crossproduct.halfline.Halfline):
             return obj.P0 in self and obj.vL.is_collinear(self.vL)
         
         elif isinstance(obj,crossproduct.segment.Segment):

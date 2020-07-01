@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .point import Point, Point2D, Point3D
-from .convex_polygon import ConvexPolygon2D, ConvexPolygon3D
+from .simple_convex_polygon import SimpleConvexPolygon2D, SimpleConvexPolygon3D
 from .vector import Vector2D, Vector3D
 
 
@@ -55,7 +55,7 @@ class Quadrilateral():
     
 
 
-class Quadrilateral2D(Quadrilateral,ConvexPolygon2D):
+class Quadrilateral2D(Quadrilateral,SimpleConvexPolygon2D):
     """"A 2D Quadrilateral
     """
         
@@ -103,7 +103,7 @@ class Quadrilateral2D(Quadrilateral,ConvexPolygon2D):
         
         
         
-class Quadrilateral3D(Quadrilateral,ConvexPolygon3D):
+class Quadrilateral3D(Quadrilateral,SimpleConvexPolygon3D):
     """"A 3D Quadrilateral
     """        
         

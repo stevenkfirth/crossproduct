@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 
-from .halfline import HalfLine2D, HalfLine3D
+from .halfline import Halfline2D, Halfline3D
 from .line import Line2D, Line3D
 from .segment import Segment, Segment2D, Segment3D
-from .polygon import Polygon2D, Polygon3D
-from .polyline import Polyline,Polyline2D, Polyline3D
+from .simple_polygon import SimplePolygon2D, SimplePolygon3D
+from .simple_polyline import SimplePolyline,SimplePolyline2D, SimplePolyline3D
 from .point import Point,Point2D, Point3D
 from .plane import Plane3D
 from .vector import Vector2D
 
 
-class ConvexPolygon():
+class SimpleConvexPolygon():
     """A n-D convex polygon
     """
 
-class ConvexPolygon2D(Polygon2D):
+class SimpleConvexPolygon2D(SimplePolygon2D):
     """A 2D convex polygon
     
     """
@@ -27,11 +27,10 @@ class ConvexPolygon2D(Polygon2D):
         
         """
         
-        for pt in points:
-            if not isinstance(pt,Point):
-                raise TypeError
+         # converting to a polyline checks for point types and adjacent segment collinearity
+        pl=SimplePolyline(*points,points[0])
         
-        self.points=tuple(points)
+        self.points=tuple(pl.points[:-1])
     
         # converts the convex polygon to a counterclockwise orientation 
         #   this is done to enable the intersection algorithms to work
@@ -48,13 +47,13 @@ class ConvexPolygon2D(Polygon2D):
         :rtype str:
             
         """
-        return 'ConvexPolygon2D(%s)' % ','.join([str(p) for p in self.points])
+        return 'SimpleConvexPolygon2D(%s)' % ','.join([str(p) for p in self.points])
     
     
     def intersect_halfline(self,halfline):
         """Intersection of this convex polygon with a halfline
         
-        :param halfline HalfLine2D: a 2D halfline 
+        :param halfline Halfline2D: a 2D halfline 
         
         :return intersection:
             - return value can be:
@@ -209,7 +208,7 @@ class ConvexPolygon2D(Polygon2D):
     def intersect_convex_polygon(self,convex_polygon):
         """Intersection of this convex polygon with another convex polygon
         
-        :param convex_polygon ConvexPolygon2D: a 2D convex polygon 
+        :param convex_polygon SimpleConvexPolygon2D: a 2D convex polygon 
         
         :return intersection:
             - return value can be:
@@ -218,7 +217,7 @@ class ConvexPolygon2D(Polygon2D):
                                            convex polygon)
                 - Point2D -> a point (for a convex polygon whose segments intersect
                                       this convex polygon at a single vertex)
-                - Polyline2D -> a polyline (for a convex polygon whose segments
+                - SimplePolyline2D -> a polyline (for a convex polygon whose segments
                                               intesect this convex polygon) 
                          
         """
@@ -247,7 +246,7 @@ class ConvexPolygon2D(Polygon2D):
             # convert segments to polyline
             points=[s.P0 for s in segments]
             points+=[segments[-1].P1]
-            return Polyline2D(*points)
+            return SimplePolyline2D(*points)
         
         elif not ipoint is None:
             return ipoint
@@ -258,7 +257,7 @@ class ConvexPolygon2D(Polygon2D):
     def union_convex_polygon(self,convex_polygon):
         """Returns the union of this convex polygon with another convex polygon
         
-        :param convex_polygon ConvexPolygon2D: a 2D convex polygon 
+        :param convex_polygon SimpleConvexPolygon2D: a 2D convex polygon 
         
         :return union_result:
             - return value can be:
@@ -267,9 +266,9 @@ class ConvexPolygon2D(Polygon2D):
                                            convex polygon)
                 - Point2D -> a point (for a convex polygon whose segments intersect
                                       this convex polygon at a single vertex)
-                - Polyline2D -> a polyline (for convex polygons tha intersect on 
+                - SimplePolyline2D -> a polyline (for convex polygons tha intersect on 
                                             one or more edges)
-                - ConvexPolygon2d -> a convex polygon (for convex polygons that intersect and overlap)
+                - SimpleConvexPolygon2d -> a convex polygon (for convex polygons that intersect and overlap)
                             
         """
         if self==convex_polygon:
@@ -296,11 +295,11 @@ class ConvexPolygon2D(Polygon2D):
                 else: # overlap intersection
                     
                     points=result.points[:-1]+result2.points[:-1]
-                    return ConvexPolygon2D(*points)
+                    return SimpleConvexPolygon2D(*points)
         
         
         
-class ConvexPolygon3D(Polygon3D):
+class SimpleConvexPolygon3D(SimplePolygon3D):
     """A 3D convex polygon
     """
     
@@ -312,18 +311,18 @@ class ConvexPolygon3D(Polygon3D):
         :rtype str:
             
         """
-        return 'ConvexPolygon3D(%s)' % ','.join([str(p) for p in self.points])
+        return 'SimpleConvexPolygon3D(%s)' % ','.join([str(p) for p in self.points])
     
     
     @property
     def class_2D(self):
-        return ConvexPolygon2D   
+        return SimpleConvexPolygon2D   
     
        
     def intersect_halfline(self,halfline):
         """Returns the intersection of this polygon and a halfline
         
-        :param line HalfLine3D: a 3D halfline 
+        :param line Halfline3D: a 3D halfline 
         
         :return result:
             - no intersection (None): 
@@ -347,7 +346,7 @@ class ConvexPolygon3D(Polygon3D):
             else:
                 return None
             
-        elif isinstance(result,HalfLine3D): # coplanar, look for intersections on 2D plane
+        elif isinstance(result,Halfline3D): # coplanar, look for intersections on 2D plane
             
             i,self2D=self.project_2D
             halfline2D=halfline.project_2D(i)
@@ -492,7 +491,7 @@ class ConvexPolygon3D(Polygon3D):
     def intersect_convex_polygon(self,convex_polygon):
         """Intersection of this convex polygon with another convex polygon
         
-        :param convex_polygon ConvexPolygon2D: a 3D convex polygon 
+        :param convex_polygon SimpleConvexPolygon2D: a 3D convex polygon 
         
         :return result:
             - no intersection (None): 
@@ -537,7 +536,7 @@ class ConvexPolygon3D(Polygon3D):
             # convert segements to polyline
             points=[s.P0 for s in segments]
             points+=[segments[-1].P1]
-            return Polyline3D(*points)
+            return SimplePolyline3D(*points)
         
         elif len(ipoints)==1:
             
@@ -545,7 +544,7 @@ class ConvexPolygon3D(Polygon3D):
         
         elif len(ipoints)==2:
             
-            return Polyline3D(*ipoints)
+            return SimplePolyline3D(*ipoints)
             
         else:
             
@@ -555,7 +554,7 @@ class ConvexPolygon3D(Polygon3D):
     def union_convex_polygon(self,convex_polygon):
         """Returns the union of this convex polygon with another convex polygon
         
-        :param convex_polygon ConvexPolygon3D: a 3D convex polygon 
+        :param convex_polygon SimpleConvexPolygon3D: a 3D convex polygon 
         
         :return union_result:
             - return value can be:
@@ -564,10 +563,10 @@ class ConvexPolygon3D(Polygon3D):
                                            convex polygon)
                 - Point2D -> a point (for a convex polygon whose segments intersect
                                       this convex polygon at a single vertex)
-                - Polyline2D -> a polyline 
+                - SimplePolyline2D -> a polyline 
                     - (for convex polygons that intersect on one or more edges)
                     - (for skew convex polygons that intersect each other at points inside the polygon)
-                - ConvexPolygon2d -> a convex polygon (for convex polygons that intersect and overlap)
+                - SimpleConvexPolygon2d -> a convex polygon (for convex polygons that intersect and overlap)
                             
         """
         if self==convex_polygon:
@@ -597,13 +596,13 @@ class ConvexPolygon3D(Polygon3D):
                     else: # point intersection at 2 different points 
                           #   - i.e skew convex polygons that intersect each other at points inside the polygon
                         
-                        return Polyline3D(result1,result2)
+                        return SimplePolyline3D(result1,result2)
                         
-                elif isinstance(result1,Polyline) and isinstance(result2,Point):
+                elif isinstance(result1,SimplePolyline) and isinstance(result2,Point):
                     
                     return result1
                 
-                elif isinstance(result1,Point) and isinstance(result2,Polyline):
+                elif isinstance(result1,Point) and isinstance(result2,SimplePolyline):
                     
                     return result2
                     
@@ -616,7 +615,7 @@ class ConvexPolygon3D(Polygon3D):
                     else: # overlap intersection
                     
                         points=result1.points[:-1]+result2.points[:-1]
-                        return ConvexPolygon3D(*points)
+                        return SimpleConvexPolygon3D(*points)
                     
                     
                     

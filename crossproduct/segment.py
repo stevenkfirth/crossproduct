@@ -387,14 +387,14 @@ class Segment2D(Segment,Line2D):
     
     @property
     def polyline(self):
-        """Returns a polyline of the segment
+        """Returns a simple polyline of the segment
         
         :return polyline:
-        :rtype Polyline2D:        
+        :rtype SimplePolyline2D:        
         
         """
-        from .polyline import Polyline2D
-        return Polyline2D(self.P0,self.P1)
+        from .simple_polyline import SimplePolyline2D
+        return SimplePolyline2D(self.P0,self.P1)
         
     
     
@@ -637,14 +637,14 @@ class Segment3D(Segment,Line3D):
     
     @property
     def polyline(self):
-        """Returns a polyline of the segment
+        """Returns a simple polyline of the segment
         
         :return polyline:
-        :rtype Polyline3D:        
+        :rtype SimplePolyline3D:        
         
         """
-        from .polyline import Polyline3D
-        return Polyline3D(self.P0,self.P1)
+        from .simple_polyline import SimplePolyline3D
+        return SimplePolyline3D(self.P0,self.P1)
     
     
     def project_2D(self,i):

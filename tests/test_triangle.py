@@ -294,49 +294,49 @@ if __name__=='__main__':
 #        ""
 #        # intersection of triangle and a halfline running along its base to the right
 #        tr=Triangle2D(P0,v,w)
-#        hl=HalfLine2D(P0,v)
+#        hl=Halfline2D(P0,v)
 #        result=tr.intersect_halfline(hl)
 #        self.assertEqual(result,[Segment2D(P0,P0+v)])
 #        
 #        # intersection of triangle and a halfline running along its base to the left
 #        tr=Triangle2D(P0,v,w)
-#        hl=HalfLine2D(tr.P1,v*-1)
+#        hl=Halfline2D(tr.P1,v*-1)
 #        result=tr.intersect_halfline(hl)
 #        self.assertEqual(result,[Segment2D(P0+v,P0)])
 #        
-#        # intersection of triangle and a HalfLine running across the top
+#        # intersection of triangle and a Halfline running across the top
 #        tr=Triangle2D(P0,v,w)
-#        hl=HalfLine2D(tr.P2,v)
+#        hl=Halfline2D(tr.P2,v)
 #        result=tr.intersect_halfline(hl)
 #        self.assertEqual(result,[tr.P2])
 #        
-#        # intersection of triangle and a horizontal HalfLine running through the middle
+#        # intersection of triangle and a horizontal Halfline running through the middle
 #        tr=Triangle2D(P0,v,w)
-#        hl=HalfLine2D(P0+w*0.5,v)
+#        hl=Halfline2D(P0+w*0.5,v)
 #        result=tr.intersect_halfline(hl)
 #        self.assertEqual(result,[Segment2D(P0+w*0.5,P0+(v+w)*0.5)])
 #        
-#        # intersection of triangle and a vertical HalfLine running through the middle
+#        # intersection of triangle and a vertical Halfline running through the middle
 #        tr=Triangle2D(P0,v,w)
-#        hl=HalfLine2D(P0+v*0.5,Vector2D(0,1))
+#        hl=Halfline2D(P0+v*0.5,Vector2D(0,1))
 #        result=tr.intersect_halfline(hl)
 #        self.assertEqual(result,[Segment2D(P0+v*0.5,tr.P2)])
 #        
-#        # intersection of triangle and a HalfLine running through a vertex to the middle of the opposite side
+#        # intersection of triangle and a Halfline running through a vertex to the middle of the opposite side
 #        tr=Triangle2D(P0,v,w)
-#        hl=HalfLine2D(P0,Vector2D(0.75,0.5))
+#        hl=Halfline2D(P0,Vector2D(0.75,0.5))
 #        result=tr.intersect_halfline(hl)
 #        self.assertEqual(result,[Segment2D(P0,P0+(v+w)*0.5)])
 #        
 #        # intersection of triangle and horizontal halfline starting inside triangle
 #        tr=Triangle2D(P0,v,w)
-#        hl=HalfLine2D(Point2D(0.5,0.5),Vector2D(1,0))
+#        hl=Halfline2D(Point2D(0.5,0.5),Vector2D(1,0))
 #        result=tr.intersect_halfline(hl)
 #        self.assertEqual(result,[Segment2D(Point2D(0.5,0.5), Point2D(0.75,0.5))])
 #        
 #        # intersection of triangle and vertical halfline starting inside triangle
 #        tr=Triangle2D(P0,v,w)
-#        hl=HalfLine2D(Point2D(0.5,0.5),Vector2D(0,1))
+#        hl=Halfline2D(Point2D(0.5,0.5),Vector2D(0,1))
 #        result=tr.intersect_halfline(hl)
 #        self.assertEqual(result,[Segment2D(Point2D(0.5,0.5), Point2D(0.5,1.0))])
 #        

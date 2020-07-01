@@ -2,7 +2,7 @@
 
 import bspy.geometry
 
-from .halfline import HalfLine3D
+from .halfline import Halfline3D
 from .line import Line3D
 from .point import Point3D
 from .segment import Segment3D
@@ -47,7 +47,7 @@ class Plane3D():
         """Tests if the line contains the object
         
         :param obj: a 3D geometric object 
-            - Point3D, HalfLine3D Segement3D etc.
+            - Point3D, Halfline3D Segement3D etc.
             
         :return result:
             - for point, ...
@@ -63,7 +63,7 @@ class Plane3D():
             point=obj
             return self.N.is_perpendicular(point-self.P0)
             
-        elif isinstance(obj,Line3D) or isinstance(obj,HalfLine3D) or isinstance(obj,Segment3D):
+        elif isinstance(obj,Line3D) or isinstance(obj,Halfline3D) or isinstance(obj,Segment3D):
             
             linelike_obj=obj            
             return linelike_obj.P0 in self and self.is_parallel(linelike_obj)
@@ -122,7 +122,7 @@ class Plane3D():
     def intersect_halfline(self,halfline):
         """Returns the intersection of this plane and a halfline
         
-        :param halfline HalfLine3D: a 3D halfline 
+        :param halfline Halfline3D: a 3D halfline 
         
         :return result:
             - no intersection (None): 
@@ -251,7 +251,7 @@ class Plane3D():
     def is_parallel(self,obj):
         """Tests if this plane and the supplied object are parallel
         
-        :param linelike_obj: a Line3D, HalfLine3D, Segment3D, Plane3D or Polygon3D
+        :param linelike_obj: a Line3D, Halfline3D, Segment3D, Plane3D or Polygon3D
         
         :return result: the result of the test
             - returns True if the object is collinear with the plane
@@ -259,7 +259,7 @@ class Plane3D():
         :rtype bool:
             
         """
-        if isinstance(obj,Line3D) or isinstance(obj,HalfLine3D) or isinstance(obj,Segment3D):
+        if isinstance(obj,Line3D) or isinstance(obj,Halfline3D) or isinstance(obj,Segment3D):
             return self.N.is_perpendicular(obj.vL)
         
         elif isinstance(obj,Plane3D):
@@ -272,7 +272,7 @@ class Plane3D():
     def is_perpendicular(self,obj):
         """Tests if this plane and the supplied object are perpendicular
         
-        :param linelike_obj: a Line3D, HalfLine3D, Segment3D, Plane3D or Polygon3D
+        :param linelike_obj: a Line3D, Halfline3D, Segment3D, Plane3D or Polygon3D
         
         :return result: the result of the test
             - returns True if the object is perpendicular with the plane
@@ -280,7 +280,7 @@ class Plane3D():
         :rtype bool:
             
         """
-        if isinstance(obj,Line3D) or isinstance(obj,HalfLine3D) or isinstance(obj,Segment3D):
+        if isinstance(obj,Line3D) or isinstance(obj,Halfline3D) or isinstance(obj,Segment3D):
             return self.N.is_collinear(obj.vL)
         
         elif isinstance(obj,Plane3D):
