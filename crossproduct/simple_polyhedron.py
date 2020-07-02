@@ -46,6 +46,7 @@ class SimplePolyhedron3D():
                     continue
                 else:
                     #print(pg1.intersect_halfline(halfline))
+                    #print(pg1)
                     ipts,isegments=pg1.intersect_halfline(halfline)
                     if len(ipts)>0 or len(isegments)>0:
                         flag=True

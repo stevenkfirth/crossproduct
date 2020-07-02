@@ -1,56 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import itertools
-
 from .point import Point
-from .segment import Segment, Segment2D, Segment3D
-
-
-#class Polyline():
-#    """A n-D polyline
-#    
-#    
-#    """
-#    def __init__(self,*points):
-#        """
-#        
-#        param points: an array of points 
-#                    
-#        """
-#        
-#        for pt in points:
-#            if not isinstance(pt,Point):
-#                raise TypeError
-#        
-#        self.points=tuple(points)
-#        
-#        
-#    @property
-#    def is_intersecting(self):
-#        """
-#        
-#        this doesn't work for a polyline that self-intersects at a vertex
-#        
-#        """
-#        for s in itertools.combinations(self.segments,2):
-#            result=s[0].intersect_segment(s[1])
-#            if isinstance(result,Segment):
-#                return True
-#            elif isinstance(result,Point):
-#                if result==s[0].P0 or result==s[0].P1:
-#                    pass
-#                else:
-#                    return True
-#        return False
-
-
+from .polyline import Polyline2D, Polyline3D
 
 
 class SimplePolyline():
-    """A n-D polyline
-    
-    In this implementation of a polyline
-    
+    """A n-D non-inersecting polyline
+        
     """
     
     def __init__(self,*points):
@@ -64,89 +20,14 @@ class SimplePolyline():
             if not isinstance(pt,Point):
                 raise TypeError
         
-        # check for collinear adjacent segments
-        if len(points)>2:
-            for i in range(1,len(points)-1):
-                u=points[i]-points[i-1]
-                v=points[i+1]-points[i]
-                if u.is_collinear(v):
-                    raise ValueError('Adjacent segments in simple polylines cannot be collinear')
-        
         self.points=tuple(points)
         
-        
-    def __eq__(self,polyline):
-        """Tests if this polygon and the supplied polygon are equal
-        
-        :param line Polygon2D: a 2D polygon
-        
-        :return result: 
-            - True if 
-                - it has the same points, and
-                - the points are in the same order (from an arbitrary start point), 
-                    either forward or reversed      
-            - otherwise False
-        :rtype bool:
-            
-        """
-        if isinstance(polyline,SimplePolyline):
-            
-            if self.points==polyline.points or self.points==polyline.reverse.points:
+        if self.is_intersecting:
+            raise ValueError('A simple polyline cannot have self intersecting points')
                 
-                return True
-            
-            else:
-            
-                return False
-            
-            
-        else:
-            return False
-        
-        
-    @property
-    def reverse(self):
-        """Return a polyline with the points reversed
-        
-        :return polyline:
-        :rtype SimplePolyline:
-        """
-        points=[self.points[i] 
-                for i in range(len(self.points)-1,-1,-1)]
-        return self.__class__(*points)
-    
-    
-    def union(self,polyline):
-        """Returns the union of this polyline and another polyline
-        
-        :param polyline SimplePolyline: a polyline
-            - for the union of a polyline and a segment, first convert the segment to a 1-item polyline
-        
-        :return result:
-            - SimplePolyline2D/3D, the union of the polylines if they have 
-                a same start point or end point
-            - None, for polylines that don't have a union        
-        
-        Note: - this may return a polyline with two adjacent segments that are collinear
-        
-        """
-        
-        
-        if self.points[-1]==polyline.points[0]:
-            return self.__class__(*self.points,*polyline.points[1:])
-        elif self.points[-1]==polyline.points[-1]:
-            return self.__class__(*self.points,*polyline.reverse.points[1:])
-        elif self.points[0]==polyline.points[-1]:
-            return self.__class__(*polyline.points,*self.points[1:])
-        elif self.points[0]==polyline.points[0]:
-            return self.__class__(*polyline.reverse.points,*self.points[1:])
-        else:
-            return None
-        
     
         
-        
-class SimplePolyline2D(SimplePolyline):
+class SimplePolyline2D(SimplePolyline,Polyline2D):
     """A 2-D polyline
     """
     
@@ -160,30 +41,8 @@ class SimplePolyline2D(SimplePolyline):
         return 'SimplePolyline2D(%s)' % ','.join([str(p) for p in self.points])
     
     
-    def plot(self,ax,**kwargs):
-        """Plots the polyline on the supplied axes
-        
-        :param ax matplotlib.axes.Axes: an Axes instance
-        :param **kwargs: keyword arguments to be supplied to the Axes.plot call
-                    
-        
-        """
-        x=[p.x for p in self.points]
-        y=[p.y for p in self.points]
-        ax.plot(x,y,**kwargs)
-        
     
-    @property
-    def segments(self):
-        """Returns a list of segments in the polyline
-        
-        :return list: a list of segments
-        """
-        n=len(self.points)
-        return tuple(Segment2D(self.points[i],self.points[i+1]) for i in range(n-1))
-        
-    
-class SimplePolyline3D(SimplePolyline):
+class SimplePolyline3D(SimplePolyline,Polyline3D):
     """A 3-D polyline
     """
     
@@ -197,25 +56,4 @@ class SimplePolyline3D(SimplePolyline):
         return 'SimplePolyline3D(%s)' % ','.join([str(p) for p in self.points])
 
 
-    def plot(self,ax,**kwargs):
-        """Plots the segment on the supplied axes
-        
-        :param ax mpl_toolkits.mplot3d.axes3d.Axes3D: an Axes3D instance
-        :param **kwargs: keyword arguments to be supplied to the Axes3D.plot call
-                    
-        
-        """
-        x=[p.x for p in self.points]
-        y=[p.y for p in self.points]
-        z=[p.z for p in self.points]
-        ax.plot(x,y,z,**kwargs)
-
-
-    @property
-    def segments(self):
-        """Returns a list of segments in the polyline
-        
-        :return list: a list of segments
-        """
-        n=len(self.points)
-        return tuple(Segment3D(self.points[i],self.points[i+1]) for i in range(n-1))
+    

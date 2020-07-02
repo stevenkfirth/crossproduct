@@ -38,3 +38,13 @@ class SimpleExtrudedPolyhedron3D(SimplePolyhedron3D):
         self.volume=self.base_polygon_area*self.height
         
         
+    def __repr__(self):
+        """The string of this line for printing
+        
+        :return result:
+        :rtype str:
+            
+        """
+        return 'SimpleExtrudedPolyhedron3D(%s,%s)' % (self.base_polygon,
+                                                      self.vector)
+    

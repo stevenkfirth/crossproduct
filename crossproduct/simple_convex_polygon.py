@@ -67,12 +67,12 @@ class SimpleConvexPolygon2D(SimplePolygon2D):
         result=self.intersect_line_t_values(halfline.line)
         #print(result)
         if len(result)==0:
-            return None
+            return [],[] # changed
         elif len(result)==1:
             try:
                 return halfline.calculate_point(result[0])
             except ValueError:
-                return None 
+                return [],[] # changed 
         else:
             try:
                 P0=halfline.calculate_point(result[0])
@@ -81,11 +81,11 @@ class SimpleConvexPolygon2D(SimplePolygon2D):
             try:
                 P1=halfline.calculate_point(result[1])
             except ValueError:
-                return None    
+                return [],[] # changed    
             if P0==P1:
-                return P0
+                return [P0],[] # changed
             else:
-                return Segment2D(P0,P1)        
+                return [],[Segment2D(P0,P1)] # changed
         
         
     def intersect_line(self,line):
@@ -338,13 +338,13 @@ class SimpleConvexPolygon3D(SimplePolygon3D):
         result=self.plane.intersect_halfline(halfline) # intersection of convex polygon plane with halfline
         
         if result is None:
-            return None
+            return [],[] # changed
         
         elif isinstance(result,Point3D):
             if result in self:
                 return result
             else:
-                return None
+                return [],[] # changed
             
         elif isinstance(result,Halfline3D): # coplanar, look for intersections on 2D plane
             
@@ -354,12 +354,12 @@ class SimpleConvexPolygon3D(SimplePolygon3D):
             result=self2D.intersect_halfline(halfline2D)
             
             if result is None:    
-                return None
+                return [],[] # changed
             
             elif isinstance(result,Point):
                 
                 t=halfline2D.calculate_t_from_point(result)
-                return halfline.calculate_point(t)
+                return [halfline.calculate_point(t)],[]
             
             elif isinstance(result,Segment):
                 
@@ -367,7 +367,7 @@ class SimpleConvexPolygon3D(SimplePolygon3D):
                 t1=halfline2D.calculate_t_from_point(result.P1)
                 P0=halfline.calculate_point(t0)
                 P1=halfline.calculate_point(t1)
-                return Segment3D(P0,P1)
+                return [], [Segment3D(P0,P1)]
                 
             raise Exception
     
@@ -488,6 +488,11 @@ class SimpleConvexPolygon3D(SimplePolygon3D):
             raise Exception
     
     
+    def intersect_polygon(self):
+        """
+        """
+    
+    
     def intersect_convex_polygon(self,convex_polygon):
         """Intersection of this convex polygon with another convex polygon
         
@@ -549,6 +554,18 @@ class SimpleConvexPolygon3D(SimplePolygon3D):
         else:
             
             raise Exception
+        
+        
+    
+    def difference_polygon(self):
+        """
+        """
+    
+    
+        
+    def union_polygon(self):
+        """
+        """
         
         
     def union_convex_polygon(self,convex_polygon):
