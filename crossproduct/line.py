@@ -402,8 +402,9 @@ class Line3D(Line):
         if not self.is_parallel(skew_line):
         
             # find the coordinate to ignore for the projection
-            absolute_coords=[abs(x) for x in self.vL.coordinates] + [abs(x) for x in skew_line.vL.coordinates]
-            i=absolute_coords.index(min(absolute_coords)) % 3 # the coordinate to ignore for projection
+            cp=self.vL.cross_product(skew_line.vL)
+            absolute_coords=[abs(x) for x in cp.coordinates] 
+            i=absolute_coords.index(max(absolute_coords)) % 3 # the coordinate to ignore for projection
                     
             #print('i',i)
             

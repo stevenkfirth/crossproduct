@@ -38,6 +38,29 @@ class Test_Polyline2D(unittest.TestCase):
         pl=Polyline2D(*points)
         self.assertEqual(str(pl),'Polyline2D(Point2D(0,0),Point2D(0,1),Point2D(1,1))')
         
+    
+    def test_consolidate(self):
+        ""
+        pl=Polyline2D(*points)
+        self.assertEqual(pl.consolidate,
+                         pl)
+        
+        pl=Polyline2D(Point2D(0,0),
+                      Point2D(1,0),
+                      Point2D(2,0))
+        self.assertEqual(pl.consolidate,
+                         Polyline2D(Point2D(0,0),
+                                    Point2D(2,0)))
+        
+        pl=Polyline2D(Point2D(0,0),
+                      Point2D(1,0),
+                      Point2D(2,0),
+                      Point2D(2,1))
+        self.assertEqual(pl.consolidate,
+                         Polyline2D(Point2D(0,0),
+                                    Point2D(2,0),
+                                    Point2D(2,1)))
+        
         
     def test_is_intersecting(self):
         ""
@@ -125,57 +148,88 @@ class Test_Polyline3D(unittest.TestCase):
             Point2D(1,1,0))
     """
 
-#    def test___init__(self):
-#        ""
-#        pl=SimplePolyline3D(*points)
-#        self.assertIsInstance(pl,SimplePolyline3D)
-#        self.assertEqual(pl.points,points)
-#    
-#    
-#    def test___eq__(self):
-#        ""
-#        pl=SimplePolyline3D(*points)
-#        
-#        self.assertTrue(pl==pl)
-#        self.assertTrue(pl==SimplePolyline3D(Point3D(1,1,0),
-#                                       Point3D(0,1,0),
-#                                       Point3D(0,0,0)))
-#    
-#    
-#    def test_plot(self):
-#        ""
-#        if plot:
-#            pl=SimplePolyline3D(*points)
-#            fig = plt.figure()
-#            ax = fig.add_subplot(111, projection='3d')
-#            pl.plot(ax)
-#    
-#        
-#    def test___repr__(self):
-#        ""
-#        pl=SimplePolyline3D(*points)
-#        self.assertEqual(str(pl),'SimplePolyline3D(Point3D(0,0,0),Point3D(0,1,0),Point3D(1,1,0))')
-#        
-#        
-#    def test_reverse(self):
-#        ""
-#        pl=SimplePolyline3D(*points)
-#        
-#        self.assertEqual(pl.reverse,
-#                         SimplePolyline3D(Point3D(1,1,0),
-#                                    Point3D(0,1,0),
-#                                    Point3D(0,0,0)))
-#        
-#        
-#    def test_segments(self):
-#        ""
-#        pl=SimplePolyline3D(*points)
-#        self.assertEqual(pl.segments,
-#                         (Segment3D(Point3D(0,0,0),
-#                                    Point3D(0,1,0)),
-#                          Segment3D(Point3D(0,1,0),
-#                                    Point3D(1,1,0))))
-#        
+    def test___init__(self):
+        ""
+        pl=Polyline3D(*points)
+        self.assertIsInstance(pl,Polyline3D)
+        self.assertEqual(pl.points,points)
+    
+    
+    def test___eq__(self):
+        ""
+        pl=Polyline3D(*points)
+        
+        self.assertTrue(pl==pl)
+        self.assertTrue(pl==Polyline3D(Point3D(1,1,0),
+                                       Point3D(0,1,0),
+                                       Point3D(0,0,0)))
+    
+    
+    def test___repr__(self):
+        ""
+        pl=Polyline3D(*points)
+        self.assertEqual(str(pl),'Polyline3D(Point3D(0,0,0),Point3D(0,1,0),Point3D(1,1,0))')
+        
+        
+    def test_consolidate(self):
+        ""
+        pl=Polyline3D(*points)
+        self.assertEqual(pl.consolidate,
+                         pl)
+        
+        pl=Polyline3D(Point3D(0,0,1),
+                      Point3D(1,0,1),
+                      Point3D(2,0,1))
+        self.assertEqual(pl.consolidate,
+                         Polyline3D(Point3D(0,0,1),
+                                    Point3D(2,0,1)))
+        
+        pl=Polyline3D(Point3D(0,0,1),
+                      Point3D(1,0,1),
+                      Point3D(2,0,1),
+                      Point3D(2,1,1))
+        self.assertEqual(pl.consolidate,
+                         Polyline3D(Point3D(0,0,1),
+                                    Point3D(2,0,1),
+                                    Point3D(2,1,1)))
+        
+                
+    def test_is_intersecting(self):
+        ""
+        pl=Polyline3D(*points)
+        self.assertFalse(pl.is_intersecting)
+        
+    
+    def test_plot(self):
+        ""
+        if plot:
+            pl=Polyline3D(*points)
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+            pl.plot(ax)
+    
+        
+    
+        
+    def test_reverse(self):
+        ""
+        pl=Polyline3D(*points)
+        
+        self.assertEqual(pl.reverse,
+                         Polyline3D(Point3D(1,1,0),
+                                    Point3D(0,1,0),
+                                    Point3D(0,0,0)))
+        
+        
+    def test_segments(self):
+        ""
+        pl=Polyline3D(*points)
+        self.assertEqual(pl.segments,
+                         Segments(Segment3D(Point3D(0,0,0), 
+                                            Point3D(0,1,0)), 
+                                  Segment3D(Point3D(0,1,0), 
+                                            Point3D(1,1,0))))
+        
         
     
 if __name__=='__main__':

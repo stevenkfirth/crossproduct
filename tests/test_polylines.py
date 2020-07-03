@@ -10,7 +10,7 @@ from crossproduct import Point2D, Point3D, Segment2D, Segment3D, Points, Segment
 
 plot=True
         
-class Test_Segments(unittest.TestCase):
+class Test_Polylines(unittest.TestCase):
     """
     
     """

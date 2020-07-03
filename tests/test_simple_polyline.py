@@ -119,13 +119,13 @@ class Test_SimplePolyline3D(unittest.TestCase):
             Point2D(1,1,0))
     """
 
-#    def test___init__(self):
-#        ""
-#        pl=SimplePolyline3D(*points)
-#        self.assertIsInstance(pl,SimplePolyline3D)
-#        self.assertEqual(pl.points,points)
-#    
-#    
+    def test___init__(self):
+        ""
+        pl=SimplePolyline3D(*points)
+        self.assertIsInstance(pl,SimplePolyline3D)
+        self.assertEqual(pl.points,points)
+    
+    
 #    def test___eq__(self):
 #        ""
 #        pl=SimplePolyline3D(*points)

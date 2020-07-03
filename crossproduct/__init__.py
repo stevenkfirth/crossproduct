@@ -9,6 +9,7 @@ from .plane import Plane3D
 from .point import Point2D, Point3D
 from .points import Points
 from .polyline import Polyline2D, Polyline3D
+from .polylines import Polylines
 from .simple_convex_polygon import SimpleConvexPolygon2D, SimpleConvexPolygon3D
 from .simple_extruded_polyhedron import SimpleExtrudedPolyhedron3D
 from .simple_polyline import SimplePolyline2D, SimplePolyline3D

@@ -15,7 +15,7 @@ from .vector import Vector3D
 class SimplePolygon():
     """A n-D simple polygon
     
-    The polygon does not self intersect
+    The polygon does not self intersect and has no holes
     
     Adjacent polygon segments are not collinear.
     

@@ -421,6 +421,15 @@ class Test_Segment3D(unittest.TestCase):
                          Vector3D(1,1,1).length)
         
         
+    def test_intersect_segment(self):
+        ""
+        s1=Segment3D(Point3D(0,0,0), Point3D(0,1,0))
+        s2=Segment3D(Point3D(0,1,0), Point3D(1,1,0))
+        
+        self.assertEqual(s1.intersect_segment(s2),
+                         Point3D(0,1,0))
+        
+        
     def test_line(self):
         ""
         s=Segment3D(P0,P1)

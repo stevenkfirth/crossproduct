@@ -48,6 +48,32 @@ class Polyline():
             
         else:
             return False
+    
+    
+    @property
+    def consolidate(self):
+        """Returns a polyline with all segments consolidated (i.e. minimum number of possible segments)
+        
+        :return polyline:
+            - looks at the segments of the polyline
+            - if any two adjacent segments are codirectional, then these
+                are replaced by a single segment
+        :rtype Polyline:
+            
+        """
+        points=[pt for pt in self.points]
+        n=len(points)
+        i=1
+        while i<n-1:
+            v=points[i]-points[i-1]
+            w=points[i+1]-points[i]
+            if v.is_codirectional(w):
+                points.pop(i)
+                n=len(points)
+            else:
+                i+=1
+            
+        return self.__class__(*points)
         
         
     def intersect_polyline(self,polyline):
@@ -89,6 +115,7 @@ class Polyline():
         
         """
         for s in itertools.combinations(self.segments,2):
+            #print(s)
             result=s[0].intersect_segment(s[1])
             if isinstance(result,Segment):
                 return True
@@ -157,6 +184,9 @@ class Polyline2D(Polyline):
         """
         return 'Polyline2D(%s)' % ','.join([str(p) for p in self.points])
     
+    
+    
+        
     
     def plot(self,ax,**kwargs):
         """Plots the polyline on the supplied axes
