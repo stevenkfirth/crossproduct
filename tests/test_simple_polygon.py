@@ -8,7 +8,7 @@ from crossproduct import Point2D, Point3D, \
     Vector2D, Vector3D, Line2D, SimplePolygon2D, SimplePolygon3D, Plane3D, Triangle2D, Triangle3D, \
     Segment2D, Segment3D, Halfline2D
 
-plot=True # Set to true to see the test plots
+plot=False # Set to true to see the test plots
 
 class Test_SimplePolygon2D(unittest.TestCase):
     """
@@ -95,6 +95,12 @@ class Test_SimplePolygon2D(unittest.TestCase):
         pg=SimplePolygon2D(*points)
         
         # convex polygon
+        
+        print(pg.intersect_halfline(Halfline2D(Point2D(0,0),
+                                                          Vector2D(1,1))))
+        
+        return
+        
         self.assertEqual(pg.intersect_halfline(Halfline2D(Point2D(0,0),
                                                           Vector2D(1,1))),
                          ([], 

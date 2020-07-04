@@ -39,16 +39,16 @@ class Test_Polyline2D(unittest.TestCase):
         self.assertEqual(str(pl),'Polyline2D(Point2D(0,0),Point2D(0,1),Point2D(1,1))')
         
     
-    def test_consolidate(self):
+    def test_merge_codirectional_segments(self):
         ""
         pl=Polyline2D(*points)
-        self.assertEqual(pl.consolidate,
+        self.assertEqual(pl.merge_codirectional_segments,
                          pl)
         
         pl=Polyline2D(Point2D(0,0),
                       Point2D(1,0),
                       Point2D(2,0))
-        self.assertEqual(pl.consolidate,
+        self.assertEqual(pl.merge_codirectional_segments,
                          Polyline2D(Point2D(0,0),
                                     Point2D(2,0)))
         
@@ -56,7 +56,7 @@ class Test_Polyline2D(unittest.TestCase):
                       Point2D(1,0),
                       Point2D(2,0),
                       Point2D(2,1))
-        self.assertEqual(pl.consolidate,
+        self.assertEqual(pl.merge_codirectional_segments,
                          Polyline2D(Point2D(0,0),
                                     Point2D(2,0),
                                     Point2D(2,1)))
@@ -171,16 +171,16 @@ class Test_Polyline3D(unittest.TestCase):
         self.assertEqual(str(pl),'Polyline3D(Point3D(0,0,0),Point3D(0,1,0),Point3D(1,1,0))')
         
         
-    def test_consolidate(self):
+    def test_merge_codirectional_segments(self):
         ""
         pl=Polyline3D(*points)
-        self.assertEqual(pl.consolidate,
+        self.assertEqual(pl.merge_codirectional_segments,
                          pl)
         
         pl=Polyline3D(Point3D(0,0,1),
                       Point3D(1,0,1),
                       Point3D(2,0,1))
-        self.assertEqual(pl.consolidate,
+        self.assertEqual(pl.merge_codirectional_segments,
                          Polyline3D(Point3D(0,0,1),
                                     Point3D(2,0,1)))
         
@@ -188,7 +188,7 @@ class Test_Polyline3D(unittest.TestCase):
                       Point3D(1,0,1),
                       Point3D(2,0,1),
                       Point3D(2,1,1))
-        self.assertEqual(pl.consolidate,
+        self.assertEqual(pl.merge_codirectional_segments,
                          Polyline3D(Point3D(0,0,1),
                                     Point3D(2,0,1),
                                     Point3D(2,1,1)))

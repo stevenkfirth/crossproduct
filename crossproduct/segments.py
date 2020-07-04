@@ -230,6 +230,11 @@ class Segments(Sequence):
         """
         
         
+    @property
+    def self_union(self):
+        """Returns a new Segments sequence with the union of any segments if possible
+        
+        """
         
         
         

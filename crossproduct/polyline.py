@@ -51,8 +51,8 @@ class Polyline():
     
     
     @property
-    def consolidate(self):
-        """Returns a polyline with all segments consolidated (i.e. minimum number of possible segments)
+    def merge_codirectional_segments(self):
+        """Returns a polyline with all codirectional adjacent segments merged
         
         :return polyline:
             - looks at the segments of the polyline

@@ -69,6 +69,7 @@ class Polylines(Sequence):
         
         :return result: 
             - each polyline can have one or more segments
+            - note there may be multiple solutions, only the first solution is returned
         
         :rtype Polylines
         

@@ -6,6 +6,8 @@ from .halfline import Halfline3D
 from .line import Line3D
 from .segment import Segment, Segment3D
 from .point import Point, Point2D, Point3D
+from .points import Points
+from .segments import Segments
 from .simple_polyline import SimplePolyline, SimplePolyline2D, SimplePolyline3D
 from .plane import Plane3D
 from .vector import Vector3D
@@ -29,12 +31,26 @@ class SimplePolygon():
         
         """
         
-        # converting to a polyline checks for point types and adjacent segment collinearity
-        pl=SimplePolyline(*points,points[0])
+        self.points=tuple(points)
         
-        self.points=tuple(pl.points[:-1])
-    
+        # check for intersection
+        if self.polyline.is_intersecting:
+            return ValueError('A simple polygon should not self intersect')
+        
+        # check for codirectional adjacent segments
+        pl2=self.polyline.merge_codirectional_segments
+        if len(pl2.points)<len(self.points):
+            self.points=pl2.points
+        
         self.triangles=self.triangulate
+        
+        
+        # converting to a polyline checks for point types and adjacent segment collinearity
+        #pl=SimplePolyline(*points,points[0])
+        
+        #self.points=tuple(pl.points[:-1])
+    
+        
         
     
     def __eq__(self,polygon):
@@ -132,22 +148,28 @@ class SimplePolygon():
         
                     
         """
-        ipts=[]
-        isegments=[]
+        ipts=Points()
+        isegments=Segments()
         for tri in self.triangles:
             
             #print(tri)
             #print(line)
-            result=tri.intersect_halfline(halfline)
-            #print(result)
-            if isinstance(result,Point):
-                if not result in ipts:
-                    ipts.append(result)
-            elif isinstance(result,Segment):
-                isegments.append(result)
+            result_pts,result_segments=tri.intersect_halfline(halfline)
+            for x in result_pts:
+                ipts.append(x,unique=True)
+            for x in result_segments:
+                isegments.append(x,unique=True)
+            
+            
+#            print(result)
+#            if isinstance(result,Point):
+#                if not result in ipts:
+#                    ipts.append(result)
+#            elif isinstance(result,Segment):
+#                isegments.append(result)
                 
-        #print(ipts,isegments)
-        return self._intersect_results(ipts,isegments)
+        print(ipts,isegments)
+        #return self._intersect_results(ipts,isegments)
     
     
     def intersect_line(self,line):
