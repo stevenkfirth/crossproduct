@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import itertools
+
 from collections.abc import Sequence
 from .segment import Segment
 from .point import Point
 from .points import Points
-from .polylines import Polylines
+from .polyline import Polyline
 
 
 class Segments(Sequence):
@@ -179,63 +181,125 @@ class Segments(Sequence):
     
     
     @property
-    def polylines(self):    
-        """Returns the polylines that exist in the Segments sequence
+    def polyline(self):
+        """Returns a polyline of the segments
         
-        :return result: - 
-            - each polyline can have one or more than one segments
-        :rtype Polylines:
+        :return result:
+        :rtype: Polyline or None
         
         """
+#        # first union
+#        s=self[0]
+#        try:
+#            pl,remaining_segments=Segments(*self[1:]).union_segment(s)
+#        except TypeError:
+#            return None
         
-        p=Polylines(*[s.polyline for s in self])
-        return p.consolidate
-    
+        pl=self[0].polyline
+        remaining_segments=Segments(*self[1:])
         
-        polylines=[s.polyline for s in self]
-        n=len(polylines)
-        i=0
-        
-        while i<n-1:
+        while len(remaining_segments)>0:
+            try:
+                pl,remaining_segments=remaining_segments.union_polyline(pl)
+            except TypeError:
+                return None
             
-            pl=polylines[i]
-            j=i+1
-            
-            while j<n:
-                
-                u=pl.union(polylines[j])
-                
-                if not u is None:
-                    polylines[i]=u
-                    polylines.pop(j)
-                    break
-                
-                j+=1
-
-            else:
-                i+=1
-                    
-            n=len(polylines)
-           
-        return tuple(polylines)
-        
+        return pl
     
-    @property
-    def polygons(self):
-        """Returns any polygons that exist in the Segments sequence
+    
+    def union_polyline(self,polyline):
+        """Returns the first union of a segment in the sequence with the polyline
         
-        :return result: - a tuple of zero or more polygons
-            - each polyline can have one or more than one segments
-        
-        """
-        
-        
-    @property
-    def self_union(self):
-        """Returns a new Segments sequence with the union of any segments if possible
+        :return result: (union_result (Polyline),
+                         Segments sequence of remaining segments)
         
         """
+        segments=[s for s in self]
+        for i in range(len(segments)):
+            u=polyline.union(segments[i].polyline)
+            if u:
+                segments.pop(i)
+                return u,Segments(*segments)
+    
+        return None
+    
+    
+    def union_segment(self,segment):
+        """Returns the first union of a segment in the sequence with the supplied segment
         
+        :return result: (union_result (Polyline),
+                         Segments sequence of remaining segments)
+        
+        """
+        segments=[s for s in self]
+        for i in range(len(segments)):
+            u=segments[i].union(segment)
+            if u:
+                segments.pop(i)
+                return u,Segments(*segments)
+    
+        return None
+    
+    
+    
+#    @property
+#    def polylines(self):    
+#        """Returns the polylines that exist in the Segments sequence
+#        
+#        :return result: - 
+#            - each polyline can have one or more than one segments
+#        :rtype Polylines:
+#        
+#        """
+#        
+#        p=Polylines(*[s.polyline for s in self])
+#        return p.consolidate
+#    
+#        
+#        polylines=[s.polyline for s in self]
+#        n=len(polylines)
+#        i=0
+#        
+#        while i<n-1:
+#            
+#            pl=polylines[i]
+#            j=i+1
+#            
+#            while j<n:
+#                
+#                u=pl.union(polylines[j])
+#                
+#                if not u is None:
+#                    polylines[i]=u
+#                    polylines.pop(j)
+#                    break
+#                
+#                j+=1
+#
+#            else:
+#                i+=1
+#                    
+#            n=len(polylines)
+#           
+#        return tuple(polylines)
+#        
+#    
+#    @property
+#    def polygons(self):
+#        """Returns any polygons that exist in the Segments sequence
+#        
+#        :return result: - a tuple of zero or more polygons
+#            - each polyline can have one or more than one segments
+#        
+#        """
+#        
+#        
+#    @property
+#    def self_union(self):
+#        """Returns a new Segments sequence with the union of any segments if possible
+#        
+#        """
+#        
         
         
         

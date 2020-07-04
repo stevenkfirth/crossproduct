@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import itertools
+
 from collections.abc import Sequence
 from .segment import Segment
 from .point import Point
 from .points import Points
+#from .simple_polygons import SimplePolygons
 
 
 class Polylines(Sequence):
@@ -103,13 +106,14 @@ class Polylines(Sequence):
         
     
     @property
-    def polygons(self):
+    def simple_polygons(self):
         """Returns any polygons that exist in the Polylines sequence
         
         :return result: - a tuple of zero or more polygons
             - each polyline can have one or more than one segments
         
         """
+        n=len(self)
         
         
         

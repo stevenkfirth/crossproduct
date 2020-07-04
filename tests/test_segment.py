@@ -6,7 +6,7 @@ import mpl_toolkits.mplot3d
 
 from crossproduct import Point2D, Point3D,Vector2D, Vector3D, \
     Halfline2D, Halfline3D, Line2D, Line3D, Segment2D, Segment3D, \
-    SimplePolyline2D
+    SimplePolyline2D, Polyline2D
 
 plot=False
 
@@ -270,30 +270,40 @@ class Test_Segment2D(unittest.TestCase):
         # two adjacent collinear segments
         self.assertEqual(s.union(Segment2D(Point2D(1,1),
                                            Point2D(2,2))),
-                         Segment2D(Point2D(0,0),
-                                   Point2D(2,2)))
+                         Polyline2D(Point2D(0,0),
+                                    Point2D(1,1),
+                                    Point2D(2,2)))
             
         self.assertEqual(s.union(Segment2D(Point2D(2,2),
                                            Point2D(1,1))),
-                         Segment2D(Point2D(0,0),
-                                   Point2D(2,2)))
+                         Polyline2D(Point2D(0,0),
+                                    Point2D(1,1),
+                                    Point2D(2,2)))
             
         # two non-collinear segment - 
         self.assertEqual(s.union(Segment2D(Point2D(1,1),
                                            Point2D(2,1))),
-                         SimplePolyline2D(Point2D(0,0),Point2D(1,1),Point2D(2,1)))
+                         Polyline2D(Point2D(0,0),
+                                    Point2D(1,1),
+                                    Point2D(2,1)))
             
         self.assertEqual(s.union(Segment2D(Point2D(2,1),
                                            Point2D(1,1))),
-                         SimplePolyline2D(Point2D(0,0),Point2D(1,1),Point2D(2,1)))
+                         Polyline2D(Point2D(0,0),
+                                    Point2D(1,1),
+                                    Point2D(2,1)))
             
         self.assertEqual(s.union(Segment2D(Point2D(-1,0),
                                            Point2D(0,0))),
-                         SimplePolyline2D(Point2D(-1,0),Point2D(0,0),Point2D(1,1)))
+                         Polyline2D(Point2D(-1,0),
+                                    Point2D(0,0),
+                                    Point2D(1,1)))
             
         self.assertEqual(s.union(Segment2D(Point2D(0,0),
                                            Point2D(-1,0))),
-                         SimplePolyline2D(Point2D(-1,0),Point2D(0,0),Point2D(1,1)))
+                         Polyline2D(Point2D(-1,0),
+                                    Point2D(0,0),
+                                    Point2D(1,1)))
             
         # two collinear non-adjacent segments
         self.assertEqual(s.union(Segment2D(Point2D(2,2),
@@ -303,8 +313,7 @@ class Test_Segment2D(unittest.TestCase):
         # two collinear overlapping segments
         self.assertEqual(s.union(Segment2D(Point2D(0.5,0.5),
                                            Point2D(2,2))),
-                         Segment2D(Point2D(0,0),
-                                   Point2D(2,2)))
+                         None)
             
         
     def test_vL(self):

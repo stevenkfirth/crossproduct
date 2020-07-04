@@ -197,37 +197,45 @@ class Segment():
         """Returns the union of two segments
         
         :return result:
-            - Segment2D, the union of the two collinear segments if 
+            - DEPRECIATED -- Segment2D, the union of the two collinear segments if 
                 they have a same start or end point
             - Polyline2D, the union of two non-collinear segments if they have 
                 a same start point or end point
             - None, for segments that don't have a union        
         
         """
-        if self.is_collinear(segment):
-            
-            if (self.P0 in segment
-                or self.P1 in segment): # if they overlap
-                
-                line=self.line
-                t_values=[line.calculate_t_from_point(self.P0),
-                          line.calculate_t_from_point(self.P1),
-                          line.calculate_t_from_point(segment.P0),
-                          line.calculate_t_from_point(segment.P1)]
-                return self.__class__(line.calculate_point(min(t_values)),
-                                      line.calculate_point(max(t_values)))
-                
-            else:
-                
-                return None
-            
-        else: # not collinear - look for a polyline union
-            
-            result=self.polyline.union(segment.polyline)
-            if result is None:
-                return None
-            else:
-                return result
+        result=self.polyline.union(segment.polyline)
+        if result is None:
+            return None
+        else:
+            return result
+        
+        
+        
+#        if self.is_collinear(segment):
+#            
+#            if (self.P0 in segment
+#                or self.P1 in segment): # if they overlap
+#                
+#                line=self.line
+#                t_values=[line.calculate_t_from_point(self.P0),
+#                          line.calculate_t_from_point(self.P1),
+#                          line.calculate_t_from_point(segment.P0),
+#                          line.calculate_t_from_point(segment.P1)]
+#                return self.__class__(line.calculate_point(min(t_values)),
+#                                      line.calculate_point(max(t_values)))
+#                
+#            else:
+#                
+#                return None
+#            
+#        else: # not collinear - look for a polyline union
+#            
+#            result=self.polyline.union(segment.polyline)
+#            if result is None:
+#                return None
+#            else:
+#                return result
             
     
     @property

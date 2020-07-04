@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d
 
 from crossproduct import Point2D, Point3D, Segment2D, Segment3D, Points, Segments, \
-    SimplePolyline2D
+    SimplePolyline2D, Polyline2D
 
 
 plot=True
@@ -125,22 +125,113 @@ class Test_Segments(unittest.TestCase):
                           s))
             
         
-    def test_polylines(self):
+    def test_polyline(self):
+        ""
+        # two segment polyline
+        s=Segments(*segments)
+        self.assertEqual(s.polyline,
+                         Polyline2D(Point2D(0,0),
+                                     Point2D(1,0),
+                                     Point2D(1,1)))
+        
+        # three segment polyline
+        s=Segments(Segment2D(Point2D(0,0),
+                             Point2D(1,0)),
+                   Segment2D(Point2D(1,0), 
+                             Point2D(1,1)),
+                   Segment2D(Point2D(1,1), 
+                             Point2D(2,1)))
+        self.assertEqual(s.polyline,
+                         Polyline2D(Point2D(0,0),
+                                    Point2D(1,0),
+                                    Point2D(1,1),
+                                    Point2D(2,1)))
+        
+        # no polyline
+        s=Segments(Segment2D(Point2D(0,0),
+                             Point2D(1,0)),
+                   Segment2D(Point2D(1,1), 
+                             Point2D(2,1)))
+        self.assertEqual(s.polyline,
+                         None)
+        
+        
+    def test_union_polyline(self):
         ""
         s=Segments(*segments)
-        self.assertEqual(s.polylines,
-                         (SimplePolyline2D(Point2D(0,0),
-                                           Point2D(1,0),
-                                           Point2D(1,1)),))
         
-        s.append(Segment2D(Point2D(2,2),
-                           Point2D(3,3)))     
-        self.assertEqual(s.polylines,
-                         (SimplePolyline2D(Point2D(0,0),
-                                           Point2D(1,0),
-                                           Point2D(1,1)), 
-                          SimplePolyline2D(Point2D(2,2),
-                                           Point2D(3,3))))
+        # no union
+        self.assertEqual(s.union_polyline(Polyline2D(Point2D(3,1),
+                                                   Point2D(4,1))),
+                         None)
+        
+        # segment union
+        self.assertEqual(s.union_polyline(Polyline2D(Point2D(1,1),
+                                                   Point2D(1,2))),
+                         (Polyline2D(Point2D(1,0),
+                                     Point2D(1,1),
+                                     Point2D(1,2)), 
+                          Segments(Segment2D(Point2D(0,0), 
+                                             Point2D(1,0)))))
+        
+        # polyline union
+        self.assertEqual(s.union_polyline(Polyline2D(Point2D(1,1),
+                                                   Point2D(2,1))),
+                         (Polyline2D(Point2D(1,0),
+                                     Point2D(1,1),
+                                     Point2D(2,1)), 
+                          Segments(Segment2D(Point2D(0,0), 
+                                             Point2D(1,0)))))
+        
+        
+        
+    def test_union_segment(self):
+        ""
+        s=Segments(*segments)
+        
+        # no union
+        self.assertEqual(s.union_segment(Segment2D(Point2D(3,1),
+                                                   Point2D(4,1))),
+                         None)
+        
+        # segment union
+        self.assertEqual(s.union_segment(Segment2D(Point2D(1,1),
+                                                   Point2D(1,2))),
+                         (Polyline2D(Point2D(1,0),
+                                     Point2D(1,1),
+                                     Point2D(1,2)), 
+                          Segments(Segment2D(Point2D(0,0), 
+                                             Point2D(1,0)))))
+        
+        # polyline union
+        self.assertEqual(s.union_segment(Segment2D(Point2D(1,1),
+                                                   Point2D(2,1))),
+                         (Polyline2D(Point2D(1,0),
+                                     Point2D(1,1),
+                                     Point2D(2,1)), 
+                          Segments(Segment2D(Point2D(0,0), 
+                                             Point2D(1,0)))))
+        
+        
+        
+        
+        
+#    def test_polylines(self):
+#        ""
+#        s=Segments(*segments)
+#        self.assertEqual(s.polylines,
+#                         (SimplePolyline2D(Point2D(0,0),
+#                                           Point2D(1,0),
+#                                           Point2D(1,1)),))
+#        
+#        s.append(Segment2D(Point2D(2,2),
+#                           Point2D(3,3)))     
+#        self.assertEqual(s.polylines,
+#                         (SimplePolyline2D(Point2D(0,0),
+#                                           Point2D(1,0),
+#                                           Point2D(1,1)), 
+#                          SimplePolyline2D(Point2D(2,2),
+#                                           Point2D(3,3))))
         
     
 if __name__=='__main__':

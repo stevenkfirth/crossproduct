@@ -46,7 +46,7 @@ class Points(Sequence):
         :rtype str:
             
         """
-        return 'points(%s)' % ', '.join([str(s) for s in self.points])
+        return 'Points(%s)' % ', '.join([str(s) for s in self.points])
     
     
     def append(self,point,unique=False):

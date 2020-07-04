@@ -4,7 +4,7 @@ import itertools
 
 from .point import Point
 from .segment import Segment, Segment2D, Segment3D
-from .segments import Segments
+
 
 
 class Polyline():
@@ -139,32 +139,7 @@ class Polyline():
         return self.__class__(*points)
     
     
-    def union(self,polyline):
-        """Returns the union of this polyline and another polyline
-        
-        :param polyline SimplePolyline: a polyline
-            - for the union of a polyline and a segment, first convert the segment to a 1-item polyline
-        
-        :return result:
-            - Polyline, the union of the polylines if they have 
-                a same start point or end point
-            - None, for polylines that don't have a union        
-        
-        Note: - this may return a polyline with two adjacent segments that are collinear
-        
-        """
-        
-        
-        if self.points[-1]==polyline.points[0]:
-            return self.__class__(*self.points,*polyline.points[1:])
-        elif self.points[-1]==polyline.points[-1]:
-            return self.__class__(*self.points,*polyline.reverse.points[1:])
-        elif self.points[0]==polyline.points[-1]:
-            return self.__class__(*polyline.points,*self.points[1:])
-        elif self.points[0]==polyline.points[0]:
-            return self.__class__(*polyline.reverse.points,*self.points[1:])
-        else:
-            return None
+    
         
         
     
@@ -209,8 +184,38 @@ class Polyline2D(Polyline):
         :rtype Segments:
         
         """
+        from .segments import Segments
+        
         n=len(self.points)
         return Segments(*[Segment2D(self.points[i],self.points[i+1]) for i in range(n-1)])
+    
+    
+    def union(self,polyline):
+        """Returns the union of this polyline and another polyline
+        
+        :param polyline SimplePolyline: a polyline
+            - for the union of a polyline and a segment, first convert the segment to a 1-item polyline
+        
+        :return result:
+            - Polyline, the union of the polylines if they have 
+                a same start point or end point
+            - None, for polylines that don't have a union        
+        
+        Note: - this may return a polyline with two adjacent segments that are collinear
+        
+        """
+        
+        
+        if self.points[-1]==polyline.points[0]:
+            return Polyline2D(*self.points,*polyline.points[1:])
+        elif self.points[-1]==polyline.points[-1]:
+            return Polyline2D(*self.points,*polyline.reverse.points[1:])
+        elif self.points[0]==polyline.points[-1]:
+            return Polyline2D(*polyline.points,*self.points[1:])
+        elif self.points[0]==polyline.points[0]:
+            return Polyline2D(*polyline.reverse.points,*self.points[1:])
+        else:
+            return None
     
     
     
@@ -251,11 +256,38 @@ class Polyline3D(Polyline):
         :rtype Segments:
         
         """
+        from .segments import Segments
+        
         n=len(self.points)
         return Segments(*[Segment3D(self.points[i],self.points[i+1]) for i in range(n-1)])
     
     
-    
+    def union(self,polyline):
+        """Returns the union of this polyline and another polyline
+        
+        :param polyline SimplePolyline: a polyline
+            - for the union of a polyline and a segment, first convert the segment to a 1-item polyline
+        
+        :return result:
+            - Polyline, the union of the polylines if they have 
+                a same start point or end point
+            - None, for polylines that don't have a union        
+        
+        Note: - this may return a polyline with two adjacent segments that are collinear
+        
+        """
+        
+        
+        if self.points[-1]==polyline.points[0]:
+            return Polyline3D(*self.points,*polyline.points[1:])
+        elif self.points[-1]==polyline.points[-1]:
+            return Polyline3D(*self.points,*polyline.reverse.points[1:])
+        elif self.points[0]==polyline.points[-1]:
+            return Polyline3D(*polyline.points,*self.points[1:])
+        elif self.points[0]==polyline.points[0]:
+            return Polyline3D(*polyline.reverse.points,*self.points[1:])
+        else:
+            return None
     
     
     

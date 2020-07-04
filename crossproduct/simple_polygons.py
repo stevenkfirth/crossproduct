@@ -23,6 +23,15 @@ class SimplePolygons(Sequence):
         self.simple_polygons=list(simple_polygons)
         
         
+    def __eq__(self,obj):
+        """
+        """
+        if isinstance(obj,SimplePolygons) and self.simple_polygons==obj.simple_polygons:
+            return True
+        else:
+            return False
+        
+        
     def __getitem__(self,i):
         """
         """

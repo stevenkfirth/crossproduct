@@ -14,6 +14,7 @@ from .simple_convex_polygon import SimpleConvexPolygon2D, SimpleConvexPolygon3D
 from .simple_extruded_polyhedron import SimpleExtrudedPolyhedron3D
 from .simple_polyline import SimplePolyline2D, SimplePolyline3D
 from .simple_polygon import SimplePolygon2D, SimplePolygon3D
+from .simple_polygons import SimplePolygons
 from .simple_polyhedron import SimplePolyhedron3D
 from .quadrilateral import Quadrilateral2D, Quadrilateral3D
 from .segment import Segment2D, Segment3D
