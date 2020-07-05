@@ -51,6 +51,14 @@ class Polyline():
     
     
     @property
+    def has_codirectional_segments(self):
+        """Test to see if the polyline has any codirectional adjacent segments
+        
+        
+        """
+    
+    
+    @property
     def merge_codirectional_segments(self):
         """Returns a polyline with all codirectional adjacent segments merged
         
