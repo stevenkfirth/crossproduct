@@ -5,7 +5,9 @@ import bspy.geometry
 from .halfline import Halfline3D
 from .line import Line3D
 from .point import Point3D
+from .points import Points
 from .segment import Segment3D
+from .segments import Segments
 from .vector import Vector3D
 
 SMALL_NUM=0.00000001
@@ -209,6 +211,28 @@ class Plane3D():
                 return None
             
             
+    def intersect_segments(self,segments):
+        """Returns the intersection of this plane and a Segment sequence
+        
+        :param segments Segments: a sequence of 3D segments 
+        
+        :return result: (Points,Segments)
+            - points which exist in segments are not returned
+        
+        """
+        ipts=Points()
+        isegments=Segments()
+        for s in segments:
+            result=self.intersect_segment(s)
+            if isinstance(result,Point3D):
+                ipts.append(result,unique=True)
+            elif isinstance(result,Segment3D):
+                isegments.append(result,unique=True)
+        ipts.remove_points_in_segments(isegments)
+        return ipts,isegments
+        
+            
+            
     def intersect_plane(self,plane):
         """Returns the intersection of this plane and another plane
         
@@ -298,11 +322,11 @@ class Plane3D():
         return Point3D(x,y,z)
     
     
-    def point_xz(self,x,z):
+    def point_zx(self,z,x):
         """Returns a point on the plane given a x and y coordinates
         
         """
-        y=self.P0.y-(self.N.x*(x-self.P0.x)+self.N.z*(z-self.P0.z))/self.N.y
+        y=self.P0.y-(self.N.z*(z-self.P0.z)+self.N.x*(x-self.P0.x))/self.N.y
         return Point3D(x,y,z)
     
     

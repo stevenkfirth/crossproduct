@@ -3,7 +3,7 @@
 from .line import Line3D
 from .point import Point, Point2D, Point3D
 from .simple_convex_polygon import SimpleConvexPolygon, SimpleConvexPolygon2D, SimpleConvexPolygon3D
-from .segment import Segment3D
+from .segment import Segment, Segment3D
 from .vector import Vector, Vector2D, Vector3D
 
 
@@ -34,6 +34,12 @@ class Triangle():
         else:
             raise TypeError
     
+        # orientate counterclockwise if a 2D triangle
+        if isinstance(P0,Point2D):
+            if self.orientation<0:
+                self.v=w
+                self.w=v
+                
 
     @property
     def P1(self):
@@ -160,6 +166,13 @@ class Triangle2D(Triangle,SimpleConvexPolygon2D):
 
         """
         return abs(self.signed_area)
+    
+    
+    def intersect_triangle(self,triangle):
+        """
+        
+        """
+        return self.intersect_simple_convex_polygon(triangle)
     
     
     @property
@@ -331,37 +344,65 @@ class Triangle3D(Triangle,SimpleConvexPolygon3D):
         
         """
         if self.plane==triangle.plane:
-            ## to do - a 2D intersection
-            raise NotImplementedError
-        
-        iresult1=self.intersect_plane(triangle.plane)
-        if iresult1 is None:
-            return None
-        
-        iresult2=triangle.intersect_plane(self.plane)
-        if iresult2 is None:
-            return None
-        
-        if isinstance(iresult1,Point3D):
-            if iresult1 in triangle:
-                return iresult1
-            else:
-                return None
             
-        elif isinstance(iresult2,Point3D):
-            if iresult2 in self:
-                return iresult2
-            else:
-                return None
-        
-        elif isinstance(iresult1,Segment3D) and isinstance(iresult2,Segment3D):
-        
-                return iresult1.intersect_segment(iresult2)
+            return self._intersect_simple_convex_polygon_coplanar(triangle)
         
         else:
-            raise Exception()     
+        
+            iresult1=self.intersect_plane(triangle.plane)
+            if iresult1 is None:
+                return None
+            
+            iresult2=triangle.intersect_plane(self.plane)
+            if iresult2 is None:
+                return None
+            
+            if isinstance(iresult1,Point3D):
+                if iresult1 in triangle:
+                    return iresult1 
+                else:
+                    return None
+                
+            elif isinstance(iresult2,Point3D):
+                if iresult2 in self:
+                    return iresult2
+                else:
+                    return None
+            
+            elif isinstance(iresult1,Segment3D) and isinstance(iresult2,Segment3D):
+            
+                    return iresult1.intersect_segment(iresult2)
+            
+            else:
+                raise Exception()     
     
-    
+    @property
+    def project_2D(self):
+        """Projects the 3D triangle to a 2D triangle
+        
+        :return (index,triangle): a tuple of results
+            - index is the index of the coordinate which is ignored in the projection
+                - 0 for x
+                - 1 for y
+                - 2 for z
+            - triangle is the 2D projected triangle
+        :rtype tuple:
+            
+        """
+        absolute_coords=[abs(x) for x in self.plane.N.coordinates]
+        i=absolute_coords.index(max(absolute_coords)) # the coordinate to ignore for projection
+        
+        if i==0:
+            points=[Point2D(pt.y,pt.z) for pt in self.points]
+        elif i==1:
+            points=[Point2D(pt.z,pt.x) for pt in self.points]
+        elif i==2:
+            points=[Point2D(pt.x,pt.y) for pt in self.points]
+        else:
+            raise Exception
+                    
+        pg=Triangle2D(points[0],points[1]-points[0],points[2]-points[0])
+        return i, pg
    
     
     

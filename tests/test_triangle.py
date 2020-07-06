@@ -2,7 +2,9 @@
 
 import unittest
 from crossproduct import Point2D, Point3D, Vector2D, Vector3D, \
-    Line2D, Line3D, Triangle2D, Triangle3D, Plane3D, Segment2D, Segment3D
+    Line2D, Line3D, Triangle2D, Triangle3D, Plane3D, Segment2D, Segment3D, \
+    SimpleConvexPolygon2D, SimpleConvexPolygon3D, Points, Segments
+
 
 class Test_Triangle2D(unittest.TestCase):
     """
@@ -34,21 +36,80 @@ class Test_Triangle2D(unittest.TestCase):
         
         
     def test_intersect_segment(self):
-        
-        tr=Triangle2D(Point2D(1,1), Vector2D(1,1), Vector2D(-1,1))
-        s=Segment2D(Point2D(1.5,0), Point2D(1.5,10))
-        
-#        print(tr)
-#        print(s)
-#        print(s.vL)
-#        print(tr.intersect_segment(s))
-        
-        
-    def test_intersect_line(self):
         ""
-        tr=Triangle2D(Point2D(0,0), Vector2D(1,1), Vector2D(0,2))
-        l=Line2D(Point2D(1.5,0), Vector2D(0,1))
-#        print(tr.intersect_line(l))
+        # ccw triangle
+        tr=Triangle2D(P0,v,w)
+        s=Segment2D(Point2D(0,1), Point2D(0.5,0))
+        self.assertEqual(tr.intersect_segment(s),
+                         Segment2D(Point2D(0.25,0.5), 
+                                   Point2D(0.5,0.0)))
+        
+        # cw triangle
+        tr1=Triangle2D(Point2D(0,1), Vector2D(1,0), Vector2D(0.5,-1))
+        s=Segment2D(Point2D(0,0), Point2D(0.5,1))
+        self.assertEqual(tr1.intersect_segment(s),
+                         Segment2D(Point2D(0.25,0.5), Point2D(0.5,1.0)))
+        
+        
+    def test_intersect_segments(self):
+        ""
+        tr=Triangle2D(P0,v,w)
+        tr1=Triangle2D(Point2D(0,1), Vector2D(1,0), Vector2D(0.5,-1))
+        
+        self.assertEqual(tr.intersect_segments(tr1.polyline.segments),
+                         (Points(Point2D(0.5,1.0)), 
+                          Segments(Segment2D(Point2D(0.25,0.5), 
+                                             Point2D(0.5,0.0)), 
+                                   Segment2D(Point2D(0.5,0.0), 
+                                             Point2D(0.75,0.5)))))
+        
+        self.assertEqual(tr1.intersect_segments(tr.polyline.segments),
+                         (Points(Point2D(0.5,0.0)), 
+                          Segments(Segment2D(Point2D(0.75,0.5), 
+                                             Point2D(0.5,1.0)), 
+                                   Segment2D(Point2D(0.5,1.0), 
+                                             Point2D(0.25,0.5)))))
+        
+            
+    def test_intersect_triangle(self):
+        ""
+        tr=Triangle2D(P0,v,w)
+        
+        # no intersection
+        tr1=Triangle2D(Point2D(0,10), Vector2D(1,10), Vector2D(0.5,10))
+        self.assertEqual(tr.intersect_triangle(tr1),
+                         None)
+        
+        # point intersection
+        tr1=Triangle2D(Point2D(1,0), Vector2D(2,0), Vector2D(1.5,1))
+        self.assertEqual(tr.intersect_triangle(tr1),
+                         Point2D(1,0))
+        
+        # segment intersection
+        tr1=Triangle2D(Point2D(0,0), Vector2D(1,0), Vector2D(0.5,-1))
+        self.assertEqual(tr.intersect_triangle(tr1),
+                         Segment2D(Point2D(0,0),
+                                   Point2D(1,0)))
+        
+        # polygon intersetion - self
+        self.assertEqual(tr.intersect_triangle(tr),
+                         tr)
+        
+        # polygon intersetion - overlap - result is a triangle
+        tr1=Triangle2D(Point2D(0.5,0), Vector2D(1,0), Vector2D(0.5,1))
+        self.assertEqual(tr.intersect_triangle(tr1),
+                         SimpleConvexPolygon2D(Point2D(0.75,0.5),
+                                               Point2D(0.5,0.0),
+                                               Point2D(1.0,0.0)))
+        
+        # polygon intersetion - overlap - result is a parallelogram
+        tr1=Triangle2D(Point2D(0,1), Vector2D(1,0), Vector2D(0.5,-1))
+        self.assertEqual(tr.intersect_triangle(tr1),
+                         SimpleConvexPolygon2D(Point2D(0.25,0.5),
+                                               Point2D(0.5,0.0),
+                                               Point2D(0.75,0.5),
+                                               Point2D(0.5,1.0)))
+        
         
     def test_orientation(self):
         ""
@@ -56,7 +117,7 @@ class Test_Triangle2D(unittest.TestCase):
         self.assertTrue(tr.orientation>0)
     
         tr=Triangle2D(P0,w,v) #cw
-        self.assertTrue(tr.orientation<0)
+        self.assertTrue(tr.orientation>0) # triangle is reversed to be ccw
         
         
     def test_P1(self):
@@ -86,7 +147,7 @@ class Test_Triangle2D(unittest.TestCase):
         self.assertEqual(tr.signed_area,0.5)
         
         tr=Triangle2D(P0,w,v) #cw
-        self.assertEqual(tr.signed_area,-0.5)
+        self.assertEqual(tr.signed_area,0.5) # as the clockwise triangle is automatically reorientated as counterclockwise
     
     
     
@@ -120,11 +181,6 @@ class Test_Triangle3D(unittest.TestCase):
         self.assertFalse(P0+tr.plane.N in tr)
         
         self.assertTrue(Point2D(1,1) in Triangle2D(Point2D(0,0), Vector2D(2,0), Vector2D(0,2)))
-
-        
-        #segment
-        
-        #polygon
         
         
     def test___repr__(self):
@@ -143,28 +199,25 @@ class Test_Triangle3D(unittest.TestCase):
         self.assertEqual(tr.area,0.5)
         
     
-    def test_intersect_halfline(self):
-        ""
-        
-        
-    def test_intersect_line(self):
-        ""
-        tr=Triangle3D(P0,v,w) #ccw
-        
-        # skew triangle plane and line, point intersection
-        self.assertEqual(tr.intersect_line(Line3D(P0,
-                                                  tr.plane.N)),
-                         P0)
-        
-        # skew triangle plane and line, no intersection
-        self.assertEqual(tr.intersect_line(Line3D(P0-v,
-                                                  tr.plane.N)),
-                         None)
-        
-        # parallel, non-coplanar triangle plane and line
-        self.assertEqual(tr.intersect_line(Line3D(P0+tr.plane.N,
-                                                  v)),
-                         None)
+#        
+#    def test_intersect_line(self):
+#        ""
+#        tr=Triangle3D(P0,v,w) #ccw
+#        
+#        # skew triangle plane and line, point intersection
+#        self.assertEqual(tr.intersect_line(Line3D(P0,
+#                                                  tr.plane.N)),
+#                         P0)
+#        
+#        # skew triangle plane and line, no intersection
+#        self.assertEqual(tr.intersect_line(Line3D(P0-v,
+#                                                  tr.plane.N)),
+#                         None)
+#        
+#        # parallel, non-coplanar triangle plane and line
+#        self.assertEqual(tr.intersect_line(Line3D(P0+tr.plane.N,
+#                                                  v)),
+#                         None)
     
 
     def test_intersect_plane(self):
@@ -208,14 +261,13 @@ class Test_Triangle3D(unittest.TestCase):
             
             # ... could test other variations here...
         
-    
-        
-    def test_intersect_segment(self):
-        ""
-        
         
     def test_intersect_triangle(self):
-        ""
+        """
+        P0=Point3D(0,0,0)
+        v=Vector3D(1,0,0)
+        w=Vector3D(0.5,1,0)
+        """
         tr=Triangle3D(P0,v,w) #ccw
         
         # parallel triangle planes
@@ -250,6 +302,41 @@ class Test_Triangle3D(unittest.TestCase):
                                                           Vector3D(-1,0,1),
                                                           Vector3D(1,0,1))),
                          None)
+            
+        # coplanar - no intersection
+        tr1=Triangle3D(Point3D(0,10,0), Vector3D(1,10,0), Vector3D(0.5,10,0))
+        self.assertEqual(tr.intersect_triangle(tr1),
+                         None)
+        
+        # coplanar - point intersection
+        tr1=Triangle3D(Point3D(1,0,0), Vector3D(2,0,0), Vector3D(1.5,1,0))
+        self.assertEqual(tr.intersect_triangle(tr1),
+                         Point3D(1,0,0))
+        
+        # coplanar - segment intersection
+        tr1=Triangle3D(Point3D(0,0,0), Vector3D(1,0,0), Vector3D(0.5,-1,0))
+        self.assertEqual(tr.intersect_triangle(tr1),
+                         Segment3D(Point3D(0,0,0),
+                                   Point3D(1,0,0)))
+        
+        # coplanar - polygon intersetion - self
+        self.assertEqual(tr.intersect_triangle(tr),
+                         tr)
+        
+        # coplanar - polygon intersetion - overlap - result is a triangle
+        tr1=Triangle3D(Point3D(0.5,0,0), Vector3D(1,0,0), Vector3D(0.5,1,0))
+        self.assertEqual(tr.intersect_triangle(tr1),
+                         SimpleConvexPolygon3D(Point3D(0.75,0.5,0),
+                                               Point3D(0.5,0.0,0),
+                                               Point3D(1.0,0.0,0)))
+        
+        # coplanar - polygon intersetion - overlap - result is a parallelogram
+        tr1=Triangle3D(Point3D(0,1,0), Vector3D(1,0,0), Vector3D(0.5,-1,0))
+        self.assertEqual(tr.intersect_triangle(tr1),
+                         SimpleConvexPolygon3D(Point3D(0.25,0.5,0),
+                                               Point3D(0.5,0.0,0),
+                                               Point3D(0.75,0.5,0),
+                                               Point3D(0.5,1.0,0)))
         
                 
     def test_P1(self):
