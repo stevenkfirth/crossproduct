@@ -5,6 +5,7 @@ from .point import Point, Point2D, Point3D
 from .simple_convex_polygon import SimpleConvexPolygon, SimpleConvexPolygon2D, SimpleConvexPolygon3D
 from .segment import Segment, Segment3D
 from .vector import Vector, Vector2D, Vector3D
+from .triangles import Triangles
 
 
 class Triangle():
@@ -39,6 +40,8 @@ class Triangle():
             if self.orientation<0:
                 self.v=w
                 self.w=v
+                
+        #self.triangles=self.triangluate
                 
 
     @property
@@ -103,6 +106,12 @@ class Triangle():
         return self.__class__(points[0],
                               points[1]-points[0],
                               points[2]-points[0])
+
+
+    @property
+    def triangles(self):
+        return Triangles(self)
+
 
 
 class Triangle2D(Triangle,SimpleConvexPolygon2D):
@@ -201,6 +210,35 @@ class Triangle2D(Triangle,SimpleConvexPolygon2D):
         return 0.5*(self.v.x*self.w.y-self.w.x*self.v.y)
     
     
+    def union_triangle_edge_intersection(self,triangle):
+        """Returns the union of two triangles that share edge intersection
+        
+        :return result:
+        :rtype SimplePolygon or None:
+        
+        """
+        
+        # difference_segments instead of intersect segments ??
+        
+        ipts1,isegments1=self.intersect_segments(triangle.polyline.segments)
+        print(ipts1,isegments1)
+        
+        if len(ipts1)==0 and len(isegments1)==0: # no union, no intersection
+            return None
+        
+        elif len(ipts1)==1 and len(isegments1)==0: # no union, point intersection
+            return None
+        
+        elif len(ipts1)==0 and len(isegments)==1: # segment intersection
+            
+            if isegments1[0] in self.polyline.segments: # exact segment
+                
+        
+        
+        else:
+            raise Exception
+        
+        
     
 class Triangle3D(Triangle,SimpleConvexPolygon3D):
     """"A 3D Triangle
@@ -341,6 +379,7 @@ class Triangle3D(Triangle,SimpleConvexPolygon3D):
             - a point: 
                 - for coplanar 3D triangles which intersect at one point
                 - for non-coplanar 3D triangles which intersect at one point
+            -a simple convex polygon
         
         """
         if self.plane==triangle.plane:

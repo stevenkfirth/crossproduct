@@ -5,6 +5,7 @@ from .segment import Segment
 from .point import Point
 from .points import Points
 from .simple_polygon import SimplePolygon
+from .segments import Segments
 
 
 class SimplePolygons(Sequence):
@@ -51,8 +52,19 @@ class SimplePolygons(Sequence):
         :rtype str:
             
         """
-        return 'SimplePolygons(%s)' % ', '.join([str(pg) for g in self.simple_polygons])
+        return 'SimplePolygons(%s)' % ', '.join([str(pg) for pg in self.simple_polygons])
     
+    
+    @property
+    def adjacent_polygons(self):
+        """Returns a list of SimplePolygon sequences containing polygons that are adjacent to each other
+        
+        
+        """
+        
+        
+        
+        
     
     def append(self,simple_polygons,unique=False):
         """
@@ -67,8 +79,17 @@ class SimplePolygons(Sequence):
         else:
             raise TypeError
     
+    @property
+    def segments(self):
+        """Returns a Segments sequence of all the segments of the polygons
+        """
+        segments=Segments()
+        for pg in self:
+            for s in pg.polyline.segments:
+                segments.append(s,unique=True)
+        return segments
     
     
-    
-    
+    def union(self):
+        ""
     

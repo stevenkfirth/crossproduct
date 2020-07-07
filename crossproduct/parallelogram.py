@@ -33,7 +33,10 @@ class Parallelogram():
             self.w=w
         else:
             raise TypeError
-
+            
+        self.triangles=self.triangulate
+        
+        
 
     @property
     def P1(self):

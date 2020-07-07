@@ -33,23 +33,19 @@ class SimplePolygon():
         
         self.points=tuple(points)
         
+        # merge any codirectional adjacent segments
+        pl1=self.polyline
+        pl2=pl1.merge_codirectional_segments
+        if len(pl2.points)<len(pl1.points):
+            self.points=pl2.points[:-1]
+        
         # check for intersection
-        if self.polyline.is_intersecting:
+        if pl2.is_intersecting:
             return ValueError('A simple polygon should not self intersect')
-        
-        # check for codirectional adjacent segments
-        pl2=self.polyline.merge_codirectional_segments
-        if len(pl2.points)<len(self.points):
-            self.points=pl2.points
-        
+                
+        # triangulate
         self.triangles=self.triangulate
         
-        
-        # converting to a polyline checks for point types and adjacent segment collinearity
-        #pl=SimplePolyline(*points,points[0])
-        
-        #self.points=tuple(pl.points[:-1])
-    
         
         
     
@@ -91,143 +87,172 @@ class SimplePolygon():
         return tuple(list(self.points) + [self.points[0]])
     
     
-    def _intersect_results(self,ipts,isegments):
-        """Sorts and cleans the intersection results
+    def intersect_simple_polygon(self,simple_polygon):
+        ""
+        ipts,isegments,isimplepolygons=self.triangles.intersect_triangles(simple_polygon.triangles)
         
-        :param ipts list: a list of intersection points
-        :param isegments list: a list of intersection segments
+        return ipts,isegments,isimplepolygons
         
-        :return result: a tuple of (points,segments)
-            - if a point exists in a segment, then it is removed
-            - if a union of two segments exist, then this is added and the individual segments removed
-        :rtype tuple:
+    
+    def is_adjacent(self,simple_polygon):
+        """Test to see if this simple polygon is adjacent to another simple polygon
+        
+        :return result:
+            - returns True if a segment from one polygon contains a segment from another
+        :rtype true:
         
         """
-        
-        # order segments so P0 < P1
-        isegments=[s.order for s in isegments]     
-                
-        # sort segments by P0 and P1
-        d={(s.P0.coordinates,s.P1.coordinates):s for s in isegments}
-        isegments=[d[c] for c in sorted(d)]
-        
-        # join segments if applicable
-        l=isegments
-        n=None
-        while not len(l)==n:
-            n=len(l)
-            for i in range(len(l)-1):
-                u=l[i].union(l[i+1])
-                if u and isinstance(u,Segment):
-                    l[i]=u
-                    l.pop(i+1)
-                    break
-        isegments=l
-                
-        # remove points which exist in the segments
-        l1=[]
-        for ipt in ipts:
-            flag=True
-            for s in l:
-                if ipt in s:
-                    flag=False
-                    break
-            if flag:
-                l1.append(ipt)
-        ipts=l1
-        
-        return ipts, isegments
+        for s in self.polyline.segments:
+            for s1 in simple_polygon.polyline.segments:
+                if isinstance(s.intersect_segment(s1),Segment):
+                    return True
+        return False
     
     
-    def intersect_halfline(self,halfline):
-        """Intersection of this polygon with a halfline
+    def union_simple_polygon(self,simple_polygon):
+        ""
+        ipts,isegments,isimplepolygons=self.triangles.union_triangles(simple_polygon.triangles)
         
-        :param halfline Halfline: a halfline 
         
-        :return tuple: (list of points, list of segments) or None
-        
-                    
-        """
-        ipts=Points()
-        isegments=Segments()
-        for tri in self.triangles:
-            
-            #print(tri)
-            #print(line)
-            result_pts,result_segments=tri.intersect_halfline(halfline)
-            for x in result_pts:
-                ipts.append(x,unique=True)
-            for x in result_segments:
-                isegments.append(x,unique=True)
-            
-        isegments.self_union
-        ipts.remove_points_in_segments(isegments)
-            
-#            print(result)
+    
+#    
+#    def _intersect_results(self,ipts,isegments):
+#        """Sorts and cleans the intersection results
+#        
+#        :param ipts list: a list of intersection points
+#        :param isegments list: a list of intersection segments
+#        
+#        :return result: a tuple of (points,segments)
+#            - if a point exists in a segment, then it is removed
+#            - if a union of two segments exist, then this is added and the individual segments removed
+#        :rtype tuple:
+#        
+#        """
+#        
+#        # order segments so P0 < P1
+#        isegments=[s.order for s in isegments]     
+#                
+#        # sort segments by P0 and P1
+#        d={(s.P0.coordinates,s.P1.coordinates):s for s in isegments}
+#        isegments=[d[c] for c in sorted(d)]
+#        
+#        # join segments if applicable
+#        l=isegments
+#        n=None
+#        while not len(l)==n:
+#            n=len(l)
+#            for i in range(len(l)-1):
+#                u=l[i].union(l[i+1])
+#                if u and isinstance(u,Segment):
+#                    l[i]=u
+#                    l.pop(i+1)
+#                    break
+#        isegments=l
+#                
+#        # remove points which exist in the segments
+#        l1=[]
+#        for ipt in ipts:
+#            flag=True
+#            for s in l:
+#                if ipt in s:
+#                    flag=False
+#                    break
+#            if flag:
+#                l1.append(ipt)
+#        ipts=l1
+#        
+#        return ipts, isegments
+#    
+#    
+#    def intersect_halfline(self,halfline):
+#        """Intersection of this polygon with a halfline
+#        
+#        :param halfline Halfline: a halfline 
+#        
+#        :return tuple: (list of points, list of segments) or None
+#        
+#                    
+#        """
+#        ipts=Points()
+#        isegments=Segments()
+#        for tri in self.triangles:
+#            
+#            #print(tri)
+#            #print(line)
+#            result_pts,result_segments=tri.intersect_halfline(halfline)
+#            for x in result_pts:
+#                ipts.append(x,unique=True)
+#            for x in result_segments:
+#                isegments.append(x,unique=True)
+#            
+#        isegments.self_union
+#        ipts.remove_points_in_segments(isegments)
+#            
+##            print(result)
+##            if isinstance(result,Point):
+##                if not result in ipts:
+##                    ipts.append(result)
+##            elif isinstance(result,Segment):
+##                isegments.append(result)
+#                
+#        print(ipts,isegments)
+#        #return self._intersect_results(ipts,isegments)
+#    
+#    
+#    def intersect_line(self,line):
+#        """Intersection of this polygon with a line
+#        
+#        :param line Line: a line 
+#        
+#        :return tuple: (list of points, list of segments) or None
+#                    
+#        """
+#        ipts=[]
+#        isegments=[]
+#        for tri in self.triangles:
+#            
+#            #print(tri)
+#            #print(line)
+#            result=tri.intersect_line(line)
+#            #print(result)
 #            if isinstance(result,Point):
 #                if not result in ipts:
 #                    ipts.append(result)
 #            elif isinstance(result,Segment):
 #                isegments.append(result)
-                
-        print(ipts,isegments)
-        #return self._intersect_results(ipts,isegments)
-    
-    
-    def intersect_line(self,line):
-        """Intersection of this polygon with a line
-        
-        :param line Line: a line 
-        
-        :return tuple: (list of points, list of segments) or None
-                    
-        """
-        ipts=[]
-        isegments=[]
-        for tri in self.triangles:
-            
-            #print(tri)
-            #print(line)
-            result=tri.intersect_line(line)
-            #print(result)
-            if isinstance(result,Point):
-                if not result in ipts:
-                    ipts.append(result)
-            elif isinstance(result,Segment):
-                isegments.append(result)
-                
-        #print(isegments)
-        return self._intersect_results(ipts,isegments)
-    
-        
-    def intersect_segment(self,segment):
-        """Intersection of this polygon with a segment
-        
-        :param segment Segment: a segment 
-        
-        :return tuple: (list of points, list of segments) or None
-                    
-        """
-        ipts=[]
-        isegments=[]
-        for tri in self.triangles:
-            
-            #print('tri',tri)
-            #print('segment',segment)
-            result=tri.intersect_segment(segment)
-            #print('result',result)
-            if isinstance(result,Point):
-                if not result in ipts:
-                    ipts.append(result)
-            elif isinstance(result,Segment):
-                isegments.append(result)
-                
-        #print('ipts',ipts)
-        #print('isegments',isegments)
-        return self._intersect_results(ipts,isegments)
-    
-    
-    
+#                
+#        #print(isegments)
+#        return self._intersect_results(ipts,isegments)
+#    
+#        
+#    def intersect_segment(self,segment):
+#        """Intersection of this polygon with a segment
+#        
+#        :param segment Segment: a segment 
+#        
+#        :return tuple: (list of points, list of segments) or None
+#                    
+#        """
+#        ipts=[]
+#        isegments=[]
+#        for tri in self.triangles:
+#            
+#            #print('tri',tri)
+#            #print('segment',segment)
+#            result=tri.intersect_segment(segment)
+#            #print('result',result)
+#            if isinstance(result,Point):
+#                if not result in ipts:
+#                    ipts.append(result)
+#            elif isinstance(result,Segment):
+#                isegments.append(result)
+#                
+#        #print('ipts',ipts)
+#        #print('isegments',isegments)
+#        return self._intersect_results(ipts,isegments)
+#    
+#    
+#    
         
     
 #    def intersect_polygon(self,polygon):
@@ -263,77 +288,77 @@ class SimplePolygon():
 #        return self._intersect_results(ipts,isegments)
         
         
-    def union_polygon(self,polygon):
-        """Returns the union of this polygon with another polygon
-        
-        :param polygon SimplePolygon: a polygon 
-        
-        :return result: one of
-            - tuple -> (list of points, list of segments, list of polygons)
-            - None        
-        
-        """
-        if self==polygon:
-            
-            return self
-        
-        else:
-        
-            result=self.intersect_polygon(polygon)
-            
-            result2=polygon.intersect_polygon(self)
-            
-            ipts=result[0]
-            for p in result2[0]:
-                if not p in ipts:
-                    ipts.append(p)
-                    
-            isegments=result[1]
-            for s in result2[1]:
-                if not s in isegments:
-                    isegments.append(s)
-            
-            # do any of the segments form polylines?
-            test_polylines=[s.polyline for s in isegments]
-            n=len(test_polylines)
-            
-            if n>1:
-                
-                i=0
-                while True:
-                    j=i+1
-                    test_polyline=test_polylines[i]
-                    while True:
-                        u=test_polyline.union(test_polylines[j])
-                        #print('u',u)
-                        if u is None:
-                            j+=1
-                        else:
-                            test_polylines[i]=u
-                            test_polylines.pop(j)
-                            break
-                        if j>=n:
-                            i+=1
-                            break
-                    n=len(test_polylines)
-                    #print(test_polylines)
-                    #print(i,n)
-                    if i>=n-1:
-                        break
-            
-             # do any of the polylines form polygons?
-            isegments=[]
-            ipolygons=[]
-            for pl in test_polylines:
-                if pl.points[0]==pl.points[-1]:
-                    polygon=self.__class__(*pl.points[:-1])
-                    ipolygons.append(polygon)
-                else:
-                    isegments+=pl.segments
-            
-            
-            return tuple(ipts), tuple(isegments), tuple(ipolygons)
-    
+#    def union_polygon(self,polygon):
+#        """Returns the union of this polygon with another polygon
+#        
+#        :param polygon SimplePolygon: a polygon 
+#        
+#        :return result: one of
+#            - tuple -> (list of points, list of segments, list of polygons)
+#            - None        
+#        
+#        """
+#        if self==polygon:
+#            
+#            return self
+#        
+#        else:
+#        
+#            result=self.intersect_polygon(polygon)
+#            
+#            result2=polygon.intersect_polygon(self)
+#            
+#            ipts=result[0]
+#            for p in result2[0]:
+#                if not p in ipts:
+#                    ipts.append(p)
+#                    
+#            isegments=result[1]
+#            for s in result2[1]:
+#                if not s in isegments:
+#                    isegments.append(s)
+#            
+#            # do any of the segments form polylines?
+#            test_polylines=[s.polyline for s in isegments]
+#            n=len(test_polylines)
+#            
+#            if n>1:
+#                
+#                i=0
+#                while True:
+#                    j=i+1
+#                    test_polyline=test_polylines[i]
+#                    while True:
+#                        u=test_polyline.union(test_polylines[j])
+#                        #print('u',u)
+#                        if u is None:
+#                            j+=1
+#                        else:
+#                            test_polylines[i]=u
+#                            test_polylines.pop(j)
+#                            break
+#                        if j>=n:
+#                            i+=1
+#                            break
+#                    n=len(test_polylines)
+#                    #print(test_polylines)
+#                    #print(i,n)
+#                    if i>=n-1:
+#                        break
+#            
+#             # do any of the polylines form polygons?
+#            isegments=[]
+#            ipolygons=[]
+#            for pl in test_polylines:
+#                if pl.points[0]==pl.points[-1]:
+#                    polygon=self.__class__(*pl.points[:-1])
+#                    ipolygons.append(polygon)
+#                else:
+#                    isegments+=pl.segments
+#            
+#            
+#            return tuple(ipts), tuple(isegments), tuple(ipolygons)
+#    
         
     
     def next_index(self,i):
@@ -426,7 +451,7 @@ class SimplePolygon():
     
     @property
     def triangulate(self):
-        """Returns a list of triangles which have the same overall shape as the polygon
+        """Returns a Triangles sequence of triangles which have the same overall shape as the polygon
         
         
         :return result: a list of Triangle2D instances
@@ -434,6 +459,8 @@ class SimplePolygon():
         
         
         """
+        from .triangles import Triangles
+        
         if isinstance(self,SimplePolygon2D):
             from .triangle import Triangle2D as t
         elif isinstance(self,SimplePolygon3D):
@@ -497,7 +524,7 @@ class SimplePolygon():
                 break
                 
     
-        return result
+        return Triangles(*result)
        
 
 class SimplePolygon2D(SimplePolygon):

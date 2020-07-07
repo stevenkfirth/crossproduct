@@ -39,6 +39,8 @@ class Quadrilateral():
         else:
             raise TypeError
             
+        self.triangles=self.triangulate
+        
     
     @property
     def points(self):

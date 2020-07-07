@@ -3,9 +3,12 @@
 
 from collections.abc import Sequence
 from .segment import Segment
+from .segments import Segments
 from .point import Point
 from .points import Points
-#from .simple_polygons import SimplePolygons
+from .simple_polygons import SimplePolygons
+from .simple_convex_polygon import SimpleConvexPolygon
+#from .triangle import Triangle
 
 
 class Triangles(Sequence):
@@ -16,6 +19,10 @@ class Triangles(Sequence):
     def __init__(self,*triangles):
         """
         """
+    
+#        for tr in triangles:
+#            if not isinstance(tr,Triangle):
+#                raise TypeError
     
         self.triangles=list(triangles)
         
@@ -48,16 +55,57 @@ class Triangles(Sequence):
         :rtype str:
             
         """
-        return 'Truangles(%s)' % ', '.join([str(s) for s in self.triangles])
+        return 'Triangles(%s)' % ', '.join([str(s) for s in self.triangles])
     
     
-    def intersect_triangle(self):
+    def intersect_simple_convex_polygon(self):
+        """
+        """
+            
+    
+    def intersect_triangle(self,triangle):
         """Returns the intersection of this Triangles sequence with another triangle
         """
+        ipts=Points()
+        isegments=Segments()
+        isimplepolygons=SimplePolygons()
         
-    def intersect_triangles(self):
+        for tr in self:
+            result=tr.intersect_triangle(triangle) # returns None, Point, Segment, SimpleConvexPolygon
+            if isinstance(result,Point):
+                ipts.append(result,unique=True)
+            elif isinstance(result,Segment):
+                isegments.append(result,unique=True)
+            elif isinstance(result,SimpleConvexPolygon):
+                isimplepolygons.append(result)
+                
+        isegments.remove_segments_in_polygons(isimplepolygons)
+        ipts.remove_points_in_segments(isegments)
+                
+        return ipts, isegments, isimplepolygons
+        
+        
+    def intersect_triangles(self,triangles):
         """Returns the intersection of this Triangles sequence with another triangle sequence
         """
+        ipts=Points()
+        isegments=Segments()
+        isimplepolygons=SimplePolygons()
+        
+        for tr in triangles:
+            result=self.intersect_triangle(tr)
+            for pt in result[0]:
+                ipts.append(pt,unique=True)
+            for s in result[1]:
+                isegments.append(s,unique=True)
+            for pg in result[2]:
+                isimplepolygons.append(pg)
+                
+        isegments.remove_segments_in_polygons(isimplepolygons)
+        ipts.remove_points_in_segments(isegments)
+                
+        return ipts, isegments, isimplepolygons
+        
         
     def union(self):
         """Returns the union of all triangles in the Triangles sequence

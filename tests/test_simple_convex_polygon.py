@@ -23,6 +23,7 @@ class Test_SimpleConvexPolygon2D(unittest.TestCase):
                                     Point2D(1,0),
                                     Point2D(1,1),
                                     Point2D(0,1)))
+        
         self.assertEqual(pg1,pg)
         
         

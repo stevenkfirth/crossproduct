@@ -20,4 +20,5 @@ from .quadrilateral import Quadrilateral2D, Quadrilateral3D
 from .segment import Segment2D, Segment3D
 from .segments import Segments
 from .triangle import Triangle2D, Triangle3D
+from .triangles import Triangles
 from .vector import Vector2D, Vector3D

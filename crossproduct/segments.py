@@ -207,6 +207,12 @@ class Segments(Sequence):
         return pl
     
     
+    def remove_segments_in_polygons(self,polygons):
+        """Removes any segments that lie on any of the polygons' segments
+        """
+        self.segments=[s for s in self if not s in polygons.segments]
+    
+    
     def union_polyline(self,polyline):
         """Returns the first union of a segment in the sequence with the polyline
         

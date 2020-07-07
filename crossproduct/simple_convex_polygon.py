@@ -35,24 +35,13 @@ class SimpleConvexPolygon2D(SimpleConvexPolygon,SimplePolygon2D):
         
         """
         
-        # converting to a polyline checks for point types and adjacent segment collinearity
-        pl=SimplePolyline2D(*points,points[0])
+        SimplePolygon2D.__init__(self,*points)
         
-        # removes any adjacent codirectional points
-        pl=pl.merge_codirectional_segments
-        
-        
-        self.points=tuple(pl.points[:-1])
-    
         # converts the convex polygon to a counterclockwise orientation 
         #   this is done to enable the intersection algorithms to work
         if self.orientation<0:
             self.points=self.reverse.points
     
-        # test for convexivity??
-        # --TO DO--
-        
-        
         
         
     
@@ -224,6 +213,12 @@ class SimpleConvexPolygon2D(SimpleConvexPolygon,SimplePolygon2D):
                     return Segment2D(P0,P1) # Points(),Segments(Segment2D(P0,P1))      
     
     
+    def difference_segment(self,segment):
+        """Returns the difference of this polygon and a Segment
+        
+        """
+    
+    
     def intersect_segments(self,segments):
         """Intersection of this polygon with a Segments sequence
         
@@ -288,21 +283,7 @@ class SimpleConvexPolygon3D(SimpleConvexPolygon,SimplePolygon3D):
     """A 3D convex polygon
     """
     
-    def __init__(self,*points):
-        """
         
-        param points: an array of points 
-            - the first point is not repeated at the end of the array
-        
-        """
-        
-         # converting to a polyline checks for point types and adjacent segment collinearity
-        #pl=SimplePolyline3D(*points,points[0])
-        
-        #self.points=tuple(pl.points[:-1])
-    
-        self.points=points
-    
     def __repr__(self):
         """The string of this line for printing
         
