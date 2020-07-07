@@ -27,66 +27,98 @@ class Test_SimpleConvexPolygon2D(unittest.TestCase):
         self.assertEqual(pg1,pg)
         
         
-#    def test_intersect_halfline(self):
-#        ""
-#        pg=SimpleConvexPolygon2D(*points)
-#        
-#        self.assertEqual(pg.intersect_halfline(Halfline2D(Point2D(0,0),
-#                                                          Vector2D(1,0))),
-#                         (Points(),
-#                          Segments(Segment2D(Point2D(0,0),
-#                                             Point2D(1,0)))))
-#        self.assertEqual(pg.intersect_halfline(Halfline2D(Point2D(-1,0.5),
-#                                                          Vector2D(1,0))),
-#                         (Points(),
-#                          Segments(Segment2D(Point2D(0,0.5),
-#                                              Point2D(1,0.5)))))
-#        self.assertEqual(pg.intersect_halfline(Halfline2D(Point2D(0,-0.5),
-#                                                          Vector2D(1,0))),
-#                         (Points(),
-#                          Segments()))
-#        self.assertEqual(pg.intersect_halfline(Halfline2D(Point2D(0,0),
-#                                                          Vector2D(-1,1))),
-#                         (Points(Point2D(0,0)),
-#                          Segments()))
-#        self.assertEqual(pg.intersect_halfline(Halfline2D(Point2D(2,0),
-#                                                          Vector2D(1,0))),
-#                         (Points(),
-#                          Segments()))
-#        self.assertEqual(pg.intersect_halfline(Halfline2D(Point2D(0.5,0.5),
-#                                                          Vector2D(1,0))),
-#                         (Points(),
-#                          Segments(Segment2D(Point2D(0.5,0.5),
-#                                             Point2D(1,0.5)))))
-#        self.assertEqual(pg.intersect_halfline(Halfline2D(Point2D(-1,1),
-#                                                          Vector2D(-1,1))),
-#                         (Points(),
-#                          Segments()))
+    def test_difference_simple_convex_polygon(self):
+        ""
+        pg=SimpleConvexPolygon2D(*points)
+        
+        # self intersection - no difference
+        self.assertEqual(pg.difference_simple_convex_polygon(pg),
+                         None)
+        
+        # point intersection - difference is the polygon pg
+        pg1=SimpleConvexPolygon2D(Point2D(1,1),
+                                  Point2D(2,1),
+                                  Point2D(2,2),
+                                  Point2D(1,2))
+        self.assertEqual(pg.difference_simple_convex_polygon(pg1),
+                         pg)
+        
+        # edge intersection - difference is the remaining segments
+        pg1=SimpleConvexPolygon2D(Point2D(1,0),
+                                  Point2D(2,0),
+                                  Point2D(2,1),
+                                  Point2D(1,1))
+        self.assertEqual(pg.difference_simple_convex_polygon(pg1),
+                         Segments(Segment2D(Point2D(0,0), 
+                                            Point2D(1,0)), 
+                                  Segment2D(Point2D(1,1), 
+                                            Point2D(0,1)), 
+                                  Segment2D(Point2D(0,1), 
+                                            Point2D(0,0))))
+        
+        # overlap intersection - difference is the remaining segments
+        pg1=SimpleConvexPolygon2D(Point2D(0.5,0),
+                                  Point2D(1.5,0),
+                                  Point2D(1.5,1),
+                                  Point2D(0.5,1))
+        self.assertEqual(pg.difference_simple_convex_polygon(pg1),
+                         Segments(Segment2D(Point2D(0,0), 
+                                            Point2D(0.5,0.0)), 
+                                  Segment2D(Point2D(0.5,1.0), 
+                                            Point2D(0,1)), 
+                                  Segment2D(Point2D(0,1), 
+                                            Point2D(0,0))))
+        
+        
+    def test_intersect_halfline(self):
+        ""
+        pg=SimpleConvexPolygon2D(*points)
+        
+        self.assertEqual(pg.intersect_halfline(Halfline2D(Point2D(0,0),
+                                                          Vector2D(1,0))),
+                         Segment2D(Point2D(0,0),
+                                   Point2D(1,0)))
+        self.assertEqual(pg.intersect_halfline(Halfline2D(Point2D(-1,0.5),
+                                                          Vector2D(1,0))),
+                         Segment2D(Point2D(0,0.5),
+                                   Point2D(1,0.5)))
+        self.assertEqual(pg.intersect_halfline(Halfline2D(Point2D(0,-0.5),
+                                                          Vector2D(1,0))),
+                         None)
+        self.assertEqual(pg.intersect_halfline(Halfline2D(Point2D(0,0),
+                                                          Vector2D(-1,1))),
+                         Point2D(0,0))
+        self.assertEqual(pg.intersect_halfline(Halfline2D(Point2D(2,0),
+                                                          Vector2D(1,0))),
+                         None)
+        self.assertEqual(pg.intersect_halfline(Halfline2D(Point2D(0.5,0.5),
+                                                          Vector2D(1,0))),
+                         Segment2D(Point2D(0.5,0.5),
+                                   Point2D(1,0.5)))
+        self.assertEqual(pg.intersect_halfline(Halfline2D(Point2D(-1,1),
+                                                          Vector2D(-1,1))),
+                         None)
     
         
-#    def test_intersect_line(self):
-#        ""
-#        pg=SimpleConvexPolygon2D(*points)
-#        
-#        self.assertEqual(pg.intersect_line(Line2D(Point2D(0,0),
-#                                                  Vector2D(1,0))),
-#                         (Points(),
-#                          Segments(Segment2D(Point2D(0,0),
-#                                             Point2D(1,0)))))
-#        self.assertEqual(pg.intersect_line(Line2D(Point2D(-1,0.5),
-#                                                  Vector2D(1,0))),
-#                         (Points(),
-#                          Segments(Segment2D(Point2D(0,0.5),
-#                                             Point2D(1,0.5)))))
-#        self.assertEqual(pg.intersect_line(Line2D(Point2D(0,-0.5),
-#                                                  Vector2D(1,0))),
-#                         (Points(),
-#                          Segments()))
-#        self.assertEqual(pg.intersect_line(Line2D(Point2D(0,0),
-#                                                  Vector2D(-1,1))),
-#                         (Points(Point2D(0,0)),
-#                          Segments()))
-#        
+    def test_intersect_line(self):
+        ""
+        pg=SimpleConvexPolygon2D(*points)
+        
+        self.assertEqual(pg.intersect_line(Line2D(Point2D(0,0),
+                                                  Vector2D(1,0))),
+                         Segment2D(Point2D(0,0),
+                                    Point2D(1,0)))
+        self.assertEqual(pg.intersect_line(Line2D(Point2D(-1,0.5),
+                                                  Vector2D(1,0))),
+                         Segment2D(Point2D(0,0.5),
+                                   Point2D(1,0.5)))
+        self.assertEqual(pg.intersect_line(Line2D(Point2D(0,-0.5),
+                                                  Vector2D(1,0))),
+                         None)
+        self.assertEqual(pg.intersect_line(Line2D(Point2D(0,0),
+                                                  Vector2D(-1,1))),
+                         Point2D(0,0))
+        
         
     def test_intersect_line_t_values(self):
         ""
@@ -94,16 +126,16 @@ class Test_SimpleConvexPolygon2D(unittest.TestCase):
         
         self.assertEqual(pg.intersect_line_t_values(Line2D(Point2D(0,0),
                                                            Vector2D(1,0))),
-                         [0,1])
+                         (0,1))
         self.assertEqual(pg.intersect_line_t_values(Line2D(Point2D(-1,0.5),
                                                            Vector2D(1,0))),
-                         [1,2])
+                         (1,2))
         self.assertEqual(pg.intersect_line_t_values(Line2D(Point2D(0,-0.5),
                                                            Vector2D(1,0))),
-                         [])
+                         None)
         self.assertEqual(pg.intersect_line_t_values(Line2D(Point2D(0,0),
                                                            Vector2D(-1,1))),
-                         [0])    
+                         (0,0))    
         
     
     def test_intersect_segment(self):
@@ -208,6 +240,17 @@ class Test_SimpleConvexPolygon2D(unittest.TestCase):
                                                Point2D(0.5,0.5),
                                                Point2D(0,0.5),
                                                Point2D(0,0)))
+        
+        # another overlap intersection
+        pg1=SimpleConvexPolygon2D(Point2D(0.5,0),
+                                  Point2D(2,0),
+                                  Point2D(2,1),
+                                  Point2D(0.5,1))
+        self.assertEqual(pg.intersect_simple_convex_polygon(pg1),
+                         SimpleConvexPolygon2D(Point2D(1.0,1.0),
+                                               Point2D(0.5,1),
+                                               Point2D(0.5,0.0),
+                                               Point2D(1.0,0.0)))
         
         
 class Test_SimpleConvexPolygon3D(unittest.TestCase):

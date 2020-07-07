@@ -67,6 +67,26 @@ class Segments(Sequence):
             raise TypeError
     
     
+    def difference_segments(self,segments):
+        """Returns the difference between self and segments
+        
+        :param segments Segments:
+            
+        :return result:
+        :rtype Segments:
+        
+        """
+        diff_segments=Segments()
+        for s in self:
+            result=s.difference_segments(segments)
+            if result:
+                diff_segments.append(result)
+        if len(diff_segments)==0:
+            return None
+        else:
+            return diff_segments
+    
+    
     def intersect_halfline(self,halfline):
         """Returns the intersection of this segments sequence and a halfline
         

@@ -95,6 +95,62 @@ class Segment():
             raise ValueError('For a segment, t must be equal to or between 0 and 1')
             
             
+    def difference_segment(self,segment):
+        """Returns the difference of two segments
+        
+        :param segment Segment:
+            
+        :return result:
+        :rtype Segment or None:
+        
+        """
+        if self==segment:
+            return None
+        
+        if self.is_collinear(segment):
+            t0=self.calculate_t_from_point(segment.P0)
+            t1=self.calculate_t_from_point(segment.P1)
+            #print(t0,t1)
+            if t1<t0:
+                t0,t1=t1,t0
+            
+            if t0>=1 or t1<=0:
+                return self
+            elif t0>=0 and t1>=1:
+                t1=t0
+                t0=0
+            elif t0<=0 and t1<=1:
+                t0=t1
+                t1=1
+            else:
+                raise Exception
+                
+            #print(t0,t1)
+            P0=self.calculate_point(t0)
+            P1=self.calculate_point(t1)
+            return self.__class__(P0,P1)
+            
+        else:
+            return self
+        
+        
+    def difference_segments(self,segments):
+        """Returns the difference between this segment and a Segments sequence
+        
+        
+        """
+        result=[self.difference_segment(s) for s in segments]
+        if None in result:
+            return None
+        else:
+            lengths=[s.vL.length for s in result]
+            i_min_length=lengths.index(min(lengths))
+            return result[i_min_length]
+        
+         
+        
+        
+            
     def distance_point(self,point):
         """Returns the distance to the supplied object
         

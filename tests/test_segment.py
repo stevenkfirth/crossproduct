@@ -6,7 +6,7 @@ import mpl_toolkits.mplot3d
 
 from crossproduct import Point2D, Point3D,Vector2D, Vector3D, \
     Halfline2D, Halfline3D, Line2D, Line3D, Segment2D, Segment3D, \
-    SimplePolyline2D, Polyline2D
+    SimplePolyline2D, Polyline2D, Segments
 
 plot=False
 
@@ -83,6 +83,51 @@ class Test_Segment2D(unittest.TestCase):
         s=Segment2D(P0,P1)
         self.assertEqual(s.calculate_t_from_y(3),
                          3)    
+        
+        
+    def test_difference_segment(self):
+        ""
+        s=Segment2D(P0,P1)
+        
+        # no intersection, difference is self
+        self.assertEqual(s.difference_segment(Segment2D(Point2D(5,5),Point2D(6,6))),
+                         s)
+        
+        # point intersection, difference is self
+        self.assertEqual(s.difference_segment(Segment2D(Point2D(1,1),Point2D(2,2))),
+                         s)
+        
+        # segment intersection, difference is remaining segment part
+        self.assertEqual(s.difference_segment(Segment2D(Point2D(0.5,0.5),Point2D(2,2))),
+                         Segment2D(Point2D(0,0),Point2D(0.5,0.5)))
+        
+        
+        # self intersection, difference is None
+        self.assertEqual(s.difference_segment(s),
+                         None)
+        
+        
+    def test_difference_segments(self):
+        ""
+        s=Segment2D(P0,P1)
+        
+        # self intersection
+        s1=Segments(Segment2D(Point2D(0,0), Point2D(1,1)), 
+                    Segment2D(Point2D(1,1), Point2D(2,1)))
+        self.assertEqual(s.difference_segments(s1),
+                         None)
+        
+        # no intersection
+        s1=Segments(Segment2D(Point2D(0,0), Point2D(1,0)), 
+                    Segment2D(Point2D(1,1), Point2D(2,1)))
+        self.assertEqual(s.difference_segments(s1),
+                         s)
+        
+        # mid intersection
+        s1=Segments(Segment2D(Point2D(0,0), Point2D(0.5,0.5)), 
+                    Segment2D(Point2D(1,1), Point2D(2,1)))
+        self.assertEqual(s.difference_segments(s1),
+                         Segment2D(Point2D(0.5,0.5), Point2D(1,1)))
         
         
     def test_distance_point(self):

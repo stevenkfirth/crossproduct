@@ -12,7 +12,10 @@ plot=True
         
 class Test_Segments(unittest.TestCase):
     """
-    
+    segments=(Segment2D(Point2D(0,0),
+                        Point2D(1,0)),
+              Segment2D(Point2D(1,0),
+                        Point2D(1,1)))
     """
     
     def test___init__(self):
@@ -58,6 +61,46 @@ class Test_Segments(unittest.TestCase):
                  unique=True)
         self.assertEqual(len(s),4)
     
+    
+    def test_difference_segments(self):
+        ""
+        s=Segments(*segments)
+        
+        # no intersection
+        s1=Segments(Segment2D(Point2D(0,5),
+                              Point2D(0,6)))
+        self.assertEqual(s.difference_segments(s1),
+                         s)
+    
+        # edge intersection - single edge
+        s1=Segments(Segment2D(Point2D(0,0),
+                              Point2D(1,0)))
+        self.assertEqual(s.difference_segments(s1),
+                         Segments(Segment2D(Point2D(1,0), 
+                                            Point2D(1,1))))
+        
+        # edge intersection - mid to end single edge
+        s1=Segments(Segment2D(Point2D(0,0),
+                              Point2D(0.5,0)))
+        self.assertEqual(s.difference_segments(s1),
+                         Segments(Segment2D(Point2D(0.5,0), 
+                                            Point2D(1,0)), 
+                                  Segment2D(Point2D(1,0), 
+                                            Point2D(1,1))))
+        
+        # edge intersection - start to mid single edge
+        s1=Segments(Segment2D(Point2D(0.5,0),
+                              Point2D(1,0)))
+        self.assertEqual(s.difference_segments(s1),
+                         Segments(Segment2D(Point2D(0,0), 
+                                            Point2D(0.5,0)), 
+                                  Segment2D(Point2D(1,0), 
+                                            Point2D(1,1))))
+        
+        # self intersection
+        self.assertEqual(s.difference_segments(s),
+                         None)
+        
     
     def test_intersect_point(self):
         ""

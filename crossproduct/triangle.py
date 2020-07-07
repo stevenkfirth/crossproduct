@@ -177,11 +177,11 @@ class Triangle2D(Triangle,SimpleConvexPolygon2D):
         return abs(self.signed_area)
     
     
-    def intersect_triangle(self,triangle):
-        """
-        
-        """
-        return self.intersect_simple_convex_polygon(triangle)
+#    def intersect_triangle(self,triangle):
+#        """
+#        
+#        """
+#        return self.intersect_simple_convex_polygon(triangle)
     
     
     @property
@@ -233,6 +233,7 @@ class Triangle2D(Triangle,SimpleConvexPolygon2D):
             
             if isegments1[0] in self.polyline.segments: # exact segment
                 
+                pass
         
         
         else:
