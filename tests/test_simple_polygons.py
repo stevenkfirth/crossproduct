@@ -60,6 +60,23 @@ class Test_SimplePolygons(unittest.TestCase):
                                                         Point2D(1.0,0.0),
                                                         Point2D(1.0,1.0))))
     
+        sp=SimplePolygons(SimpleConvexPolygon2D(Point2D(1.0,0.5),Point2D(1.0,0.0),Point2D(2.0,0.0),Point2D(2.0,1.0)), 
+                          SimpleConvexPolygon2D(Point2D(2.0,1.0),Point2D(1.0,1.0),Point2D(1.0,0.5)), 
+                          SimpleConvexPolygon2D(Point2D(1.0,2.5),Point2D(1.0,2.0),Point2D(2.0,2.0)), 
+                          SimpleConvexPolygon2D(Point2D(2.0,2.0),Point2D(2.0,3.0),Point2D(1,3),Point2D(1.0,2.5)))
+        
+        self.assertEqual(sp.union_adjacent,
+                         SimplePolygons(SimplePolygon2D(Point2D(1.0,0.0),
+                                                        Point2D(2.0,0.0),
+                                                        Point2D(2.0,1.0),
+                                                        Point2D(1.0,1.0)), 
+                                        SimplePolygon2D(Point2D(1.0,2.0),
+                                                        Point2D(2.0,2.0),
+                                                        Point2D(2.0,3.0),
+                                                        Point2D(1,3))))
+        #sp.plot()
+        #sp.union_adjacent.plot()
+    
     
 if __name__=='__main__':
     

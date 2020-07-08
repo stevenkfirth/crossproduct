@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import matplotlib.pyplot as plt
+import mpl_toolkits.mplot3d
 
 from collections.abc import Sequence
 from .segment import Segment
@@ -8,7 +10,7 @@ from .point import Point
 from .points import Points
 from .simple_polygons import SimplePolygons
 from .simple_convex_polygon import SimpleConvexPolygon
-#from .triangle import Triangle
+#from .triangle import Triangle2D
 
 
 class Triangles(Sequence):
@@ -66,7 +68,9 @@ class Triangles(Sequence):
         isimplepolygons=SimplePolygons()
         
         for tr in self:
+            #print('tr',tr)
             result=tr.intersect_simple_convex_polygon(simple_convex_polygon) # returns None, Point, Segment, SimpleConvexPolygon
+            #print('result',result)
             if isinstance(result,Point):
                 ipts.append(result,unique=True)
             elif isinstance(result,Segment):
@@ -74,8 +78,8 @@ class Triangles(Sequence):
             elif isinstance(result,SimpleConvexPolygon):
                 isimplepolygons.append(result)
                 
-        isegments.remove_segments_in_polygons(isimplepolygons)
-        ipts.remove_points_in_segments(isegments)
+        #isegments.remove_segments_in_polygons(isimplepolygons)
+        #ipts.remove_points_in_segments(isegments)
                 
         return ipts, isegments, isimplepolygons
     
@@ -124,6 +128,20 @@ class Triangles(Sequence):
                 
         return ipts, isegments, isimplepolygons
         
+    
+    def plot(self,ax=None,color='blue',**kwargs):
+        ""
+        if not ax:
+            if self[0].__class__.__name__=='Triangle2D':
+                fig, ax = plt.subplots()
+            else:
+                fig = plt.figure()
+                ax = fig.add_subplot(111, projection='3d')
+        for tr in self:
+            tr.plot(ax,color=color,**kwargs)
+        
+        
+    
         
     def union(self):
         """Returns the union of all triangles in the Triangles sequence

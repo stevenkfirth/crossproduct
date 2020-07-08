@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import matplotlib.pyplot as plt
+import mpl_toolkits.mplot3d
+
+
 from collections.abc import Sequence
-from .segment import Segment
-from .point import Point
-from .points import Points
 from .simple_polygon import SimplePolygon
 from .segments import Segments
 
@@ -79,6 +80,19 @@ class SimplePolygons(Sequence):
         else:
             raise TypeError
     
+    
+    def plot(self,ax=None,color='blue',**kwargs):
+        ""
+        if not ax:
+            if self[0].__class__.__name__.endswith('2D'):
+                fig, ax = plt.subplots()
+            else:
+                fig = plt.figure()
+                ax = fig.add_subplot(111, projection='3d')
+        for tr in self:
+            tr.plot(ax,color=color,**kwargs)
+    
+    
     @property
     def segments(self):
         """Returns a Segments sequence of all the segments of the polygons
@@ -102,22 +116,28 @@ class SimplePolygons(Sequence):
         result=SimplePolygons()
         i=0
         pg=self[0]
-        remaining_polygons=SimplePolygons(*self[i+1:])
+        remaining_polygons=SimplePolygons(*self[1:])
         while True:
+            #print('---')
+            #print('i',i)
+            #print('pg',pg)
+            #print('remaining_polygons',remaining_polygons)
+            #print('result',result)
             try:
                 pg,remaining_polygons=remaining_polygons.union_adjacent_simple_polygon(pg)
+                
             except TypeError:
                 result.append(pg)
-                i+=1
                 try:
-                    pg=remaining_polygons[i]
+                    pg=remaining_polygons[0]
                 except IndexError:
                     break
+                remaining_polygons=SimplePolygons(*remaining_polygons[1:])
         return result
     
     
     def union_adjacent_simple_polygon(self,polygon):
-        """Returns the first union of a polygon in the sequence with the polyline
+        """Returns the first adjacent union of a polygon in the sequence with the polyline
         
         :return result: (union_result (SimplePolygon),
                          SimplePolygons sequence of remaining polygons)

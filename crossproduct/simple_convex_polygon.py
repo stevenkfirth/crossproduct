@@ -285,7 +285,7 @@ class SimpleConvexPolygon2D(SimpleConvexPolygon,SimplePolygon2D):
             return ipts1[0] # returns a Point2D - point intersection
         elif len(ipts1)>1:
             raise Exception
-        elif len(isegments1)==1:
+        elif len(ipts1)==0 and len(isegments1)==1:
             return isegments1[0] # returns a Segment2D - edge segment intersection
         else: # a simple complex polygon intersection
             ipts2,isegments2=simple_convex_polygon.intersect_segments(self.polyline.segments)

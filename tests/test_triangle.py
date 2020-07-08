@@ -371,6 +371,7 @@ class Test_Triangle3D(unittest.TestCase):
                                                Point3D(0.75,0.5,0),
                                                Point3D(0.5,1.0,0)))
         
+        
                 
     def test_P1(self):
         ""

@@ -3,7 +3,8 @@
 import unittest
 from crossproduct import Point2D, Point3D, Halfline2D, Halfline3D, \
     Vector2D, Vector3D, Line2D, Line3D, SimpleConvexPolygon2D, SimpleConvexPolygon3D, Plane3D, Segment2D, Segment3D, \
-    SimplePolyline2D, SimplePolyline3D, Points, Segments, Polylines, SimplePolygons, SimplePolygon2D
+    SimplePolyline2D, SimplePolyline3D, Points, Segments, Polylines, SimplePolygons, SimplePolygon2D, \
+    Triangle2D
     
 
 class Test_SimpleConvexPolygon2D(unittest.TestCase):
@@ -245,6 +246,13 @@ class Test_SimpleConvexPolygon2D(unittest.TestCase):
                                                Point2D(0.5,1),
                                                Point2D(0.5,0.0),
                                                Point2D(1.0,0.0)))
+        
+        # example
+        tr2=Triangle2D(Point2D(2,1), Vector2D(-1,0), Vector2D(-2,-1))
+        scp=SimpleConvexPolygon2D(Point2D(1,0),Point2D(2,0),Point2D(2,3),Point2D(1,3))
+        self.assertEqual(tr2.intersect_simple_convex_polygon(scp),
+                         SimpleConvexPolygon2D(Point2D(2.0,1.0),Point2D(1.0,1.0),Point2D(1.0,0.5)))
+        
         
         
     def test_union_simple_convex_polygon(self):

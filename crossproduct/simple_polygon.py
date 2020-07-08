@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import itertools
+import matplotlib.pyplot as plt
+import mpl_toolkits.mplot3d
 
 from .halfline import Halfline3D
 from .line import Line3D
@@ -97,8 +99,12 @@ class SimplePolygon():
             raise Exception
     
         ipts, isegments, isimplepolygons=self.triangles.intersect_simple_convex_polygon(simple_convex_polygon)
-        print(ipts, isegments, isimplepolygons)
-        return ipts, isegments, isimplepolygons.union_adjacent
+        #print(ipts, isegments, isimplepolygons)
+        isegments.remove_segments_in_polygons(isimplepolygons)
+        ipts.remove_points_in_segments(isegments)
+        isimplepolygons=isimplepolygons.union_adjacent
+        #print(ipts, isegments, isimplepolygons)
+        return ipts, isegments, isimplepolygons
     
     
     
@@ -136,7 +142,10 @@ class SimplePolygon():
         pl1=self.polyline.segments.difference_segments(simple_polygon.polyline.segments).polyline
         pl2=simple_polygon.polyline.segments.difference_segments(self.polyline.segments).polyline
         pl3=pl1.union(pl2)
-        return SimplePolygon2D(*pl3.points[:-1])
+        if pl3:
+            return SimplePolygon2D(*pl3.points[:-1])
+        else:
+            return None
         
         
     
@@ -403,7 +412,7 @@ class SimplePolygon():
             return i+1
     
     
-    def plot(self,ax,normal=False,**kwargs):
+    def plot(self,ax=None,normal=False,**kwargs):
         """Plots the segment on the supplied axes
         
         :param ax: an Axes or Axes3D instance
@@ -412,6 +421,13 @@ class SimplePolygon():
         :param **kwargs: keyword arguments to be supplied to the matplotlib plot call
                     
         """
+        if not ax:
+            if self.__class__.__name__.endswith('2D'):
+                fig, ax = plt.subplots()
+            else:
+                fig = plt.figure()
+                ax = fig.add_subplot(111, projection='3d')
+        
         self.polyline.plot(ax,**kwargs)
         
         if normal:

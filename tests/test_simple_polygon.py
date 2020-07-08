@@ -164,15 +164,26 @@ class Test_SimplePolygon2D(unittest.TestCase):
                            Point2D(1,1),
                            Point2D(1,2),
                            Point2D(2,2),
-                           Point2D(3,2),
-                           Point2D(3,3),
+                           Point2D(2,3),
                            Point2D(0,3))
-        print(sp.triangles)
-        
         
         # two polygon intersection
-        scp=SimpleConvexPolygon2D(Point2D(1,0),Point2D(2,0),Point2D(2,3),Point2D(1,3))
-        print(sp.intersect_simple_convex_polygon(scp))
+        scp=SimpleConvexPolygon2D(Point2D(1,0),
+                                  Point2D(2,0),
+                                  Point2D(2,3),
+                                  Point2D(1,3))
+        self.assertEqual(sp.intersect_simple_convex_polygon(scp),
+                         (Points(), 
+                          Segments(Segment2D(Point2D(1.0,2.0), 
+                                             Point2D(1.0,1.0))), 
+                          SimplePolygons(SimplePolygon2D(Point2D(1.0,0.0),
+                                                         Point2D(2.0,0.0),
+                                                         Point2D(2.0,1.0),
+                                                         Point2D(1.0,1.0)), 
+                                         SimplePolygon2D(Point2D(1.0,2.0),
+                                                         Point2D(2.0,2.0),
+                                                         Point2D(2.0,3.0),
+                                                         Point2D(1,3)))))
         return
                     
         
