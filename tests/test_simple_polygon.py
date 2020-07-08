@@ -22,6 +22,11 @@ class Test_SimplePolygon2D(unittest.TestCase):
         self.assertIsInstance(pg,SimplePolygon2D)
         self.assertEqual(pg.points,points)
         
+        #print('--start--')
+        pts2=Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1),Point2D(-1,1),Point2D(-1,0)
+        pg=SimplePolygon2D(*pts2)
+        #print('--end--')
+        
         
     def test___contains__(self):
         ""

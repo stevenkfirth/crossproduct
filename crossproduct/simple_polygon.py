@@ -36,8 +36,12 @@ class SimplePolygon():
         # merge any codirectional adjacent segments
         pl1=self.polyline
         pl2=pl1.merge_codirectional_segments
-        if len(pl2.points)<len(pl1.points):
-            self.points=pl2.points[:-1]
+        points=list(pl2.points)
+        if (points[1]-points[0]).is_codirectional(points[-1]-points[-2]):
+            points.pop(0)
+        self.points=tuple(points[:-1])
+        #print(self.points)
+        
         
         # check for intersection
         if pl2.is_intersecting:

@@ -49,6 +49,36 @@ class SimpleConvexPolygon2D(SimpleConvexPolygon,SimplePolygon2D):
         """
         return 'SimpleConvexPolygon2D(%s)' % ','.join([str(p) for p in self.points])
        
+        
+    def difference_simple_convex_polygon(self,simple_convex_polygon):
+        """The difference between this 2D simple convex polygon and another
+        
+        :param simple_convex_polygon SimpleConvexPolygon: a simple convex polygon 
+        
+        :return result:
+            - None
+            - Segments
+            - SimpleConvexPolygon
+        
+        """
+        
+        if self==simple_convex_polygon:
+            return None
+
+        result=self.intersect_simple_convex_polygon(simple_convex_polygon)
+        
+        if result is None or isinstance(result,Point):
+            return self # returns the polygon -  no intersection
+
+        elif isinstance(result,Segment):
+            
+            return self.polyline.segments.difference_segments(Segments(result)) # Segments
+            
+        elif isinstance(result,SimpleConvexPolygon):
+            
+            return self.polyline.segments.difference_segments(result.polyline.segments) # Segments
+            
+    
     
     def intersect_halfline(self,halfline):
         """Intersection of this convex polygon with a halfline
@@ -265,37 +295,38 @@ class SimpleConvexPolygon2D(SimpleConvexPolygon,SimplePolygon2D):
             return pg
 
 
-    def difference_simple_convex_polygon(self,simple_convex_polygon):
-        """The difference between this 2D simple convex polygon and another
+    def union_simple_convex_polygon(self,simple_convex_polygon):
+        """The union between this 2D simple convex polygon and another
         
         :param simple_convex_polygon SimpleConvexPolygon: a simple convex polygon 
         
         :return result:
             - None
-            - Segments
             - SimpleConvexPolygon
         
         """
         
         if self==simple_convex_polygon:
-            return None
+            return self
 
-        result=self.intersect_simple_convex_polygon(simple_convex_polygon)
+        result=self.difference_simple_convex_polygon(simple_convex_polygon)
         
-        if result is None or isinstance(result,Point):
-            return self # returns the polygon -  no intersection
-
-        elif isinstance(result,Segment):
-            
-            return self.polyline.segments.difference_segments(Segments(result))
-            
-        elif isinstance(result,SimpleConvexPolygon):
-            
-            #print(self)
-            #print(result)
-            
-            return self.polyline.segments.difference_segments(result.polyline.segments)
-            
+        if result is self:
+            return None
+        
+        polyline1=result.polyline
+        polyline2=simple_convex_polygon.difference_simple_convex_polygon(self).polyline
+        
+        print(polyline1)
+        print(polyline2)
+        
+        pl=polyline1.union(polyline2)
+        
+        print(pl)
+        
+        
+        return SimplePolygon2D(*pl.points[:-1])
+    
             
 
 class SimpleConvexPolygon3D(SimpleConvexPolygon,SimplePolygon3D):

@@ -3,7 +3,7 @@
 import unittest
 from crossproduct import Point2D, Point3D, Halfline2D, Halfline3D, \
     Vector2D, Vector3D, Line2D, Line3D, SimpleConvexPolygon2D, SimpleConvexPolygon3D, Plane3D, Segment2D, Segment3D, \
-    SimplePolyline2D, SimplePolyline3D, Points, Segments, Polylines, SimplePolygons
+    SimplePolyline2D, SimplePolyline3D, Points, Segments, Polylines, SimplePolygons, SimplePolygon2D
     
 
 class Test_SimpleConvexPolygon2D(unittest.TestCase):
@@ -251,6 +251,89 @@ class Test_SimpleConvexPolygon2D(unittest.TestCase):
                                                Point2D(0.5,1),
                                                Point2D(0.5,0.0),
                                                Point2D(1.0,0.0)))
+        
+        
+    def test_union_simple_convex_polygon(self):
+        ""
+        pg=SimpleConvexPolygon2D(*points)
+        
+        # no intersection
+        pg1=SimpleConvexPolygon2D(Point2D(-2,0),
+                                  Point2D(-1,0),
+                                  Point2D(-1,1),
+                                  Point2D(-2,1))
+        self.assertEqual(pg.union_simple_convex_polygon(pg1),
+                         None)
+        
+        # point unionion
+        pg1=SimpleConvexPolygon2D(Point2D(-1,-1),
+                                  Point2D(0,-1),
+                                  Point2D(0,0),
+                                  Point2D(-1,0))
+        self.assertEqual(pg.union_simple_convex_polygon(pg1),
+                         None)
+        
+        # edge unionion
+        pg1=SimpleConvexPolygon2D(Point2D(-1,0),
+                                  Point2D(0,0),
+                                  Point2D(0,1),
+                                  Point2D(-1,1))
+        self.assertEqual(pg.union_simple_convex_polygon(pg1),
+                         SimplePolygon2D(Point2D(1,0),
+                                         Point2D(1,1),
+                                         Point2D(-1,1),
+                                         Point2D(-1,0)))
+        
+        # overlap unionion - same polygon
+        self.assertEqual(pg.union_simple_convex_polygon(pg),
+                         pg)
+    
+        
+        # overlap unionion
+        pg1=SimpleConvexPolygon2D(Point2D(-0.5,-0.5),
+                                  Point2D(0.5,-0.5),
+                                  Point2D(0.5,0.5),
+                                  Point2D(-0.5,0.5))
+        
+       
+        
+        self.assertEqual(pg.union_simple_convex_polygon(pg1),
+                         SimplePolygon2D(Point2D(0.5,0.0),
+                                         Point2D(1,0),
+                                         Point2D(1,1),
+                                         Point2D(0,1),
+                                         Point2D(0.0,0.5),
+                                         Point2D(-0.5,0.5),
+                                         Point2D(-0.5,-0.5),
+                                         Point2D(0.5,-0.5)))
+        
+        # overlap union - polygons reversed from above       
+        self.assertEqual(pg1.union_simple_convex_polygon(pg),
+                         SimplePolygon2D(Point2D(0.5,0.0),
+                                         Point2D(1,0),
+                                         Point2D(1,1),
+                                         Point2D(0,1),
+                                         Point2D(0.0,0.5),
+                                         Point2D(-0.5,0.5),
+                                         Point2D(-0.5,-0.5),
+                                         Point2D(0.5,-0.5)))
+        
+        
+        
+        
+        # another overlap unionion
+        pg1=SimpleConvexPolygon2D(Point2D(0.5,0),
+                                  Point2D(2,0),
+                                  Point2D(2,1),
+                                  Point2D(0.5,1))
+        print(pg.union_simple_convex_polygon(pg1))
+        return
+        self.assertEqual(pg.union_simple_convex_polygon(pg1),
+                         SimpleConvexPolygon2D(Point2D(1.0,1.0),
+                                               Point2D(0.5,1),
+                                               Point2D(0.5,0.0),
+                                               Point2D(1.0,0.0)))
+        
         
         
 class Test_SimpleConvexPolygon3D(unittest.TestCase):

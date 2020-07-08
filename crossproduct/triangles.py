@@ -71,7 +71,7 @@ class Triangles(Sequence):
         isimplepolygons=SimplePolygons()
         
         for tr in self:
-            result=tr.intersect_triangle(triangle) # returns None, Point, Segment, SimpleConvexPolygon
+            result=tr.intersect_simple_convex_polygon(triangle) # returns None, Point, Segment, SimpleConvexPolygon
             if isinstance(result,Point):
                 ipts.append(result,unique=True)
             elif isinstance(result,Segment):

@@ -81,6 +81,7 @@ class Polyline():
             else:
                 i+=1
             
+            
         return self.__class__(*points)
         
         

@@ -78,9 +78,13 @@ class Segments(Sequence):
         """
         diff_segments=Segments()
         for s in self:
+            #print(s)
+            #print(segments)
             result=s.difference_segments(segments)
+            #print(result)
             if result:
-                diff_segments.append(result)
+                for s1 in result:
+                    diff_segments.append(s1)
         if len(diff_segments)==0:
             return None
         else:

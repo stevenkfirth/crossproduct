@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+
 from .point import Point, Point2D
 from .line import Line, Line2D, Line3D
 
@@ -101,7 +102,9 @@ class Segment():
         :param segment Segment:
             
         :return result:
-        :rtype Segment or None:
+            - a tuple of one or two segments
+            - None
+        :rtype tuple or None:
         
         """
         if self==segment:
@@ -115,39 +118,60 @@ class Segment():
                 t0,t1=t1,t0
             
             if t0>=1 or t1<=0:
-                return self
+                return (self,)
             elif t0>=0 and t1>=1:
-                t1=t0
-                t0=0
+                return (self.__class__(self.calculate_point(0),
+                                       self.calculate_point(t0)),)
             elif t0<=0 and t1<=1:
-                t0=t1
-                t1=1
+                return (self.__class__(self.calculate_point(t1),
+                                       self.calculate_point(1)),)
             else:
-                raise Exception
-                
-            #print(t0,t1)
-            P0=self.calculate_point(t0)
-            P1=self.calculate_point(t1)
-            return self.__class__(P0,P1)
-            
+                return (self.__class__(self.calculate_point(0),
+                                       self.calculate_point(t0)),
+                        self.__class__(self.calculate_point(t1),
+                                       self.calculate_point(1)))
         else:
-            return self
+            return (self,)
         
         
     def difference_segments(self,segments):
         """Returns the difference between this segment and a Segments sequence
         
+        :param segments Segments:
+        
+        :return result:
+            - a tuple of one or more segments
+            - None
+        :rtype tuple or None:
+        
         
         """
-        result=[self.difference_segment(s) for s in segments]
-        if None in result:
-            return None
-        else:
-            lengths=[s.vL.length for s in result]
-            i_min_length=lengths.index(min(lengths))
-            return result[i_min_length]
-        
-         
+        def rf(result,segments):
+            if len(segments)==0:
+                return result
+            else:
+                diff=result.difference_segment(segments[0])
+                #print('diff',diff)
+                if diff is None:
+                    return None
+                elif len(diff)==1:
+                    if len(segments)>1:
+                        result=rf(diff[0],segments[1:])
+                    else:
+                        result=diff[0],
+                    return result
+                elif len(diff)==2:
+                    if len(segments)>1:
+                        result=tuple(list(rf(diff[0],segments[1:]))+list(rf(diff[1],segments[1:])))
+                    else:
+                        result=diff[0],diff[1]
+                    return result
+                else:
+                    raise Exception
+                
+        result=self
+        result=rf(result,segments)
+        return result
         
         
             
