@@ -58,9 +58,27 @@ class Triangles(Sequence):
         return 'Triangles(%s)' % ', '.join([str(s) for s in self.triangles])
     
     
-    def intersect_simple_convex_polygon(self):
+    def intersect_simple_convex_polygon(self,simple_convex_polygon):
+        """Returns the intersection of this Triangles sequence with a simple convex polygon
         """
-        """
+        ipts=Points()
+        isegments=Segments()
+        isimplepolygons=SimplePolygons()
+        
+        for tr in self:
+            result=tr.intersect_simple_convex_polygon(simple_convex_polygon) # returns None, Point, Segment, SimpleConvexPolygon
+            if isinstance(result,Point):
+                ipts.append(result,unique=True)
+            elif isinstance(result,Segment):
+                isegments.append(result,unique=True)
+            elif isinstance(result,SimpleConvexPolygon):
+                isimplepolygons.append(result)
+                
+        isegments.remove_segments_in_polygons(isimplepolygons)
+        ipts.remove_points_in_segments(isegments)
+                
+        return ipts, isegments, isimplepolygons
+    
             
     
     def intersect_triangle(self,triangle):

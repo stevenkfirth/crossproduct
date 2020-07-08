@@ -6,7 +6,7 @@ import mpl_toolkits.mplot3d
 
 from crossproduct import Point2D, Point3D, Segment2D, Segment3D, Points, Segments, \
     SimplePolyline2D, Triangle2D, Vector2D, Triangles, SimplePolygons, \
-    SimpleConvexPolygon2D
+    SimpleConvexPolygon2D, SimplePolygon2D
 
 
 plot=True
@@ -51,9 +51,14 @@ class Test_SimplePolygons(unittest.TestCase):
                                   Segment2D(Point2D(1.0,1.0), Point2D(0.0,1.0))))
     
     
-    def test_union(self):
+    def test_union_adjacent(self):
         ""
-        
+        sp=SimplePolygons(*simple_polygons)
+        self.assertEqual(sp.union_adjacent,
+                         SimplePolygons(SimplePolygon2D(Point2D(0.0,1.0),
+                                                        Point2D(0.0,0.0),
+                                                        Point2D(1.0,0.0),
+                                                        Point2D(1.0,1.0))))
     
     
 if __name__=='__main__':

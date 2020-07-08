@@ -113,92 +113,161 @@ class Test_SimplePolygon2D(unittest.TestCase):
         self.assertTrue(pr.is_adjacent(pr1))
                 
         
-        
-    def test_intersect_simple_polygon__triangle(self):
+    def test_intersect_simple_convex_polygon(self):
         ""
-        tr=Triangle2D(Point2D(0,0),Vector2D(1,0),Vector2D(0.5,1))
+        # SQUARE
+        sp=SimplePolygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
         
         # no intersection
-        tr1=Triangle2D(Point2D(0,10), Vector2D(1,10), Vector2D(0.5,10))
-        self.assertEqual(tr.intersect_simple_polygon(tr1),
+        scp=SimpleConvexPolygon2D(Point2D(2,0),Point2D(3,0),Point2D(3,1),Point2D(2,1))
+        self.assertEqual(sp.intersect_simple_convex_polygon(scp),
                          (Points(), 
                           Segments(), 
                           SimplePolygons()))
         
         # point intersection
-        tr1=Triangle2D(Point2D(1,0), Vector2D(2,0), Vector2D(1.5,1))
-        self.assertEqual(tr.intersect_simple_polygon(tr1),
-                         (Points(Point2D(1,0)), 
-                          Segments(), 
-                          SimplePolygons()))
-                
-        # segment intersection
-        tr1=Triangle2D(Point2D(0,0), Vector2D(1,0), Vector2D(0.5,-1))
-        self.assertEqual(tr.intersect_simple_polygon(tr1),
-                         (Points(), 
-                          Segments(Segment2D(Point2D(0,0),
-                                             Point2D(1,0))), 
-                          SimplePolygons()))
-        
-        # polygon intersetion - self
-        self.assertEqual(tr.intersect_simple_polygon(tr),
-                         (Points(), 
-                          Segments(), 
-                          SimplePolygons(tr)))
-        
-        # polygon intersetion - overlap - result is a triangle
-        tr1=Triangle2D(Point2D(0.5,0), Vector2D(1,0), Vector2D(0.5,1))
-        self.assertEqual(tr.intersect_simple_polygon(tr1),
-                         (Points(), 
-                          Segments(), 
-                          SimplePolygons(SimpleConvexPolygon2D(Point2D(0.75,0.5),
-                                                               Point2D(0.5,0.0),
-                                                               Point2D(1.0,0.0)))))
-        
-        # polygon intersetion - overlap - result is a parallelogram
-        tr1=Triangle2D(Point2D(0,1), Vector2D(1,0), Vector2D(0.5,-1))
-        self.assertEqual(tr.intersect_simple_polygon(tr1),
-                         (Points(), 
-                          Segments(), 
-                          SimplePolygons(SimpleConvexPolygon2D(Point2D(0.25,0.5),
-                                               Point2D(0.5,0.0),
-                                               Point2D(0.75,0.5),
-                                               Point2D(0.5,1.0)))))
-        
-    def test_intersect_simple_polygon__parallelogram(self):
-        ""
-        pr=Parallelogram2D(Point2D(0,0),Vector2D(1,0),Vector2D(0,1))
-        
-        # no intersection
-        pr1=Parallelogram2D(Point2D(0,10), Vector2D(1,0), Vector2D(0,1))
-        self.assertEqual(pr.intersect_simple_polygon(pr1),
-                         (Points(), 
-                          Segments(), 
-                          SimplePolygons()))
-        
-        # point intersection
-        pr1=Parallelogram2D(Point2D(1,1), Vector2D(1,0), Vector2D(0,1))
-        self.assertEqual(pr.intersect_simple_polygon(pr1),
+        scp=SimpleConvexPolygon2D(Point2D(1,1),Point2D(2,1),Point2D(2,2),Point2D(1,2))
+        self.assertEqual(sp.intersect_simple_convex_polygon(scp),
                          (Points(Point2D(1,1)), 
                           Segments(), 
                           SimplePolygons()))
         
-        # segment intersection
-        pr1=Parallelogram2D(Point2D(0,1), Vector2D(1,0), Vector2D(0,1))
-        self.assertEqual(pr.intersect_simple_polygon(pr1),
+        # edge intersection
+        scp=SimpleConvexPolygon2D(Point2D(1,0),Point2D(2,0),Point2D(2,1),Point2D(1,1))
+        self.assertEqual(sp.intersect_simple_convex_polygon(scp),
                          (Points(), 
-                          Segments(Segment2D(Point2D(0,1),
-                                             Point2D(1,1))), 
+                          Segments(Segment2D(Point2D(1.0,1.0), 
+                                             Point2D(1.0,0.0))), 
                           SimplePolygons()))
-        
-        # polygon intersection - self
-        #print(pr.intersect_simple_polygon(pr))
-        return
-        self.assertEqual(pr.intersect_simple_polygon(pr),
+                     
+        # self intersection
+        scp=SimpleConvexPolygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
+        self.assertEqual(sp.intersect_simple_convex_polygon(scp),
                          (Points(), 
                           Segments(), 
-                          SimplePolygons(pr)))
+                          SimplePolygons(sp)))
         
+        # mid intersection
+        scp=SimpleConvexPolygon2D(Point2D(0.5,0),Point2D(1,0),Point2D(1,1),Point2D(0.5,1))
+        self.assertEqual(sp.intersect_simple_convex_polygon(scp),
+                         (Points(), 
+                          Segments(), 
+                          SimplePolygons(SimplePolygon2D(Point2D(0.5,0.0),
+                                                         Point2D(1.0,0.0),
+                                                         Point2D(1.0,1.0),
+                                                         Point2D(0.5,1)))))
+        
+        # C-SHAPE
+        sp=SimplePolygon2D(Point2D(0,0),
+                           Point2D(2,0),
+                           Point2D(2,1),
+                           Point2D(1,1),
+                           Point2D(1,2),
+                           Point2D(2,2),
+                           Point2D(3,2),
+                           Point2D(3,3),
+                           Point2D(0,3))
+        print(sp.triangles)
+        
+        
+        # two polygon intersection
+        scp=SimpleConvexPolygon2D(Point2D(1,0),Point2D(2,0),Point2D(2,3),Point2D(1,3))
+        print(sp.intersect_simple_convex_polygon(scp))
+        return
+                    
+        
+        
+        
+    def test_union_adjacent_simple_polygon(self):
+        ""
+        
+        
+        
+#    def test_intersect_simple_polygon__triangle(self):
+#        ""
+#        tr=Triangle2D(Point2D(0,0),Vector2D(1,0),Vector2D(0.5,1))
+#        
+#        # no intersection
+#        tr1=Triangle2D(Point2D(0,10), Vector2D(1,10), Vector2D(0.5,10))
+#        self.assertEqual(tr.intersect_simple_polygon(tr1),
+#                         (Points(), 
+#                          Segments(), 
+#                          SimplePolygons()))
+#        
+#        # point intersection
+#        tr1=Triangle2D(Point2D(1,0), Vector2D(2,0), Vector2D(1.5,1))
+#        self.assertEqual(tr.intersect_simple_polygon(tr1),
+#                         (Points(Point2D(1,0)), 
+#                          Segments(), 
+#                          SimplePolygons()))
+#                
+#        # segment intersection
+#        tr1=Triangle2D(Point2D(0,0), Vector2D(1,0), Vector2D(0.5,-1))
+#        self.assertEqual(tr.intersect_simple_polygon(tr1),
+#                         (Points(), 
+#                          Segments(Segment2D(Point2D(0,0),
+#                                             Point2D(1,0))), 
+#                          SimplePolygons()))
+#        
+#        # polygon intersetion - self
+#        self.assertEqual(tr.intersect_simple_polygon(tr),
+#                         (Points(), 
+#                          Segments(), 
+#                          SimplePolygons(tr)))
+#        
+#        # polygon intersetion - overlap - result is a triangle
+#        tr1=Triangle2D(Point2D(0.5,0), Vector2D(1,0), Vector2D(0.5,1))
+#        self.assertEqual(tr.intersect_simple_polygon(tr1),
+#                         (Points(), 
+#                          Segments(), 
+#                          SimplePolygons(SimpleConvexPolygon2D(Point2D(0.75,0.5),
+#                                                               Point2D(0.5,0.0),
+#                                                               Point2D(1.0,0.0)))))
+#        
+#        # polygon intersetion - overlap - result is a parallelogram
+#        tr1=Triangle2D(Point2D(0,1), Vector2D(1,0), Vector2D(0.5,-1))
+#        self.assertEqual(tr.intersect_simple_polygon(tr1),
+#                         (Points(), 
+#                          Segments(), 
+#                          SimplePolygons(SimpleConvexPolygon2D(Point2D(0.25,0.5),
+#                                               Point2D(0.5,0.0),
+#                                               Point2D(0.75,0.5),
+#                                               Point2D(0.5,1.0)))))
+#        
+#    def test_intersect_simple_polygon__parallelogram(self):
+#        ""
+#        pr=Parallelogram2D(Point2D(0,0),Vector2D(1,0),Vector2D(0,1))
+#        
+#        # no intersection
+#        pr1=Parallelogram2D(Point2D(0,10), Vector2D(1,0), Vector2D(0,1))
+#        self.assertEqual(pr.intersect_simple_polygon(pr1),
+#                         (Points(), 
+#                          Segments(), 
+#                          SimplePolygons()))
+#        
+#        # point intersection
+#        pr1=Parallelogram2D(Point2D(1,1), Vector2D(1,0), Vector2D(0,1))
+#        self.assertEqual(pr.intersect_simple_polygon(pr1),
+#                         (Points(Point2D(1,1)), 
+#                          Segments(), 
+#                          SimplePolygons()))
+#        
+#        # segment intersection
+#        pr1=Parallelogram2D(Point2D(0,1), Vector2D(1,0), Vector2D(0,1))
+#        self.assertEqual(pr.intersect_simple_polygon(pr1),
+#                         (Points(), 
+#                          Segments(Segment2D(Point2D(0,1),
+#                                             Point2D(1,1))), 
+#                          SimplePolygons()))
+#        
+#        # polygon intersection - self
+#        #print(pr.intersect_simple_polygon(pr))
+#        return
+#        self.assertEqual(pr.intersect_simple_polygon(pr),
+#                         (Points(), 
+#                          Segments(), 
+#                          SimplePolygons(pr)))
+#        
         
 #    def test_intersect_halfline(self):
 #        ""

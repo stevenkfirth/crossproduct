@@ -101,6 +101,24 @@ class Test_Segments(unittest.TestCase):
         self.assertEqual(s.difference_segments(s),
                          None)
         
+        
+        
+        #
+        s1=Segments(Segment2D(Point2D(1.0,1.0), Point2D(0.5,1)), 
+                    Segment2D(Point2D(0.5,1), Point2D(0.5,0.0)), 
+                    Segment2D(Point2D(0.5,0.0), Point2D(1.0,0.0)), 
+                    Segment2D(Point2D(1.0,0.0), Point2D(1.0,1.0)))
+        s2=Segments(Segment2D(Point2D(0,0), Point2D(1,0)), 
+                    Segment2D(Point2D(1,0), Point2D(1,1)), 
+                    Segment2D(Point2D(1,1), Point2D(0,1)), 
+                    Segment2D(Point2D(0,1), Point2D(0,0)))
+        self.assertEqual(s1.difference_segments(s2),
+                         Segments(Segment2D(Point2D(0.5,1), 
+                                            Point2D(0.5,0.0))))
+    
+    
+    
+    
     
     def test_intersect_point(self):
         ""

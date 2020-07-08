@@ -91,12 +91,30 @@ class SimplePolygon():
         return tuple(list(self.points) + [self.points[0]])
     
     
+    def intersect_simple_convex_polygon(self,simple_convex_polygon):
+        ""
+        if not simple_convex_polygon.__class__.__name__.startswith('SimpleConvexPolygon'):
+            raise Exception
+    
+        ipts, isegments, isimplepolygons=self.triangles.intersect_simple_convex_polygon(simple_convex_polygon)
+        print(ipts, isegments, isimplepolygons)
+        return ipts, isegments, isimplepolygons.union_adjacent
+    
+    
+    
     def intersect_simple_polygon(self,simple_polygon):
         ""
-        ipts,isegments,isimplepolygons=self.triangles.intersect_triangles(simple_polygon.triangles)
+        if simple_polygon.__class__.__name.startswith('SimpleConvexPolygon'): # WONT WORK FOR TRIANGLES...
+            return self.intersect_simple_convex_polygon(simple_polygon)
+        elif simple_polygon.__class__.__name.startswith('SimplePolygon'):
         
-        return ipts,isegments,isimplepolygons
+            ipts,isegments,isimplepolygons=self.triangles.intersect_triangles(simple_polygon.triangles)
         
+            return ipts,isegments,isimplepolygons
+        
+        else:
+            raise Exception
+            
     
     def is_adjacent(self,simple_polygon):
         """Test to see if this simple polygon is adjacent to another simple polygon
@@ -113,9 +131,12 @@ class SimplePolygon():
         return False
     
     
-    def union_simple_polygon(self,simple_polygon):
+    def union_adjacent_simple_polygon(self,simple_polygon):
         ""
-        ipts,isegments,isimplepolygons=self.triangles.union_triangles(simple_polygon.triangles)
+        pl1=self.polyline.segments.difference_segments(simple_polygon.polyline.segments).polyline
+        pl2=simple_polygon.polyline.segments.difference_segments(self.polyline.segments).polyline
+        pl3=pl1.union(pl2)
+        return SimplePolygon2D(*pl3.points[:-1])
         
         
     

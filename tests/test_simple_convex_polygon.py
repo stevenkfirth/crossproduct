@@ -43,18 +43,14 @@ class Test_SimpleConvexPolygon2D(unittest.TestCase):
         self.assertEqual(pg.difference_simple_convex_polygon(pg1),
                          pg)
         
-        # edge intersection - difference is the remaining segments
+        # edge intersection - difference is the polygon pg
         pg1=SimpleConvexPolygon2D(Point2D(1,0),
                                   Point2D(2,0),
                                   Point2D(2,1),
                                   Point2D(1,1))
         self.assertEqual(pg.difference_simple_convex_polygon(pg1),
-                         Segments(Segment2D(Point2D(0,0), 
-                                            Point2D(1,0)), 
-                                  Segment2D(Point2D(1,1), 
-                                            Point2D(0,1)), 
-                                  Segment2D(Point2D(0,1), 
-                                            Point2D(0,0))))
+                         pg)
+                         
         
         # overlap intersection - difference is the remaining segments
         pg1=SimpleConvexPolygon2D(Point2D(0.5,0),
@@ -62,12 +58,10 @@ class Test_SimpleConvexPolygon2D(unittest.TestCase):
                                   Point2D(1.5,1),
                                   Point2D(0.5,1))
         self.assertEqual(pg.difference_simple_convex_polygon(pg1),
-                         Segments(Segment2D(Point2D(0,0), 
-                                            Point2D(0.5,0.0)), 
-                                  Segment2D(Point2D(0.5,1.0), 
-                                            Point2D(0,1)), 
-                                  Segment2D(Point2D(0,1), 
-                                            Point2D(0,0))))
+                         SimpleConvexPolygon2D(Point2D(0,0),
+                                               Point2D(0.5,0),
+                                               Point2D(0.5,1),
+                                               Point2D(0,1)))
         
         
     def test_intersect_halfline(self):
@@ -284,19 +278,34 @@ class Test_SimpleConvexPolygon2D(unittest.TestCase):
                                          Point2D(-1,1),
                                          Point2D(-1,0)))
         
-        # overlap unionion - same polygon
+        # overlap union - same polygon
         self.assertEqual(pg.union_simple_convex_polygon(pg),
                          pg)
     
         
-        # overlap unionion
+        # overlap union
+        pg1=SimpleConvexPolygon2D(Point2D(0.5,0),
+                                  Point2D(2,0),
+                                  Point2D(2,1),
+                                  Point2D(0.5,1))
+        self.assertEqual(pg.union_simple_convex_polygon(pg1),
+                         SimplePolygon2D(Point2D(0,1),
+                                         Point2D(0,0),
+                                         Point2D(2,0),
+                                         Point2D(2,1)))
+        
+        # above, reversed
+        self.assertEqual(pg1.union_simple_convex_polygon(pg),
+                         SimplePolygon2D(Point2D(0,1),
+                                         Point2D(0,0),
+                                         Point2D(2,0),
+                                         Point2D(2,1)))
+        
+        # overlap union
         pg1=SimpleConvexPolygon2D(Point2D(-0.5,-0.5),
                                   Point2D(0.5,-0.5),
                                   Point2D(0.5,0.5),
                                   Point2D(-0.5,0.5))
-        
-       
-        
         self.assertEqual(pg.union_simple_convex_polygon(pg1),
                          SimplePolygon2D(Point2D(0.5,0.0),
                                          Point2D(1,0),
@@ -317,22 +326,6 @@ class Test_SimpleConvexPolygon2D(unittest.TestCase):
                                          Point2D(-0.5,0.5),
                                          Point2D(-0.5,-0.5),
                                          Point2D(0.5,-0.5)))
-        
-        
-        
-        
-        # another overlap unionion
-        pg1=SimpleConvexPolygon2D(Point2D(0.5,0),
-                                  Point2D(2,0),
-                                  Point2D(2,1),
-                                  Point2D(0.5,1))
-        print(pg.union_simple_convex_polygon(pg1))
-        return
-        self.assertEqual(pg.union_simple_convex_polygon(pg1),
-                         SimpleConvexPolygon2D(Point2D(1.0,1.0),
-                                               Point2D(0.5,1),
-                                               Point2D(0.5,0.0),
-                                               Point2D(1.0,0.0)))
         
         
         

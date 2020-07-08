@@ -57,8 +57,7 @@ class SimpleConvexPolygon2D(SimpleConvexPolygon,SimplePolygon2D):
         
         :return result:
             - None
-            - Segments
-            - SimpleConvexPolygon
+            - SimplePolygon
         
         """
         
@@ -67,17 +66,21 @@ class SimpleConvexPolygon2D(SimpleConvexPolygon,SimplePolygon2D):
 
         result=self.intersect_simple_convex_polygon(simple_convex_polygon)
         
-        if result is None or isinstance(result,Point):
+        if result is None or isinstance(result,Point) or isinstance(result,Segment):
             return self # returns the polygon -  no intersection
 
-        elif isinstance(result,Segment):
-            
-            return self.polyline.segments.difference_segments(Segments(result)) # Segments
-            
         elif isinstance(result,SimpleConvexPolygon):
             
-            return self.polyline.segments.difference_segments(result.polyline.segments) # Segments
+            pl1=self.polyline.segments.difference_segments(result.polyline.segments).polyline # Segments
             
+            #print(result.polyline.segments)
+            #print(self.polyline.segments)
+            #print('pl1',pl1)
+            pl2=result.polyline.segments.difference_segments(self.polyline.segments).polyline
+            pl3=pl1.union(pl2)
+            return SimplePolygon2D(*pl3.points[:-1])
+        
+        # NOTE  THIS COULD RETURN MORE THAT ONE POLYGON
     
     
     def intersect_halfline(self,halfline):
@@ -293,6 +296,17 @@ class SimpleConvexPolygon2D(SimpleConvexPolygon,SimplePolygon2D):
             #print(pl)
             pg=SimpleConvexPolygon2D(*pl.points[:-1])
             return pg
+    
+    
+    def intersect_simple_polygon(self,simple_polygon):
+        """
+        """
+        if isinstance(simple_polygon,SimpleConvexPolygon):
+            return self.intersect_simple_convex_polygon(simple_polygon)
+        else:
+            return simple_polygon.intersect_simple_convex_polygon(self)
+    
+    
 
 
     def union_simple_convex_polygon(self,simple_convex_polygon):
@@ -309,23 +323,33 @@ class SimpleConvexPolygon2D(SimpleConvexPolygon,SimplePolygon2D):
         if self==simple_convex_polygon:
             return self
 
-        result=self.difference_simple_convex_polygon(simple_convex_polygon)
+        result=self.intersect_simple_convex_polygon(simple_convex_polygon)
         
-        if result is self:
+        if result is None or isinstance(result,Point):
             return None
         
-        polyline1=result.polyline
-        polyline2=simple_convex_polygon.difference_simple_convex_polygon(self).polyline
+        elif isinstance(result,Segment):
+            
+            pl1=self.polyline.segments.difference_segments(simple_convex_polygon.polyline.segments).polyline
+            pl2=simple_convex_polygon.polyline.segments.difference_segments(self.polyline.segments).polyline
+            pl3=pl1.union(pl2)
+            return SimplePolygon2D(*pl3.points[:-1])
         
-        print(polyline1)
-        print(polyline2)
+        elif isinstance(result,SimpleConvexPolygon):
+            
+            # NOT WORKING #
+            
+            simple_convex_polygon1=simple_convex_polygon.difference_simple_convex_polygon(result)
+            pl1=self.polyline.segments.difference_segments(simple_convex_polygon1.polyline.segments).polyline
+            pl2=simple_convex_polygon1.polyline.segments.difference_segments(self.polyline.segments).polyline
+            pl3=pl1.union(pl2)
+            return SimplePolygon2D(*pl3.points[:-1])
+            
         
-        pl=polyline1.union(polyline2)
         
-        print(pl)
+        else:
         
-        
-        return SimplePolygon2D(*pl.points[:-1])
+            raise Exception
     
             
 

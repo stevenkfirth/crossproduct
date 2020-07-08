@@ -90,6 +90,56 @@ class SimplePolygons(Sequence):
         return segments
     
     
-    def union(self):
-        ""
+    @property
+    def union_adjacent(self):
+        """Returns the adjacent unions of the simple polygons
+        
+        :rtype: SimplePolygons
+        """
+        if len(self)==0:
+            return self        
+        
+        result=SimplePolygons()
+        i=0
+        pg=self[0]
+        remaining_polygons=SimplePolygons(*self[i+1:])
+        while True:
+            try:
+                pg,remaining_polygons=remaining_polygons.union_adjacent_simple_polygon(pg)
+            except TypeError:
+                result.append(pg)
+                i+=1
+                try:
+                    pg=remaining_polygons[i]
+                except IndexError:
+                    break
+        return result
+    
+    
+    def union_adjacent_simple_polygon(self,polygon):
+        """Returns the first union of a polygon in the sequence with the polyline
+        
+        :return result: (union_result (SimplePolygon),
+                         SimplePolygons sequence of remaining polygons)
+        
+        """
+        pgs=[pg for pg in self]
+        for i in range(len(pgs)):
+            u=polygon.union_adjacent_simple_polygon(pgs[i])
+            if u:
+                pgs.pop(i)
+                return u,SimplePolygons(*pgs)
+    
+        return None
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     

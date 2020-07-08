@@ -107,13 +107,13 @@ class Segment():
         :rtype tuple or None:
         
         """
-        if self==segment:
+        #print(self,segment)
+        if self in segment:
             return None
         
         if self.is_collinear(segment):
             t0=self.calculate_t_from_point(segment.P0)
             t1=self.calculate_t_from_point(segment.P1)
-            #print(t0,t1)
             if t1<t0:
                 t0,t1=t1,t0
             
