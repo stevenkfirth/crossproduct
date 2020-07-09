@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from .segment import Segment
 from .point import Point
 from .points import Points
-
+from .polylines import Polylines
 
 
 class Segments(Sequence):
@@ -283,48 +283,48 @@ class Segments(Sequence):
     
     
     
-#    @property
-#    def polylines(self):    
-#        """Returns the polylines that exist in the Segments sequence
-#        
-#        :return result: - 
-#            - each polyline can have one or more than one segments
-#        :rtype Polylines:
-#        
-#        """
-#        
-#        p=Polylines(*[s.polyline for s in self])
-#        return p.consolidate
-#    
-#        
-#        polylines=[s.polyline for s in self]
-#        n=len(polylines)
-#        i=0
-#        
-#        while i<n-1:
-#            
-#            pl=polylines[i]
-#            j=i+1
-#            
-#            while j<n:
-#                
-#                u=pl.union(polylines[j])
-#                
-#                if not u is None:
-#                    polylines[i]=u
-#                    polylines.pop(j)
-#                    break
-#                
-#                j+=1
-#
-#            else:
-#                i+=1
-#                    
-#            n=len(polylines)
-#           
-#        return tuple(polylines)
-#        
-#    
+    @property
+    def polylines(self):    
+        """Returns the polylines that exist in the Segments sequence
+        
+        :return result: - 
+            - each polyline can have one or more than one segments
+        :rtype Polylines:
+        
+        """
+        
+        p=Polylines(*[s.polyline for s in self])
+        return p.consolidate
+    
+        
+        polylines=[s.polyline for s in self]
+        n=len(polylines)
+        i=0
+        
+        while i<n-1:
+            
+            pl=polylines[i]
+            j=i+1
+            
+            while j<n:
+                
+                u=pl.union(polylines[j])
+                
+                if not u is None:
+                    polylines[i]=u
+                    polylines.pop(j)
+                    break
+                
+                j+=1
+
+            else:
+                i+=1
+                    
+            n=len(polylines)
+           
+        return tuple(polylines)
+        
+    
 #    @property
 #    def polygons(self):
 #        """Returns any polygons that exist in the Segments sequence

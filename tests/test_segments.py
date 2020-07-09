@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d
 
 from crossproduct import Point2D, Point3D, Segment2D, Segment3D, Points, Segments, \
-    SimplePolyline2D, Polyline2D
+    SimplePolyline2D, Polyline2D, Polylines
 
 
 plot=True
@@ -116,8 +116,22 @@ class Test_Segments(unittest.TestCase):
                          Segments(Segment2D(Point2D(0.5,1), 
                                             Point2D(0.5,0.0))))
     
-    
-    
+        #
+        s1=Segments(Segment2D(Point2D(0,0), Point2D(2,0)), 
+                    Segment2D(Point2D(2,0), Point2D(2,1)), 
+                    Segment2D(Point2D(2,1), Point2D(0,1)), 
+                    Segment2D(Point2D(0,1), Point2D(0,0)))
+        s2=Segments(Segment2D(Point2D(0.5,0), Point2D(1.5,0)), 
+                    Segment2D(Point2D(1.5,0), Point2D(1.5,1)), 
+                    Segment2D(Point2D(1.5,1), Point2D(0.5,1)), 
+                    Segment2D(Point2D(0.5,1), Point2D(0.5,0)))
+        self.assertEqual(s1.difference_segments(s2),
+                         Segments(Segment2D(Point2D(0,0), Point2D(0.5,0.0)), 
+                                  Segment2D(Point2D(1.5,0.0), Point2D(2,0)), 
+                                  Segment2D(Point2D(2,0), Point2D(2,1)), 
+                                  Segment2D(Point2D(2,1), Point2D(1.5,1.0)), 
+                                  Segment2D(Point2D(0.5,1.0), Point2D(0,1)), 
+                                  Segment2D(Point2D(0,1), Point2D(0,0))))
     
     
     def test_intersect_point(self):
@@ -215,7 +229,28 @@ class Test_Segments(unittest.TestCase):
                              Point2D(2,1)))
         self.assertEqual(s.polyline,
                          None)
+    
+
+    def test_polylines(self):
+        #
+        s=Segments(Segment2D(Point2D(0,0), Point2D(0.5,0.0)), 
+                   Segment2D(Point2D(1.5,0.0), Point2D(2,0)), 
+                   Segment2D(Point2D(2,0), Point2D(2,1)), 
+                   Segment2D(Point2D(2,1), Point2D(1.5,1.0)), 
+                   Segment2D(Point2D(0.5,1.0), Point2D(0,1)), 
+                   Segment2D(Point2D(0,1), Point2D(0,0)))
+        self.assertEqual(s.polylines,
+                         Polylines(Polyline2D(Point2D(0.5,1.0),
+                                              Point2D(0,1),
+                                              Point2D(0,0),
+                                              Point2D(0.5,0.0)), 
+                                   Polyline2D(Point2D(1.5,0.0),
+                                              Point2D(2,0),
+                                              Point2D(2,1),
+                                              Point2D(1.5,1.0))))
         
+            
+    
         
     def test_union_polyline(self):
         ""

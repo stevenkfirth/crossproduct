@@ -11,6 +11,14 @@ from crossproduct import Point2D, Point3D, \
 
 plot=False # Set to true to see the test plots
 
+class Test1(unittest.TestCase):
+    
+    def test___init__(self):
+        ""
+        pts3=Point2D(0,0), Point2D(2,0), Point2D(2,1), Point2D(0,1), Point2D(0,0), Point2D(0.25,0.75), Point2D(1.75,0.75), Point2D(1.75,0.25), Point2D(0.25,0.25), Point2D(0.25,0.75)
+        #pg=SimplePolygon2D(*pts3)
+
+
 class Test_SimplePolygon2D(unittest.TestCase):
     """
     points=(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
@@ -27,6 +35,8 @@ class Test_SimplePolygon2D(unittest.TestCase):
         pg=SimplePolygon2D(*pts2)
         #print('--end--')
         
+        pts3=Point2D(0,0), Point2D(2,0), Point2D(2,1), Point2D(0,1), Point2D(0,0), Point2D(0.25,0.75), Point2D(1.75,0.75), Point2D(1.75,0.25), Point2D(0.25,0.25), Point2D(0.25,0.75)
+        #pg=SimplePolygon2D(*pts3)
         
     def test___contains__(self):
         ""
@@ -94,6 +104,67 @@ class Test_SimplePolygon2D(unittest.TestCase):
                          2)
         self.assertEqual(pg.crossing_number(Point2D(0.5,0.5)),
                          1)
+        
+        
+    def test_difference_simple_polygon_interior(self):
+        ""
+        pg=SimplePolygon2D(Point2D(0,0),
+                           Point2D(2,0),
+                           Point2D(2,1),
+                           Point2D(0,1))
+        #pg.plot()
+        
+        # self intersection
+        self.assertEqual(pg.difference_simple_polygon_interior(pg),
+                         None)
+        
+        # half intersection
+        pg1=SimplePolygon2D(Point2D(1,0),
+                            Point2D(2,0),
+                            Point2D(2,1),
+                            Point2D(1,1))
+        self.assertEqual(pg.difference_simple_polygon_interior(pg1),
+                         SimplePolygons(SimplePolygon2D(Point2D(1,1),
+                                                        Point2D(0,1),
+                                                        Point2D(0,0),
+                                                        Point2D(1,0))))
+        
+        # corner intersection
+        pg1=SimplePolygon2D(Point2D(1,0),
+                            Point2D(2,0),
+                            Point2D(2,0.5),
+                            Point2D(1,0.5))
+        self.assertEqual(pg.difference_simple_polygon_interior(pg1),
+                         SimplePolygons(SimplePolygon2D(Point2D(2.0,0.5),
+                                                        Point2D(2,1),
+                                                        Point2D(0,1),
+                                                        Point2D(0,0),
+                                                        Point2D(1.0,0.0),
+                                                        Point2D(1,0.5))))
+        
+        # mid intersection
+        pg1=SimplePolygon2D(Point2D(0.5,0),
+                            Point2D(1.5,0),
+                            Point2D(1.5,1),
+                            Point2D(0.5,1))
+        self.assertEqual(pg.difference_simple_polygon_interior(pg1),
+                         SimplePolygons(SimplePolygon2D(Point2D(0.5,1.0),
+                                                        Point2D(0,1),
+                                                        Point2D(0,0),
+                                                        Point2D(0.5,0.0)), 
+                                        SimplePolygon2D(Point2D(1.5,0.0),
+                                                        Point2D(2,0),
+                                                        Point2D(2,1),
+                                                        Point2D(1.5,1.0))))
+        
+        # interior intersection
+        pg1=SimplePolygon2D(Point2D(0.25,0.25),
+                            Point2D(1.75,0.25),
+                            Point2D(1.75,0.75),
+                            Point2D(0.25,0.75))
+        # NOT IMPLEMENTED AT PRESENT AS THIS CREATES A POLYGON WITH A HOLE
+        #print(pg.difference_simple_polygon_interior(pg1))
+          
         
         
     def test_is_adjacent(self):
@@ -924,6 +995,7 @@ class Test_SimplePolygon3D(unittest.TestCase):
 if __name__=='__main__':
     
     points=(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
+    unittest.main(Test1())
     unittest.main(Test_SimplePolygon2D())
     
     points=(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))

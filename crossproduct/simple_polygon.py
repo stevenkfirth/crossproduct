@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d
 
 from .point import Point2D, Point3D
+from .segment import Segment2D
 from .simple_polyline import SimplePolyline2D, SimplePolyline3D
+from .simple_polygons import SimplePolygons
 from .plane import Plane3D
 from .vector import Vector3D
 from .triangles import Triangles 
@@ -88,6 +90,71 @@ class SimplePolygon():
         """
         return tuple(list(self.points) + [self.points[0]])
     
+    
+    def difference_simple_polygon_interior(self,simple_polygon_interior):
+        """Returns the difference between this polygon and another polygon which is interior to it.
+        
+        :param simple_polygon SimpleConvexPolygon: a simple convex polygon which is interior (including on one or more edges)
+        
+        :return result:
+            - None
+            - SimplePolygons
+        
+        """
+        
+        if self==simple_polygon_interior:
+            return None
+
+        else:
+            #print(self.polyline.segments)
+            #print(simple_polygon.polyline.segments)
+            
+            pls1=self.polyline.segments.difference_segments(simple_polygon_interior.polyline.segments).polylines 
+            #print('pls1',pls1)
+            
+            pls2=simple_polygon_interior.polyline.segments.difference_segments(self.polyline.segments).polylines
+            #print('pls2',pls2)
+            
+            spgs=SimplePolygons()
+            
+            for pl1 in pls1:
+                for pl2 in pls2:
+                    pl3=pl1.union(pl2)
+                    if not pl3 is None: 
+                        spgs.append(SimplePolygon2D(*pl3.points[:-1]))
+            
+            if len(spgs)>0:
+                return spgs
+        
+            else: # interior intersection
+                
+                return NotImplementedError #self.doughnut(simple_polygon_interior) # perhaps return a polygon with a hole??
+    
+    
+    def doughnut(self,simple_polygon_interior):
+        """Returns a 'doughnut' polygon around the interior polygon
+        
+        Note that the returned polygon is NOT a simple polygon, so traingulation doesn't work
+        
+        """
+        
+        pg1=self if self.orientation>0 else self.reverse # ccw
+        pg2=simple_polygon_interior.reverse if simple_polygon_interior.orientation>0 else simple_polygon_interior # cw
+            
+        combinations=[(i,j) for i in range(len(pg1.points)) for j in range(len(pg2.points))]
+        for i,j in combinations:
+            pg1b=pg1.reorder(i)
+            pg2b=pg2.reorder(j)
+            s=Segment2D(pg1b.points[0],pg2b.points[0])
+            ipts1,isegments1=pg1b.polyline.segments.intersect_segment(s)
+            ipts2,isegments2=pg2b.polyline.intersect_segment(s)
+            if len(ipts1)==1 and len(isegments1)==0 and len(ipts2)==1 and len(isegments2)==0:
+                break
+                
+        points=list(pg1b.polyline.points)+list(pg2b.polyline.points)
+        print(points)
+        return self.__class__(*points) # error as the triangulation of a doughnut isnt working at present
+        
     
     def intersect_simple_convex_polygon(self,simple_convex_polygon):
         ""
@@ -270,8 +337,10 @@ class SimplePolygon():
             
             n=len(points)
             
-            for i in range(n):
+            for i in range(n-2):
                 #print('i',i)
+                #print('n',n)
+                #print('len(points)',len(points))
                 
                 if i==n-1:
                     i_next=0
