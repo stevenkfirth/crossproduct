@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-
 from .point import Point, Point2D
-from .line import Line, Line2D, Line3D
+from .line import Line2D, Line3D
 
 SMALL_NUM=0.00000001
 
@@ -10,6 +9,7 @@ SMALL_NUM=0.00000001
 class Segment():
     "A n-D segment"
     
+    classname='Segment'
     
     def __init__(self,P0,P1):
         """

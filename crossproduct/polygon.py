@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .points import Point
-from .simple_polygon import SimplePolygon, SimplePolygon2D, SimplePolygon3D
+from .simple_polygon import SimplePolygon2D, SimplePolygon3D
 
 class Polygon():
     """A n-D polygon
@@ -20,7 +19,7 @@ class Polygon():
         """
         
         for pt in points:
-            if not isinstance(pt,Point):
+            if pt.classname=='Point':
                 raise TypeError
         
         self.points=tuple(points)
@@ -28,7 +27,7 @@ class Polygon():
         self.triangles=self.triangulate
         
         for h in holes:
-            if not isinstance(h,SimplePolygon):
+            if not h.classname=='SimplePolygon':
                 raise TypeError
                     
         self.holes=holes

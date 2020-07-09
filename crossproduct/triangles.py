@@ -4,13 +4,9 @@ import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d
 
 from collections.abc import Sequence
-from .segment import Segment
 from .segments import Segments
-from .point import Point
 from .points import Points
 from .simple_polygons import SimplePolygons
-from .simple_convex_polygon import SimpleConvexPolygon
-#from .triangle import Triangle2D
 
 
 class Triangles(Sequence):
@@ -71,15 +67,14 @@ class Triangles(Sequence):
             #print('tr',tr)
             result=tr.intersect_simple_convex_polygon(simple_convex_polygon) # returns None, Point, Segment, SimpleConvexPolygon
             #print('result',result)
-            if isinstance(result,Point):
+            if result is None:
+                continue
+            if result.classname=='Point':
                 ipts.append(result,unique=True)
-            elif isinstance(result,Segment):
+            elif result.classname=='Segment':
                 isegments.append(result,unique=True)
-            elif isinstance(result,SimpleConvexPolygon):
+            elif result.classname=='SimpleConvexPolygon':
                 isimplepolygons.append(result)
-                
-        #isegments.remove_segments_in_polygons(isimplepolygons)
-        #ipts.remove_points_in_segments(isegments)
                 
         return ipts, isegments, isimplepolygons
     
@@ -94,15 +89,14 @@ class Triangles(Sequence):
         
         for tr in self:
             result=tr.intersect_simple_convex_polygon(triangle) # returns None, Point, Segment, SimpleConvexPolygon
-            if isinstance(result,Point):
+            if result is None:
+                continue
+            if result.classname=='Point':
                 ipts.append(result,unique=True)
-            elif isinstance(result,Segment):
+            elif result.classname=='Segment':
                 isegments.append(result,unique=True)
-            elif isinstance(result,SimpleConvexPolygon):
+            elif result.classname=='SimpleConvexPolygon':
                 isimplepolygons.append(result)
-                
-        isegments.remove_segments_in_polygons(isimplepolygons)
-        ipts.remove_points_in_segments(isegments)
                 
         return ipts, isegments, isimplepolygons
         
@@ -123,9 +117,6 @@ class Triangles(Sequence):
             for pg in result[2]:
                 isimplepolygons.append(pg)
                 
-        isegments.remove_segments_in_polygons(isimplepolygons)
-        ipts.remove_points_in_segments(isegments)
-                
         return ipts, isegments, isimplepolygons
         
     
@@ -142,12 +133,6 @@ class Triangles(Sequence):
         
         
     
-        
-    def union(self):
-        """Returns the union of all triangles in the Triangles sequence
-        """
-    
-        
         
         
         

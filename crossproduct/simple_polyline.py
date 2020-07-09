@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from .point import Point
 from .polyline import Polyline2D, Polyline3D
 
 
@@ -9,21 +8,25 @@ class SimplePolyline():
         
     """
     
-    def __init__(self,*points):
+    classname='SimplePolyline'
+    
+    def __init__(self,*points,validate=False):
         """
         
         param points: an array of points 
                     
         """
         
-        for pt in points:
-            if not isinstance(pt,Point):
-                raise TypeError
+        if validate:
+            for pt in points:
+                if not pt.classname=='Point':
+                    raise TypeError
         
         self.points=tuple(points)
         
-        if self.is_intersecting:
-            raise ValueError('A simple polyline cannot have self intersecting points')
+        if validate:
+            if self.is_intersecting:
+                raise ValueError('A simple polyline cannot have self intersecting points')
                 
     
         

@@ -184,10 +184,94 @@ class Test_SimplePolygon2D(unittest.TestCase):
                                                          Point2D(2.0,2.0),
                                                          Point2D(2.0,3.0),
                                                          Point2D(1,3)))))
-        return
-                    
+        
+
+    def test_intersect_simple_polygon(self):
+        ""
+        # SQUARE
+        sp=SimplePolygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
+        
+        # no intersection
+        sp1=SimplePolygon2D(Point2D(2,0),Point2D(3,0),Point2D(3,1),Point2D(2,1))
+        self.assertEqual(sp.intersect_simple_polygon(sp1),
+                         (Points(), 
+                          Segments(), 
+                          SimplePolygons()))
+        
+        # point intersection
+        sp1=SimplePolygon2D(Point2D(1,1),Point2D(2,1),Point2D(2,2),Point2D(1,2))
+        self.assertEqual(sp.intersect_simple_polygon(sp1),
+                         (Points(Point2D(1,1)), 
+                          Segments(), 
+                          SimplePolygons()))
+        
+        # edge intersection
+        sp1=SimplePolygon2D(Point2D(1,0),Point2D(2,0),Point2D(2,1),Point2D(1,1))
+        self.assertEqual(sp.intersect_simple_polygon(sp1),
+                         (Points(), 
+                          Segments(Segment2D(Point2D(1.0,1.0), 
+                                             Point2D(1.0,0.0))), 
+                          SimplePolygons()))
+                     
+        # self intersection
+        sp1=SimplePolygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
+        self.assertEqual(sp.intersect_simple_polygon(sp1),
+                         (Points(), 
+                          Segments(), 
+                          SimplePolygons(sp)))
+        
+        # mid intersection
+        sp1=SimplePolygon2D(Point2D(0.5,0),Point2D(1,0),Point2D(1,1),Point2D(0.5,1))
+        self.assertEqual(sp.intersect_simple_polygon(sp1),
+                         (Points(Point2D(1.0,0.0)), 
+                          Segments(), 
+                          SimplePolygons(SimplePolygon2D(Point2D(0.5,0.0),
+                                                         Point2D(1.0,0.0),
+                                                         Point2D(1.0,1.0),
+                                                         Point2D(0.5,1)))))
+        
+        # C-SHAPE
+        sp=SimplePolygon2D(Point2D(0,0),
+                           Point2D(2,0),
+                           Point2D(2,1),
+                           Point2D(1,1),
+                           Point2D(1,2),
+                           Point2D(2,2),
+                           Point2D(2,3),
+                           Point2D(0,3))
+        
+        # two polygon intersection
+        sp1=SimplePolygon2D(Point2D(1,0),
+                            Point2D(2,0),
+                            Point2D(2,3),
+                            Point2D(1,3))
+        self.assertEqual(sp.intersect_simple_polygon(sp1),
+                         (Points(), 
+                          Segments(Segment2D(Point2D(1.0,2.0), 
+                                             Point2D(1.0,1.0))), 
+                          SimplePolygons(SimplePolygon2D(Point2D(1.0,0.0),
+                                                         Point2D(2.0,0.0),
+                                                         Point2D(2.0,1.0),
+                                                         Point2D(1.0,1.0)), 
+                                         SimplePolygon2D(Point2D(1.0,2.0),
+                                                         Point2D(2.0,2.0),
+                                                         Point2D(2.0,3.0),
+                                                         Point2D(1,3)))))
         
         
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
         
     def test_union_adjacent_simple_polygon(self):
         ""

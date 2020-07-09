@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import bspy.geometry
-
-from .halfline import Halfline3D
 from .line import Line3D
 from .point import Point3D
 from .points import Points
-from .segment import Segment3D
 from .segments import Segments
-from .vector import Vector3D
+
 
 SMALL_NUM=0.00000001
 
@@ -34,12 +30,12 @@ class Plane3D():
         
         """
         
-        if isinstance(P0,Point3D):
+        if P0.__class__.__name__=='Point3D':
             self.P0=P0
         else:
             raise TypeError
             
-        if isinstance(N,Vector3D):
+        if N.__class__.__name__=='Vector3D':
             self.N=N
         else:
             raise TypeError
@@ -60,12 +56,12 @@ class Plane3D():
         :rtype bool:
         
         """
-        if isinstance(obj,Point3D):
+        if obj.__class__.__name__=='Point3D':
             
             point=obj
             return self.N.is_perpendicular(point-self.P0)
             
-        elif isinstance(obj,Line3D) or isinstance(obj,Halfline3D) or isinstance(obj,Segment3D):
+        elif obj.__class__.__name__ in ['Line3D','Halfline3D','Segment3D']:
             
             linelike_obj=obj            
             return linelike_obj.P0 in self and self.is_parallel(linelike_obj)
@@ -224,10 +220,14 @@ class Plane3D():
         isegments=Segments()
         for s in segments:
             result=self.intersect_segment(s)
-            if isinstance(result,Point3D):
+            if result is None:
+                continue
+            elif result.__class__.__name__=='Point3D':
                 ipts.append(result,unique=True)
-            elif isinstance(result,Segment3D):
+            elif result.__class__.__name__=='Segment3D':
                 isegments.append(result,unique=True)
+            else:
+                raise Exception
         ipts.remove_points_in_segments(isegments)
         return ipts,isegments
         
@@ -283,7 +283,7 @@ class Plane3D():
         :rtype bool:
             
         """
-        if isinstance(obj,Line3D) or isinstance(obj,Halfline3D) or isinstance(obj,Segment3D):
+        if obj.__class__.__name__ in ['Line3D','Halfline3D','Segment3D']:
             return self.N.is_perpendicular(obj.vL)
         
         elif isinstance(obj,Plane3D):
@@ -304,7 +304,7 @@ class Plane3D():
         :rtype bool:
             
         """
-        if isinstance(obj,Line3D) or isinstance(obj,Halfline3D) or isinstance(obj,Segment3D):
+        if obj.__class__.__name__ in ['Line3D','Halfline3D','Segment3D']:
             return self.N.is_collinear(obj.vL)
         
         elif isinstance(obj,Plane3D):

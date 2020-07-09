@@ -8,6 +8,7 @@ SMALL_NUM=0.00000001
 class Point():
     " A n-D point"
 
+    classname='Point'
     
     def distance_point(self,point):
         """Returns the distance to the supplied point
@@ -24,6 +25,8 @@ class Point():
 
 class Point2D(Point):
     "A 2D point"
+    
+    dimension='2D'
     
     def __init__(self,x,y):
         """
@@ -127,26 +130,11 @@ class Point2D(Point):
         """
         return self.x, self.y
     
-    
-#    def distance(self,obj):
-#        """Returns the distance to the supplied object
-#        
-#        :param obj: a 2D geometric object 
-#            - e.g. Point2D, Triangle2D etc.
-#        
-#        :return distance: the distance from the point to the object
-#        :rtype float:
-#            
-#        """
-#        if isinstance(obj,Point2D):
-#            return (obj-self).length
-#        else:
-#            return obj.distance(self)
-    
-    
 
 class Point3D(Point):
     "A 3D point"
+    
+    dimension='3D'
     
     def __init__(self,x,y,z):
         """
@@ -283,24 +271,6 @@ class Point3D(Point):
         else:
             raise Exception
                     
-        
-    
-    
-    
-#    def distance(self,obj):
-#        """Returns the distance to the supplied object
-#        
-#        :param obj: a 3D geometric object 
-#            - e.g. Point3D, Triangle3D etc.
-#        
-#        :return distance: the distance from the point to the object
-#        :rtype float:
-#            
-#        """
-#        if isinstance(obj,Point3D):
-#            return (obj-self).length
-#        else:
-#            return obj.distance_to_point(self)
         
 
     

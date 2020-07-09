@@ -6,6 +6,8 @@ SMALL_NUM=0.00000001
 class Vector():
     "A n-D vector"
     
+    classname='Vector'
+    
     def is_codirectional(self,vector):
         """Tests if this vector and the supplied vector are codirectional
         

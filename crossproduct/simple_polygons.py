@@ -3,9 +3,7 @@
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d
 
-
 from collections.abc import Sequence
-from .simple_polygon import SimplePolygon
 from .segments import Segments
 
 
@@ -14,13 +12,19 @@ class SimplePolygons(Sequence):
     
     """
     
-    def __init__(self,*simple_polygons):
+    def __init__(self,*simple_polygons,validate=False):
         """
         """
     
-        for pg in simple_polygons:
-            if not isinstance(pg,SimplePolygon):
-                raise TypeError
+        if validate:
+            for pg in simple_polygons:
+                print(pg.classname)
+                if not pg.classname in ['Triangle',
+                                        'Quadrilateral',
+                                        'Parallelogram',
+                                        'SimpleConvexPolygon',
+                                        'SimplePolygon']:
+                    raise TypeError
     
         self.simple_polygons=list(simple_polygons)
         
@@ -67,15 +71,15 @@ class SimplePolygons(Sequence):
         
         
     
-    def append(self,simple_polygons,unique=False):
+    def append(self,simple_polygon,unique=False):
         """
         """
-        if isinstance(simple_polygons,SimplePolygon):
+        if simple_polygon.classname in ['Triangle','Quadrilateral','Parallelogram','SimpleConvexPolygon','SimplePolygon']:
             if unique:
-                if not simple_polygons in self:
-                    self.simple_polygons.append(simple_polygons)
+                if not simple_polygon in self:
+                    self.simple_polygons.append(simple_polygon)
             else:
-                self.simple_polygons.append(simple_polygons)
+                self.simple_polygons.append(simple_polygon)
                 
         else:
             raise TypeError
@@ -114,7 +118,6 @@ class SimplePolygons(Sequence):
             return self        
         
         result=SimplePolygons()
-        i=0
         pg=self[0]
         remaining_polygons=SimplePolygons(*self[1:])
         while True:

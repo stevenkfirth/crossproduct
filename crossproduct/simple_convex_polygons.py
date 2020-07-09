@@ -2,8 +2,6 @@
 
 # -*- coding: utf-8 -*-
 
-from collections.abc import Sequence
-from .simple_convex_polygon import SimpleConvexPolygon
 from .simple_polygons import SimplePolygons
 
 
@@ -12,14 +10,15 @@ class SimpleConvexPolygons(SimplePolygons):
     
     """
     
-    def __init__(self,*simple_convex_polygons):
+    def __init__(self,*simple_convex_polygons,validate=False):
         """
         """
     
-        for pg in simple_convex_polygons:
-            if not isinstance(pg,SimpleConvexPolygon):
-                raise TypeError
-    
+        if validate:
+            for pg in simple_convex_polygons:
+                if not pg.classname in ['Triangle','Quadrilateral','Parallelogram','SimpleConvexPolygon']:
+                    raise TypeError
+        
         self.simple_convex_polygons=list(simple_convex_polygons)
         
         

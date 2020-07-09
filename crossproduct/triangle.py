@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from .line import Line3D
-from .point import Point, Point2D, Point3D
-from .simple_convex_polygon import SimpleConvexPolygon, SimpleConvexPolygon2D, SimpleConvexPolygon3D
-from .segment import Segment, Segment3D
-from .vector import Vector, Vector2D, Vector3D
-from .triangles import Triangles
+from .point import Point2D
+from .simple_convex_polygon import SimpleConvexPolygon2D, SimpleConvexPolygon3D
+from .segment import Segment3D
 
 
 class Triangle():
     """A n-D triangle
     """
+    
+    classname='Triangle'
     
     def __init__(self,P0,v,w):
         """
@@ -20,28 +19,26 @@ class Triangle():
         :param w Vector2D: a vector on the triangle from P0 to P2
         
         """
-        if isinstance(P0,Point):
+        if P0.classname=='Point':
             self.P0=P0
         else:
             raise TypeError
             
-        if isinstance(v,Vector):
+        if v.classname=='Vector':
             self.v=v
         else:
             raise TypeError
         
-        if isinstance(w,Vector):
+        if w.classname=='Vector':
             self.w=w
         else:
             raise TypeError
     
         # orientate counterclockwise if a 2D triangle
-        if isinstance(P0,Point2D):
+        if P0.dimension=='2D':
             if self.orientation<0:
                 self.v=w
                 self.w=v
-                
-        #self.triangles=self.triangluate
                 
 
     @property
@@ -108,11 +105,6 @@ class Triangle():
                               points[2]-points[0])
 
 
-    @property
-    def triangles(self):
-        return Triangles(self)
-
-
 
 class Triangle2D(Triangle,SimpleConvexPolygon2D):
     """A 2D Triangle
@@ -133,7 +125,7 @@ class Triangle2D(Triangle,SimpleConvexPolygon2D):
         :rtype bool:
             
         """
-        if isinstance(obj,Point2D):
+        if obj.__class__.__name__=='Point2D':
             
             point=obj
             
@@ -150,7 +142,6 @@ class Triangle2D(Triangle,SimpleConvexPolygon2D):
                 return True
             else:
                 return False                
-            
             
         else:
             raise Exception
@@ -210,35 +201,35 @@ class Triangle2D(Triangle,SimpleConvexPolygon2D):
         return 0.5*(self.v.x*self.w.y-self.w.x*self.v.y)
     
     
-    def union_triangle_edge_intersection(self,triangle):
-        """Returns the union of two triangles that share edge intersection
-        
-        :return result:
-        :rtype SimplePolygon or None:
-        
-        """
-        
-        # difference_segments instead of intersect segments ??
-        
-        ipts1,isegments1=self.intersect_segments(triangle.polyline.segments)
-        print(ipts1,isegments1)
-        
-        if len(ipts1)==0 and len(isegments1)==0: # no union, no intersection
-            return None
-        
-        elif len(ipts1)==1 and len(isegments1)==0: # no union, point intersection
-            return None
-        
-        elif len(ipts1)==0 and len(isegments)==1: # segment intersection
-            
-            if isegments1[0] in self.polyline.segments: # exact segment
-                
-                pass
-        
-        
-        else:
-            raise Exception
-        
+#    def union_triangle_edge_intersection(self,triangle):
+#        """Returns the union of two triangles that share edge intersection
+#        
+#        :return result:
+#        :rtype SimplePolygon or None:
+#        
+#        """
+#        
+#        # difference_segments instead of intersect segments ??
+#        
+#        ipts1,isegments1=self.intersect_segments(triangle.polyline.segments)
+#        print(ipts1,isegments1)
+#        
+#        if len(ipts1)==0 and len(isegments1)==0: # no union, no intersection
+#            return None
+#        
+#        elif len(ipts1)==1 and len(isegments1)==0: # no union, point intersection
+#            return None
+#        
+#        elif len(ipts1)==0 and len(isegments)==1: # segment intersection
+#            
+#            if isegments1[0] in self.polyline.segments: # exact segment
+#                
+#                pass
+#        
+#        
+#        else:
+#            raise Exception
+#        
         
     
 class Triangle3D(Triangle,SimpleConvexPolygon3D):
@@ -258,7 +249,7 @@ class Triangle3D(Triangle,SimpleConvexPolygon3D):
         :rtype bool:
             
         """
-        if isinstance(obj,Point3D):
+        if obj.__class__.__name__=='Point3D':
             
             point=obj
             
@@ -340,7 +331,7 @@ class Triangle3D(Triangle,SimpleConvexPolygon3D):
                 i=plane.intersect_segment(ps)
                 if i is None:
                     continue
-                elif isinstance(i,Segment3D): # if a segment, then this is the result
+                elif i.__class__.__name__=='Segment3D': # if a segment, then this is the result
                     return i
                 else:
                     if not i in ipts:
@@ -397,19 +388,19 @@ class Triangle3D(Triangle,SimpleConvexPolygon3D):
             if iresult2 is None:
                 return None
             
-            if isinstance(iresult1,Point3D):
+            if iresult1.__class__.__name__=='Point3D':
                 if iresult1 in triangle:
                     return iresult1 
                 else:
                     return None
                 
-            elif isinstance(iresult2,Point3D):
+            elif iresult2.__class__.__name__=='Point3D':
                 if iresult2 in self:
                     return iresult2
                 else:
                     return None
             
-            elif isinstance(iresult1,Segment3D) and isinstance(iresult2,Segment3D):
+            elif iresult1.__class__.__name__=='Segment3D' and iresult2.__class__.__name__=='Segment3D':
             
                     return iresult1.intersect_segment(iresult2)
             

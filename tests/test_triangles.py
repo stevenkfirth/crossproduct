@@ -51,10 +51,10 @@ class Test_Triangles(unittest.TestCase):
                     Triangle2D(Point2D(1,1), Vector2D(0,1), Vector2D(-1,2)), 
                     Triangle2D(Point2D(1,2), Vector2D(1,0), Vector2D(-1,1)), 
                     Triangle2D(Point2D(2,2), Vector2D(0,1), Vector2D(-2,1)))
-        fig, ax = plt.subplots()
-        t.plot(ax)
+        #fig, ax = plt.subplots()
+        #t.plot(ax)
         scp=SimpleConvexPolygon2D(Point2D(1,0),Point2D(2,0),Point2D(2,3),Point2D(1,3))
-        scp.plot(ax)
+        #scp.plot(ax)
         
         self.assertEqual(t.intersect_simple_convex_polygon(scp),
                          (Points(Point2D(1.0,1.0)),
@@ -84,7 +84,7 @@ class Test_Triangles(unittest.TestCase):
         # self intersection with first triangle
         self.assertEqual(t.intersect_triangle(triangles[0]),
                          (Points(), 
-                          Segments(), 
+                          Segments(Segment2D(Point2D(1.0,0.0), Point2D(0.0,1.0))), 
                           SimplePolygons(SimpleConvexPolygon2D(Point2D(0.0,0.0),
                                                                Point2D(1.0,0.0),
                                                                Point2D(0.0,1.0)))))
@@ -92,7 +92,7 @@ class Test_Triangles(unittest.TestCase):
         # self intersection with second triangle
         self.assertEqual(t.intersect_triangle(triangles[1]),
                          (Points(), 
-                          Segments(), 
+                          Segments(Segment2D(Point2D(0.0,1.0), Point2D(1.0,0.0))), 
                           SimplePolygons(SimpleConvexPolygon2D(Point2D(1.0,1.0),
                                                                Point2D(0.0,1.0),
                                                                Point2D(1.0,0.0)))))
@@ -118,7 +118,7 @@ class Test_Triangles(unittest.TestCase):
         # self intersection
         self.assertEqual(t.intersect_triangles(t),
                          (Points(), 
-                          Segments(), 
+                          Segments(Segment2D(Point2D(1.0,0.0), Point2D(0.0,1.0))), 
                           SimplePolygons(SimpleConvexPolygon2D(Point2D(0.0,0.0),
                                                                Point2D(1.0,0.0),
                                                                Point2D(0.0,1.0)), 

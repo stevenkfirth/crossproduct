@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from collections.abc import Sequence
-from .segment import Segment
 from .point import Point
 
 
@@ -24,7 +23,6 @@ class Points(Sequence):
             return True
         else:
             return False
-        
         
         
     def __getitem__(self,i):

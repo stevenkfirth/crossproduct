@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from .point import Point, Point2D, Point3D
-from .simple_convex_polygon import SimpleConvexPolygon2D, SimpleConvexPolygon3D
-from .vector import Vector, Vector2D, Vector3D
 from .quadrilateral import Quadrilateral2D, Quadrilateral3D
 
 
 class Parallelogram():
     """A n-D parallelogram
     """
+    
+    classname='Parallelogram'
     
     def __init__(self,P0,v,w):
         """
@@ -19,23 +18,20 @@ class Parallelogram():
         
         """
         
-        if isinstance(P0,Point):
+        if P0.classname=='Point':
             self.P0=P0
         else:
             raise TypeError
             
-        if isinstance(v,Vector):
+        if v.classname=='Vector':
             self.v=v
         else:
             raise TypeError
         
-        if isinstance(w,Vector):
+        if w.classname=='Vector':
             self.w=w
         else:
             raise TypeError
-            
-        self.triangles=self.triangulate
-        
         
 
     @property

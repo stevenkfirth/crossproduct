@@ -1,28 +1,27 @@
 # -*- coding: utf-8 -*-
 
-from .halfline import Halfline2D, Halfline3D
-from .line import Line2D, Line3D
+
 from .segment import Segment, Segment2D, Segment3D
 from .segments import Segments
 from .simple_polygon import SimplePolygon2D, SimplePolygon3D
-from .simple_polyline import SimplePolyline,SimplePolyline2D, SimplePolyline3D
-from .point import Point,Point2D, Point3D
+from .point import Point, Point2D
 from .points import Points
-from .polylines import Polylines
-from .simple_polygons import SimplePolygons
-from .plane import Plane3D
-from .vector import Vector2D
 
 
 class SimpleConvexPolygon():
     """A n-D convex polygon
     """
     
+    classname='SimpleConvexPolygon'
+    #superclassname='SimpleConvexPolygon'
+
 
 class SimpleConvexPolygon2D(SimpleConvexPolygon,SimplePolygon2D):
     """A 2D convex polygon
     
     """
+    
+    dimension='2D'
     
     def __init__(self,*points):
         """
@@ -66,7 +65,7 @@ class SimpleConvexPolygon2D(SimpleConvexPolygon,SimplePolygon2D):
 
         result=self.intersect_simple_convex_polygon(simple_convex_polygon)
         
-        if result is None or isinstance(result,Point) or isinstance(result,Segment):
+        if result is None or result.classname=='Point' or result.classname=='Segment':
             return self # returns the polygon -  no intersection
 
         elif isinstance(result,SimpleConvexPolygon):
@@ -250,10 +249,15 @@ class SimpleConvexPolygon2D(SimpleConvexPolygon,SimplePolygon2D):
         for s in segments:
             result=self.intersect_segment(s)
             #print(result)
-            if isinstance(result,Point2D):
+            if result is None:
+                continue
+            if result.classname=='Point':
                 ipts.append(result,unique=True)
-            elif isinstance(result,Segment2D):
+            elif result.classname=='Segment':
                 isegments.append(result,unique=True)
+            else:
+                raise Exception
+                
         ipts.remove_points_in_segments(isegments)
         return ipts,isegments
     
@@ -306,53 +310,49 @@ class SimpleConvexPolygon2D(SimpleConvexPolygon,SimplePolygon2D):
         else:
             return simple_polygon.intersect_simple_convex_polygon(self)
     
-    
 
-
-    def union_simple_convex_polygon(self,simple_convex_polygon):
-        """The union between this 2D simple convex polygon and another
-        
-        :param simple_convex_polygon SimpleConvexPolygon: a simple convex polygon 
-        
-        :return result:
-            - None
-            - SimpleConvexPolygon
-        
-        """
-        
-        if self==simple_convex_polygon:
-            return self
-
-        result=self.intersect_simple_convex_polygon(simple_convex_polygon)
-        
-        if result is None or isinstance(result,Point):
-            return None
-        
-        elif isinstance(result,Segment):
-            
-            pl1=self.polyline.segments.difference_segments(simple_convex_polygon.polyline.segments).polyline
-            pl2=simple_convex_polygon.polyline.segments.difference_segments(self.polyline.segments).polyline
-            pl3=pl1.union(pl2)
-            return SimplePolygon2D(*pl3.points[:-1])
-        
-        elif isinstance(result,SimpleConvexPolygon):
-            
-            # NOT WORKING #
-            
-            simple_convex_polygon1=simple_convex_polygon.difference_simple_convex_polygon(result)
-            pl1=self.polyline.segments.difference_segments(simple_convex_polygon1.polyline.segments).polyline
-            pl2=simple_convex_polygon1.polyline.segments.difference_segments(self.polyline.segments).polyline
-            pl3=pl1.union(pl2)
-            return SimplePolygon2D(*pl3.points[:-1])
-            
-        
-        
-        else:
-        
-            raise Exception
+#    def union_simple_convex_polygon(self,simple_convex_polygon):
+#        """The union between this 2D simple convex polygon and another
+#        
+#        :param simple_convex_polygon SimpleConvexPolygon: a simple convex polygon 
+#        
+#        :return result:
+#            - None
+#            - SimpleConvexPolygon
+#        
+#        """
+#        
+#        if self==simple_convex_polygon:
+#            return self
+#
+#        result=self.intersect_simple_convex_polygon(simple_convex_polygon)
+#        
+#        if result is None or isinstance(result,Point):
+#            return None
+#        
+#        elif isinstance(result,Segment):
+#            
+#            pl1=self.polyline.segments.difference_segments(simple_convex_polygon.polyline.segments).polyline
+#            pl2=simple_convex_polygon.polyline.segments.difference_segments(self.polyline.segments).polyline
+#            pl3=pl1.union(pl2)
+#            return SimplePolygon2D(*pl3.points[:-1])
+#        
+#        elif isinstance(result,SimpleConvexPolygon):
+#            
+#            # NOT WORKING #
+#            
+#            simple_convex_polygon1=simple_convex_polygon.difference_simple_convex_polygon(result)
+#            pl1=self.polyline.segments.difference_segments(simple_convex_polygon1.polyline.segments).polyline
+#            pl2=simple_convex_polygon1.polyline.segments.difference_segments(self.polyline.segments).polyline
+#            pl3=pl1.union(pl2)
+#            return SimplePolygon2D(*pl3.points[:-1])
+#            
+#        
+#        else:
+#        
+#            raise Exception
     
             
-
 class SimpleConvexPolygon3D(SimpleConvexPolygon,SimplePolygon3D):
     """A 3D convex polygon
     """
@@ -385,7 +385,7 @@ class SimpleConvexPolygon3D(SimpleConvexPolygon,SimplePolygon3D):
         if result is None: 
             return None
         
-        elif isinstance(result,Point):
+        elif result.classname=='Point':
             if i==0:
                 return self.plane.point_yz(result.x,result.y)   
             elif i==1:
@@ -395,7 +395,7 @@ class SimpleConvexPolygon3D(SimpleConvexPolygon,SimplePolygon3D):
             else:
                 raise Exception
                 
-        elif isinstance(result,Segment):
+        elif result.classname=='Segment':
             if i==0:
                 return Segment3D(self.plane.point_yz(result.P0.x,result.P0.y),
                                  self.plane.point_yz(result.P1.x,result.P1.y))
@@ -736,16 +736,7 @@ class SimpleConvexPolygon3D(SimpleConvexPolygon,SimplePolygon3D):
 #        
 #        
     
-    def difference_polygon(self):
-        """
-        """
     
-    
-        
-    def union_polygon(self):
-        """
-        """
-        
         
 #    def union_simple_convex_polygon(self,simple_convex_polygon):
 #        """Returns the union of this convex polygon with another convex polygon

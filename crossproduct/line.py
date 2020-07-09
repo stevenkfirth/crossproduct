@@ -11,6 +11,8 @@ SMALL_NUM=0.00000001
 class Line():
     "A n-D line"
     
+    classname='Line'
+    
     def __init__(self,P0,vL):
         """
         

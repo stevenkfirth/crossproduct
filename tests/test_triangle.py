@@ -19,8 +19,6 @@ class Test_Triangle2D(unittest.TestCase):
         self.assertIsInstance(tr,Triangle2D)
         
         
-        
-        
     def test___repr__(self):
         ""
         tr=Triangle2D(P0,v,w)
@@ -71,18 +69,6 @@ class Test_Triangle2D(unittest.TestCase):
                                              Point2D(0.5,1.0)), 
                                    Segment2D(Point2D(0.5,1.0), 
                                              Point2D(0.25,0.5)))))
-        
-            
-#    def test_intersect_simple_polygon(self):
-#        ""
-#        tr=Triangle2D(P0,v,w)
-#        
-#        # no intersection
-#        tr1=Triangle2D(Point2D(0,10), Vector2D(1,10), Vector2D(0.5,10))
-#        self.assertEqual(tr.intersect_simple_polygon(tr1),
-#                         (Points(), 
-#                          Segments(), 
-#                          SimplePolygons()))
             
             
     def test_intersect_simple_convex_polygon(self):
@@ -163,26 +149,7 @@ class Test_Triangle2D(unittest.TestCase):
         tr=Triangle2D(P0,w,v) #cw
         self.assertEqual(tr.signed_area,0.5) # as the clockwise triangle is automatically reorientated as counterclockwise
     
-    
-#    def test_union_triangle(self):
-#        ""
-#        tr=Triangle2D(P0,v,w)
-#        
-#        # no intersection
-#        tr1=Triangle2D(P0+v*2,v,w)
-#        self.assertEqual(tr.union_triangle(tr1),
-#                         None)
-#        
-#        # point intersection
-#        tr1=Triangle2D(P0+v,v,w)
-#        self.assertEqual(tr.union_triangle(tr1),
-#                         None)
-#        
-#        # segment intersection - exact segment
-#        tr1=Triangle2D(P0,v,w.opposite)
-#        self.assertEqual(tr.union_triangle(tr1),
-#                         None)
-    
+
     
 class Test_Triangle3D(unittest.TestCase):
     """

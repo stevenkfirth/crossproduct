@@ -3,25 +3,25 @@
 import itertools
 
 from .point import Point
-from .segment import Segment, Segment2D, Segment3D
-
-
+from .segment import Segment2D, Segment3D
+from .segments import Segments
 
 class Polyline():
     """A n-D polyline
     
     """
     
-    def __init__(self,*points):
+    def __init__(self,*points,validate=False):
         """
         
         param points: an array of points 
                     
         """
         
-        for pt in points:
-            if not isinstance(pt,Point):
-                raise TypeError
+        if validate:
+            for pt in points:
+                if not isinstance(pt,Point):
+                    raise TypeError
         
         self.points=tuple(points)
         
@@ -126,9 +126,11 @@ class Polyline():
         for s in itertools.combinations(self.segments,2):
             #print(s)
             result=s[0].intersect_segment(s[1])
-            if isinstance(result,Segment):
+            if result is None:
+                continue
+            elif result.classname=='Segment':
                 return True
-            elif isinstance(result,Point):
+            elif result.classname=='Point':
                 if result==s[0].P0 or result==s[0].P1:
                     pass
                 else:
@@ -149,11 +151,6 @@ class Polyline():
     
     
     
-        
-        
-    
-    
-    
 class Polyline2D(Polyline):
     """A 2D polyline
     
@@ -168,10 +165,7 @@ class Polyline2D(Polyline):
         """
         return 'Polyline2D(%s)' % ','.join([str(p) for p in self.points])
     
-    
-    
-        
-    
+
     def plot(self,ax,**kwargs):
         """Plots the polyline on the supplied axes
         
@@ -193,8 +187,6 @@ class Polyline2D(Polyline):
         :rtype Segments:
         
         """
-        from .segments import Segments
-        
         n=len(self.points)
         return Segments(*[Segment2D(self.points[i],self.points[i+1]) for i in range(n-1)])
     
@@ -265,8 +257,6 @@ class Polyline3D(Polyline):
         :rtype Segments:
         
         """
-        from .segments import Segments
-        
         n=len(self.points)
         return Segments(*[Segment3D(self.points[i],self.points[i+1]) for i in range(n-1)])
     

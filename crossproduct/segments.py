@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import itertools
 
 from collections.abc import Sequence
 from .segment import Segment
 from .point import Point
 from .points import Points
-from .polyline import Polyline
+
 
 
 class Segments(Sequence):
@@ -56,7 +55,7 @@ class Segments(Sequence):
     def append(self,segment,unique=False):
         """
         """
-        if isinstance(segment,Segment):
+        if segment.classname=='Segment':
             if unique:
                 if not segment in self:
                     self.segments.append(segment)
@@ -105,10 +104,14 @@ class Segments(Sequence):
         isegments=Segments()
         for s in self:
             result=s.intersect_halfline(halfline)
-            if isinstance(result,Point):
+            if result is None:
+                continue
+            elif result.classname=='Point':
                 ipts.append(result,unique=True)
-            if isinstance(result,Segment):
+            elif result.classname=='Segment':
                 isegments.append(result,unique=True)
+            else:
+                raise Exception
         
         # remove points which exist in the segments
         ipts.remove_points_in_segments(isegments)
@@ -130,10 +133,14 @@ class Segments(Sequence):
         isegments=Segments()
         for s in self:
             result=s.intersect_line(line)
-            if isinstance(result,Point):
+            if result is None:
+                continue
+            elif result.classname=='Point':
                 ipts.append(result,unique=True)
-            if isinstance(result,Segment):
+            elif result.classname=='Segment':
                 isegments.append(result,unique=True)
+            else:
+                raise Exception
         
         # remove points which exist in the segments
         ipts.remove_points_in_segments(isegments)
@@ -168,10 +175,14 @@ class Segments(Sequence):
         isegments=Segments()
         for s in self:
             result=s.intersect_segment(segment)
-            if isinstance(result,Point):
+            if result is None:
+                continue
+            elif result.classname=='Point':
                 ipts.append(result,unique=True)
-            if isinstance(result,Segment):
+            elif result.classname=='Segment':
                 isegments.append(result,unique=True)
+            else:
+                raise Exception
         
         # remove points which exist in the segments
         ipts.remove_points_in_segments(isegments)

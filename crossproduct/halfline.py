@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from .line import Line2D, Line3D
-from .point import Point, Point2D
+from .point import Point2D
 from .segment import Segment2D, Segment3D
-from .vector import Vector, Vector2D
+from .vector import Vector2D
 
 
 SMALL_NUM=0.00000001
@@ -12,6 +12,7 @@ SMALL_NUM=0.00000001
 class Halfline():
     "A n-D halfline"
     
+    classname='Halfline'
            
     def __contains__(self,obj):
         """Tests if the halfline contains the object
@@ -25,9 +26,7 @@ class Halfline():
         :rtype bool:
         
         """
-        import crossproduct
-        
-        if isinstance(obj,Point):
+        if obj.classname=='Point':
             
             t=self.calculate_t_from_point(obj)
             try:
@@ -36,7 +35,7 @@ class Halfline():
                 return False
             return obj==pt 
         
-        elif isinstance(obj,crossproduct.segment.Segment):
+        elif obj.classname=='Segment':
             if obj.P0 in self and obj.P1 in self:
                 return True
             else:

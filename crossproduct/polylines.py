@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import itertools
-
 from collections.abc import Sequence
-from .segment import Segment
-from .point import Point
-from .points import Points
-#from .simple_polygons import SimplePolygons
 
 
 class Polylines(Sequence):

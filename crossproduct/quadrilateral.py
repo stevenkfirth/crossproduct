@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from .point import Point, Point2D, Point3D
 from .simple_convex_polygon import SimpleConvexPolygon2D, SimpleConvexPolygon3D
-from .vector import Vector2D, Vector3D
+
 
 
 class Quadrilateral():
     """A n-D quadrilateral
     """
+    
+    classname='Quadrilateral'
     
     def __init__(self,P0,P1,P2,P3):
         """
@@ -19,28 +20,26 @@ class Quadrilateral():
         
         """
         
-        if isinstance(P0,Point):
+        if P0.classname=='Point':
             self.P0=P0
         else:
             raise TypeError
             
-        if isinstance(P1,Point):
+        if P1.classname=='Point':
             self.P1=P1
         else:
             raise TypeError
             
-        if isinstance(P2,Point):
+        if P2.classname=='Point':
             self.P2=P2
         else:
             raise TypeError
             
-        if isinstance(P3,Point):
+        if P3.classname=='Point':
             self.P3=P3
         else:
             raise TypeError
             
-        self.triangles=self.triangulate
-        
     
     @property
     def points(self):
