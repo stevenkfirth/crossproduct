@@ -97,6 +97,20 @@ class SimplePolygons(Sequence):
             tr.plot(ax,color=color,**kwargs)
     
     
+    def project_3D(self,plane,i):
+        """Returns a projection of the segments on a 3D plane
+        
+        :param plane Plane3D: the plane for the projection
+        :param i int: the index of the coordinate which was ignored to create the 2D projection
+        
+        :return result:
+               
+        """
+        simple_polygons=[spg.project_3D(plane,i) for spg in self]
+        return SimplePolygons(*simple_polygons)
+    
+    
+    
     @property
     def segments(self):
         """Returns a Segments sequence of all the segments of the polygons

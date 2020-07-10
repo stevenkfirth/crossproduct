@@ -215,6 +215,31 @@ class Segments(Sequence):
         return ipts, isegments
     
     
+    def project_2D(self,i):
+        """Returns a projection of the segments on a 2D plane
+        
+        :param i int: the index of the coordinate which was ignored to create the 2D projection
+        
+        :return result:
+               
+        """
+        segments=[s.project_2D(i) for s in self]
+        return Segments(*segments)
+    
+    
+    def project_3D(self,plane,i):
+        """Returns a projection of the segments on a 3D plane
+        
+        :param plane Plane3D: the plane for the projection
+        :param i int: the index of the coordinate which was ignored to create the 2D projection
+        
+        :return result:
+               
+        """
+        segments=[s.project_3D(plane,i) for s in self]
+        return Segments(*segments)
+    
+    
     @property
     def polyline(self):
         """Returns a polyline of the segments
@@ -246,6 +271,36 @@ class Segments(Sequence):
         """Removes any segments that lie on any of the polygons' segments
         """
         self.segments=[s for s in self if not s in polygons.segments]
+    
+    
+    @property
+    def union(self):    
+        """Returns a Segments sequence 
+        
+        :return result: 
+            - note multiple solutions are possible, only the first is returned
+        :rtype Segments
+        
+        """
+        segments=[s for s in self]
+        n=len(segments)
+        i=0
+        
+        while i<n-1:
+            s=segments[i]
+            j=i+1
+            while j<n:
+                s1=segments[j]
+                u=s.union(s1)
+                if s.is_collinear(s1) and not u is None:
+                    segments[i]=s.__class__(u.points[0],u.points[-1]) # as u is a polyline
+                    segments.pop(j)
+                    break
+                j+=1
+            else:
+                i+=1
+            n=len(segments)
+        return Segments(*segments)
     
     
     def union_polyline(self,polyline):
@@ -296,51 +351,6 @@ class Segments(Sequence):
         p=Polylines(*[s.polyline for s in self])
         return p.consolidate
     
-        
-        polylines=[s.polyline for s in self]
-        n=len(polylines)
-        i=0
-        
-        while i<n-1:
-            
-            pl=polylines[i]
-            j=i+1
-            
-            while j<n:
-                
-                u=pl.union(polylines[j])
-                
-                if not u is None:
-                    polylines[i]=u
-                    polylines.pop(j)
-                    break
-                
-                j+=1
-
-            else:
-                i+=1
-                    
-            n=len(polylines)
-           
-        return tuple(polylines)
-        
-    
-#    @property
-#    def polygons(self):
-#        """Returns any polygons that exist in the Segments sequence
-#        
-#        :return result: - a tuple of zero or more polygons
-#            - each polyline can have one or more than one segments
-#        
-#        """
-#        
-#        
-#    @property
-#    def self_union(self):
-#        """Returns a new Segments sequence with the union of any segments if possible
-#        
-#        """
-#        
         
         
         

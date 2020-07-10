@@ -24,8 +24,7 @@ class SimplePolyhedron3D():
             if not isinstance(polygon,SimplePolygon3D):
                 raise TypeError
         
-        polygons=list(polygons
-                      )
+        polygons=list(polygons)
         
         # reverse polygons if needed to ensure all polygon plane normals are facing outwards
         for i in range(len(polygons)):

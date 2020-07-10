@@ -130,6 +130,28 @@ class Point2D(Point):
         """
         return self.x, self.y
     
+    
+    def project_3D(self,plane,i):
+        """Returns a projection of the point on a 3D plane
+        
+        :param plane Plane3D: the plane for the projection
+        :param i int: the index of the coordinate which was ignored to create the 2D projection
+        
+        :return result:
+               
+        """
+        
+        if i==0:
+            point=plane.point_yz(self.x,self.y)
+        elif i==1:
+            point=plane.point_zx(self.x,self.y)
+        elif i==2:
+            point=plane.point_xy(self.x,self.y)
+        else:
+            raise Exception
+            
+        return point
+    
 
 class Point3D(Point):
     "A 3D point"

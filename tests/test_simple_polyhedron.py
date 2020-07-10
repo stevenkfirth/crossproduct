@@ -6,20 +6,20 @@ import mpl_toolkits.mplot3d
 
 from crossproduct import Point2D, Point3D, \
     Vector2D, Vector3D, Line2D, SimplePolygon2D, SimplePolygon3D, Plane3D, Triangle2D, Triangle3D, \
-    Segment2D, Segment3D, Polyhedron3D
+    Segment2D, Segment3D, SimplePolyhedron3D
 
 
 plot=True
         
-class Test_Polyhedron3D(unittest.TestCase):
+class Test_SimplePolyhedron3D(unittest.TestCase):
     """
     
     """
     
     def test___init__(self):
         ""
-        ph=Polyhedron3D(*polygons)
-        self.assertIsInstance(ph,Polyhedron3D)
+        ph=SimplePolyhedron3D(*polygons)
+        self.assertIsInstance(ph,SimplePolyhedron3D)
         self.assertEqual(ph.polygons,polygons)
         print(ph.polygons)
         print(ph.polygons[0].plane.N)
@@ -43,7 +43,7 @@ class Test_Polyhedron3D(unittest.TestCase):
                 
         if plot:
         
-            ph=Polyhedron3D(*polygons)
+            ph=SimplePolyhedron3D(*polygons)
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
             ph.plot(ax)
@@ -67,6 +67,6 @@ if __name__=='__main__':
               SimplePolygon3D(P2,P3,P7,P6),
               SimplePolygon3D(P3,P0,P4,P7),
               SimplePolygon3D(P5,P4,P7,P6))
-    unittest.main(Test_Polyhedron3D())
+    unittest.main(Test_SimplePolyhedron3D())
     
     

@@ -277,8 +277,6 @@ class Segment():
         """Returns the union of two segments
         
         :return result:
-            - DEPRECIATED -- Segment2D, the union of the two collinear segments if 
-                they have a same start or end point
             - Polyline2D, the union of two non-collinear segments if they have 
                 a same start point or end point
             - None, for segments that don't have a union        
@@ -484,6 +482,20 @@ class Segment2D(Segment,Line2D):
         from .simple_polyline import SimplePolyline2D
         return SimplePolyline2D(self.P0,self.P1)
         
+    
+    def project_3D(self,plane,i):
+        """Returns a projection of the segment on a 3D plane
+        
+        :param plane Plane3D: the plane for the projection
+        :param i int: the index of the coordinate which was ignored to create the 2D projection
+        
+        :return result:
+               
+        """
+        P0=self.P0.project_3D(plane,i)
+        P1=self.P1.project_3D(plane,i)
+        return Segment3D(P0,P1)
+    
     
     
 class Segment3D(Segment,Line3D):

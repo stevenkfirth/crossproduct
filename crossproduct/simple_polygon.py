@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d
 
 from .point import Point2D, Point3D
-from .segment import Segment2D
+from .points import Points
+from .segment import Segment2D, Segment3D
+from .segments import Segments
 from .simple_polyline import SimplePolyline2D, SimplePolyline3D
 from .simple_polygons import SimplePolygons
 from .plane import Plane3D
@@ -25,7 +27,7 @@ class SimplePolygon():
     superclassname='SimplePolygon'
     
     
-    def __init__(self,*points,validate=False):
+    def __init__(self,*points,holes=None,validate=False):
         """
         
         param points: an array of points 
@@ -43,6 +45,11 @@ class SimplePolygon():
             points.pop(0)
         self.points=tuple(points[:-1])
         #print(self.points)
+        
+        if holes:
+            self.holes=holes
+        else:
+            self.holes=SimplePolygons()
         
         if validate:
             # check for intersection
@@ -154,8 +161,24 @@ class SimplePolygon():
         points=list(pg1b.polyline.points)+list(pg2b.polyline.points)
         print(points)
         return self.__class__(*points) # error as the triangulation of a doughnut isnt working at present
-        
+            
     
+    def intersect_segment(self,segment):
+        ""
+        ipts, isegments = self.triangles.intersect_segment(segment)
+        ipts.remove_points_in_segments(isegments)
+        isegments=isegments.union
+        return ipts, isegments
+    
+    
+    def intersect_segments(self,segments):
+        ""
+        ipts, isegments = self.triangles.intersect_segments(segments)
+        ipts.remove_points_in_segments(isegments)
+        isegments=isegments.union
+        return ipts, isegments    
+    
+
     def intersect_simple_convex_polygon(self,simple_convex_polygon):
         ""
         if not simple_convex_polygon.classname in ['Triangle','Quadrilateral','Parallelogram','SimpleConvexPolygon']:
@@ -456,6 +479,11 @@ class SimplePolygon2D(SimplePolygon):
         return Point2D(x,y)        
         
     
+    @property
+    def class_3D(self):
+        return SimplePolygon3D
+    
+    
     def crossing_number(self,point):
         """Returns the crossing number for the supplied point
         
@@ -506,6 +534,19 @@ class SimplePolygon2D(SimplePolygon):
     def polyline(self):
         return SimplePolyline2D(*self.closed_points)
     
+    
+    def project_3D(self,plane,i):
+        """Returns a projection of the polygon on a 3D plane
+        
+        :param plane Plane3D: the plane for the projection
+        :param i int: the index of the coordinate which was ignored to create the 2D projection
+        
+        :return result:
+               
+        """
+        points=[pt.project_3D(plane,i) for pt in self.points]
+        return self.class_3D(*points)
+        
     
     @property
     def rightmost_lowest_vertex(self):
@@ -695,8 +736,10 @@ class SimplePolygon3D(SimplePolygon):
         :rtype tuple:
             
         """
-        absolute_coords=[abs(x) for x in self.plane.N.coordinates]
-        i=absolute_coords.index(max(absolute_coords)) # the coordinate to ignore for projection
+        #absolute_coords=[abs(x) for x in self.plane.N.coordinates]
+        #i=absolute_coords.index(max(absolute_coords)) # the coordinate to ignore for projection
+        
+        i=self.plane.N.index_largest_absolute_coordinate
         
         if i==0:
             pg=self.class_2D(*[Point2D(pt.y,pt.z) for pt in self.points])
@@ -710,45 +753,134 @@ class SimplePolygon3D(SimplePolygon):
         return i, pg
         
     
+    def intersect_plane(self,plane):
+        """Returns the intersection of this 3D simple polygon and a plane
+        
+        :param plane Plane3D: a 3D plane 
+        
+        :return result: (Points,Segments)
+            
+        """
+        if self.plane==plane:
+            return self
+        
+        elif self.plane.is_parallel(plane):
+            return None
+        
+        else:
+        
+            ipts,isegments=self.triangles.intersect_plane(plane)
+            
+            ipts.remove_points_in_segments(isegments)
+            isegments=isegments.union
+            
+            return ipts,isegments
+    
+    
+    def intersect_simple_polygon_coplanar(self,simple_polygon):
+        """Intersection of this polygon with another coplanar polygon
+        
+        """
+        i,self_2D=self.project_2D
+        i,scp_2D=simple_polygon.project_2D
+        
+        ipts,isegments,isimplepolygons=self_2D.intersect_simple_polygon(scp_2D)
+    
+        return (ipts.project_3D(self.plane,i),
+                isegments.project_3D(self.plane,i),
+                isimplepolygons.project_3D(self.plane,i))
+    
+    
+    def _intersect_simple_polygon_skew(self,simple_polygon):
+        """Intersection of this polygon with another skew polygon
+        
+        """
+        ipts,isegments=self.intersect_plane(simple_polygon.plane)
+        
+        if len(ipts)==0 and len(isegments)==0:
+            return ipts,isegments
+        
+        else:
+        
+            i,sp_2D=simple_polygon.project_2D
+            ipts_2D=ipts.project_2D(i)
+            isegments_2D=isegments.project_2D(i)
+            
+            ipts2,isegments2=sp_2D.intersect_segments(isegments_2D)
+                
+            for pt in ipts_2D:
+                if pt in sp_2D:
+                    ipts2.append(pt,unique=True)
+            
+            return ipts2,isegments2
+            
+        
+    def intersect_simple_polygon(self,simple_polygon):
+        """Intersection of this simple polygon with another simple polygon
+        
+        :param simple_polygon SimplePolygon: a simple polygon 
+        
+        :return intersection:
+            - return value can be:
+                - if the two polygons are on the same plane:
+                    - Points -> a point (for a convex polygon whose segments intersect
+                                      this convex polygon at a single vertex)
+                    - Segments -> a segment (for a convex polygon whose segments
+                                          intersect this convex polygon at an edge segment)
+                    - SimplePolygons - > a simple convex polygon (for a convex
+                                            polygon which overlaps this polygon)
+                
+                - if the two polygons are on skew planes
+                    - Points -> for two polygons which intersect at a single point
+                    - Segments -> for two polygons that intersect along a segment
+                         
+        """
+        if self.plane==simple_polygon.plane:
+            
+            return self._intersect_simple_polygon_coplanar(simple_polygon)
+            
+        else: # polygons exist in different planes
+            
+            return self._intersect_simple_polygon_skew(simple_polygon)
+                    
     
     
     
     
+    def intersect_halfline(self,halfline):
+        """Returns the intersection of this polygon and a halfline
+        
+        :param line Halfline3D: a 3D halfline 
+        
+        :return result:
+            - no intersection (None): 
+                - for parallel, non-coplanar polygon plane and halfline
+                - for skew polygon plane and halfline which do not intersect
+            - a segment:
+                - for a coplanar halfline which intersects the polygon at two points
+            - a point: 
+                - for a halfline skew to the polygon plane which intersects the polygon at a point
+                - for a coplanar halfline which intersects the polygon one point
+        
+        """
+        result=self.plane.intersect_line(halfline) # intersection of polygon plane with halfline
+        
+        if result is None:
+            return Points(),Segments()
+        
+        elif result.classname=='Point':
+            if result in self:
+                return Points(result),Segments()
+            else:
+                return None
+            
+        elif result.classname=='Halfline':
+            # coplanar, look for intersections on 2D plane
+            raise Exception('Not implemented yet')
     
-#    def intersect_halfline(self,halfline):
-#        """Returns the intersection of this polygon and a halfline
-#        
-#        :param line Halfline3D: a 3D halfline 
-#        
-#        :return result:
-#            - no intersection (None): 
-#                - for parallel, non-coplanar polygon plane and halfline
-#                - for skew polygon plane and halfline which do not intersect
-#            - a segment:
-#                - for a coplanar halfline which intersects the polygon at two points
-#            - a point: 
-#                - for a halfline skew to the polygon plane which intersects the polygon at a point
-#                - for a coplanar halfline which intersects the polygon one point
-#        
-#        """
-#        result=self.plane.intersect_line(halfline) # intersection of triangle plane with halfline
-#        
-#        if result is None:
-#            return None
-#        
-#        elif isinstance(result,Point3D):
-#            if result in self:
-#                return result
-#            else:
-#                return None
-#            
-#        elif isinstance(result,Halfline3D):
-#            # coplanar, look for intersections on 2D plane
-#            raise Exception('Not implemented yet')
-#    
-#        else:
-#            raise Exception
-#    
+        else:
+            raise Exception
+    
 #    
 #    def intersect_line(self,line):
 #        """Returns the intersection of this polygon and a line

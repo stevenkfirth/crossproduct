@@ -8,6 +8,20 @@ class Vector():
     
     classname='Vector'
     
+    
+    @property
+    def index_largest_absolute_coordinate(self):
+        """Returns the index of the largest absolute coordinate of the vector
+        
+        :return index:
+        :rtype int:
+            
+        """
+        absolute_coords=[abs(x) for x in self.coordinates]
+        i=absolute_coords.index(max(absolute_coords)) 
+        return i
+    
+    
     def is_codirectional(self,vector):
         """Tests if this vector and the supplied vector are codirectional
         

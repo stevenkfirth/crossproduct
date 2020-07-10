@@ -168,11 +168,10 @@ class Triangle2D(Triangle,SimpleConvexPolygon2D):
         return abs(self.signed_area)
     
     
-#    def intersect_triangle(self,triangle):
-#        """
-#        
-#        """
-#        return self.intersect_simple_convex_polygon(triangle)
+    @property
+    def class_3D(self):
+        return Triangle3D    
+
     
     
     @property
@@ -200,36 +199,6 @@ class Triangle2D(Triangle,SimpleConvexPolygon2D):
         """
         return 0.5*(self.v.x*self.w.y-self.w.x*self.v.y)
     
-    
-#    def union_triangle_edge_intersection(self,triangle):
-#        """Returns the union of two triangles that share edge intersection
-#        
-#        :return result:
-#        :rtype SimplePolygon or None:
-#        
-#        """
-#        
-#        # difference_segments instead of intersect segments ??
-#        
-#        ipts1,isegments1=self.intersect_segments(triangle.polyline.segments)
-#        print(ipts1,isegments1)
-#        
-#        if len(ipts1)==0 and len(isegments1)==0: # no union, no intersection
-#            return None
-#        
-#        elif len(ipts1)==1 and len(isegments1)==0: # no union, point intersection
-#            return None
-#        
-#        elif len(ipts1)==0 and len(isegments)==1: # segment intersection
-#            
-#            if isegments1[0] in self.polyline.segments: # exact segment
-#                
-#                pass
-#        
-#        
-#        else:
-#            raise Exception
-#        
         
     
 class Triangle3D(Triangle,SimpleConvexPolygon3D):

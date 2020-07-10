@@ -56,6 +56,60 @@ class Triangles(Sequence):
         return 'Triangles(%s)' % ', '.join([str(s) for s in self.triangles])
     
     
+    def intersect_plane(self,plane):
+        """Returns the intersection of this Triangles sequence with a plane
+        """
+        ipts=Points()
+        isegments=Segments()
+        
+        for tr in self:
+            
+            result=tr.intersect_plane(plane)
+            if result is None:
+                continue
+            elif result.classname=='Point':
+                ipts.append(result,unique=True)
+            elif result.classname=='Segment':
+                isegments.append(result,unique=True)
+            else:
+                raise Exception
+                
+        return ipts, isegments
+    
+    
+    def intersect_segment(self,segment):
+        ""
+        ipts=Points()
+        isegments=Segments()
+        
+        for tr in self:
+            result=tr.intersect_segment(segment)
+            if result is None:
+                continue
+            if result.classname=='Point':
+                ipts.append(result,unique=True)
+            elif result.classname=='Segment':
+                isegments.append(result,unique=True)
+        
+        return ipts, isegments
+    
+    
+    def intersect_segments(self,segments):
+        """Returns the intersection of this Triangles sequence with a Segments sequence
+        """
+        ipts=Points()
+        isegments=Segments()
+        
+        for s in segments:
+            result=self.intersect_segment(s)
+            for pt in result[0]:
+                ipts.append(pt,unique=True)
+            for s in result[1]:
+                isegments.append(s,unique=True)
+                
+        return ipts, isegments
+        
+    
     def intersect_simple_convex_polygon(self,simple_convex_polygon):
         """Returns the intersection of this Triangles sequence with a simple convex polygon
         """

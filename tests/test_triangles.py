@@ -7,7 +7,7 @@ from pprint import pprint
 
 from crossproduct import Point2D, Point3D, Segment2D, Segment3D, Points, Segments, \
     SimplePolyline2D, Triangle2D, Vector2D, Triangles, SimplePolygons, \
-    SimpleConvexPolygon2D
+    SimpleConvexPolygon2D, Triangle3D, Vector3D, Plane3D
 
 
 plot=True
@@ -41,6 +41,19 @@ class Test_Triangles(unittest.TestCase):
         t=Triangles(*triangles)
         self.assertEqual(str(t),
                          'Triangles(Triangle2D(Point2D(0,0), Vector2D(1,0), Vector2D(0,1)), Triangle2D(Point2D(1,1), Vector2D(-1,0), Vector2D(0,-1)))')
+        
+        
+    def test_intersect_plane(self):
+        ""
+        t=Triangles(Triangle3D(Point3D(1,0,0), Vector3D(0,-1,1), Vector3D(0,1,1)), 
+                    Triangle3D(Point3D(10,0,0), Vector3D(1,0,0), Vector3D(0,0,1)),
+                    Triangle3D(Point3D(-10,0,-1), Vector3D(0,-2,2), Vector3D(0,2,2)))
+        self.assertEqual(t.intersect_plane(Plane3D(Point3D(0,0,0),Vector3D(0,0,1))),
+                         (Points(Point3D(1.0,0.0,0.0)), 
+                          Segments(Segment3D(Point3D(10,0,0), 
+                                             Point3D(11,0,0)), 
+                                   Segment3D(Point3D(-10.0,-1.0,0.0), 
+                                             Point3D(-10.0,1.0,0.0)))))
         
         
     def test_intersect_simple_convex_polygon(self):

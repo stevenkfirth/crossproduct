@@ -61,6 +61,31 @@ class Points(Sequence):
             raise TypeError
     
     
+    def project_2D(self,i):
+        """Returns a projection of the points on a 2D plane
+        
+        :param i int: the index of the coordinate which was ignored to create the 2D projection
+        
+        :return result:
+               
+        """
+        points=[pt.project_2D(i) for pt in self]
+        return Points(*points)
+    
+    
+    def project_3D(self,plane,i):
+        """Returns a projection of the points on a 3D plane
+        
+        :param plane Plane3D: the plane for the projection
+        :param i int: the index of the coordinate which was ignored to create the 2D projection
+        
+        :return result:
+               
+        """
+        points=[pt.project_3D(plane,i) for pt in self]
+        return Points(*points)
+    
+    
     def remove_points_in_segments(self,segments):
         """Removes any points that lie on any of the segments
         """

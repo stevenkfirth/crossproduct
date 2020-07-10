@@ -248,9 +248,38 @@ class Test_Segments(unittest.TestCase):
                                               Point2D(2,0),
                                               Point2D(2,1),
                                               Point2D(1.5,1.0))))
+
+
+    def test_union(self):
+        ""
+        s=Segments(*segments)
         
+        # no unions
+        self.assertEqual(s.union,
+                         s)
             
-    
+        # a union
+        s=Segments(Segment2D(Point2D(0,0), Point2D(1,0)), 
+                   Segment2D(Point2D(1,0), Point2D(2,0)))
+        self.assertEqual(s.union,
+                         Segments(Segment2D(Point2D(0,0), 
+                                            Point2D(2,0))))
+        
+        # reversed
+        s=Segments(Segment2D(Point2D(1,0), Point2D(2,0)), 
+                   Segment2D(Point2D(0,0), Point2D(1,0)))
+        self.assertEqual(s.union,
+                         Segments(Segment2D(Point2D(0,0), 
+                                            Point2D(2,0))))
+        
+        # gap
+        # a union
+        s=Segments(Segment2D(Point2D(0,0), Point2D(1,0)), 
+                   Segment2D(Point2D(2,0), Point2D(3,0)))
+        self.assertEqual(s.union,
+                         s)
+        
+        
         
     def test_union_polyline(self):
         ""

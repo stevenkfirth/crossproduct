@@ -32,7 +32,7 @@ class Parallelogram():
             self.w=w
         else:
             raise TypeError
-        
+
 
     @property
     def P1(self):
@@ -110,6 +110,12 @@ class Parallelogram2D(Parallelogram,Quadrilateral2D):
         """
         return 'Parallelogram2D(%s, %s, %s)' % (self.P0,self.v,self.w)
         
+    
+    @property
+    def class_3D(self):
+        return Parallelogram3D    
+
+
     
     @property
     def signed_area(self):

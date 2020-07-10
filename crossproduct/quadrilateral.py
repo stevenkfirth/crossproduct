@@ -74,6 +74,11 @@ class Quadrilateral2D(Quadrilateral,SimpleConvexPolygon2D):
         """
         return abs(self.signed_area)
             
+    
+    @property
+    def class_3D(self):
+        return Quadrilateral3D    
+
         
     @property
     def orientation(self):
