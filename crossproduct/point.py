@@ -34,13 +34,11 @@ class Point2D(Point):
     :Example:
     
     .. code-block:: python
+       :linenos:
     
-        >>> p = Point2D(1,2)
-        >>> print(p)
-        Point2D(1,2)
-    
-    :Properties and Methods:
-        
+       >>> p = Point2D(1,2)
+       >>> print(p)
+       Point2D(1,2)
     
     """
     
