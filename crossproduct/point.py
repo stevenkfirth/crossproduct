@@ -33,11 +33,11 @@ class Point2D(Point):
     
     :Example:
     
-        .. code-block:: python
-        
-            >>> p = Point2D(1,2)
-            >>> print(p)
-            Point2D(1,2)
+    .. code-block:: python
+    
+        >>> p = Point2D(1,2)
+        >>> print(p)
+        Point2D(1,2)
     
     :Properties and Methods:
         
