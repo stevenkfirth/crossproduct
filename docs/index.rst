@@ -12,11 +12,13 @@ Geometry in Python - 2D and 3D
    :maxdepth: 2
    :caption: Contents:
 
-.. autoclass:: crossproduct.point.Point2D
+   Point2D
+   
+.. autoclass:: crossproduct.point.Vector2D
    :members:
-   :private-members:
    :special-members:
-
+   :inherited-members:
+   :exclude-members: __dict__,__weakref__,__init__
 
 Indices and tables
 ==================

@@ -24,16 +24,17 @@ class Point():
 
 
 class Point2D(Point):
-    "A 2D point"
+    """A 2D point
     
-    dimension='2D'
+    :param x: the x coordinate of the point
+    :type x: float
+    :param y: the y coordinate of the point
+    :type y: float
+    
+    """
     
     def __init__(self,x,y):
-        """
-        :param x int/float: the x coordinate of the point
-        :param y int/float: the y coordinate of the point
-        
-        """
+        ""
         self.x=x
         self.y=y
             
@@ -41,7 +42,8 @@ class Point2D(Point):
     def __add__(self,vector):
         """Addition of this point and a vector
         
-        :param vector Vector2D: a 2D vector
+        :param vector: a 2D vector
+        :type vector: Vector2D
         
         :return: the resulting point
         :rtype: Point2D
@@ -129,6 +131,18 @@ class Point2D(Point):
         
         """
         return self.x, self.y
+    
+    
+    @property
+    def dimension(self):
+        """Returns the dimension of the object instance
+        
+        :return: '2D'
+        :rtype: str
+        
+        """
+        
+        return '2D'
     
     
     def project_3D(self,plane,i):
