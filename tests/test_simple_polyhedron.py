@@ -46,7 +46,7 @@ class Test_SimplePolyhedron3D(unittest.TestCase):
             ph=SimplePolyhedron3D(*polygons)
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
-            ph.plot(ax)
+            ph.plot(ax,normal=True)
         
         
     

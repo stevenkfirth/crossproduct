@@ -163,6 +163,22 @@ class SimplePolygon():
         return self.__class__(*points) # error as the triangulation of a doughnut isnt working at present
             
     
+    def intersect_halfline(self,halfline):
+        ""
+        ipts, isegments = self.triangles.intersect_halfline(halfline)
+        ipts.remove_points_in_segments(isegments)
+        isegments=isegments.union
+        return ipts, isegments
+    
+    
+    def intersect_line(self,line):
+        ""
+        ipts, isegments = self.triangles.intersect_line(line)
+        ipts.remove_points_in_segments(isegments)
+        isegments=isegments.union
+        return ipts, isegments
+    
+    
     def intersect_segment(self,segment):
         ""
         ipts, isegments = self.triangles.intersect_segment(segment)
@@ -753,7 +769,7 @@ class SimplePolygon3D(SimplePolygon):
         return i, pg
         
     
-    def intersect_plane(self,plane):
+    def __intersect_plane(self,plane):
         """Returns the intersection of this 3D simple polygon and a plane
         
         :param plane Plane3D: a 3D plane 
@@ -777,7 +793,7 @@ class SimplePolygon3D(SimplePolygon):
             return ipts,isegments
     
     
-    def intersect_simple_polygon_coplanar(self,simple_polygon):
+    def __intersect_simple_polygon_coplanar(self,simple_polygon):
         """Intersection of this polygon with another coplanar polygon
         
         """
@@ -791,7 +807,7 @@ class SimplePolygon3D(SimplePolygon):
                 isimplepolygons.project_3D(self.plane,i))
     
     
-    def _intersect_simple_polygon_skew(self,simple_polygon):
+    def ___intersect_simple_polygon_skew(self,simple_polygon):
         """Intersection of this polygon with another skew polygon
         
         """
@@ -815,7 +831,7 @@ class SimplePolygon3D(SimplePolygon):
             return ipts2,isegments2
             
         
-    def intersect_simple_polygon(self,simple_polygon):
+    def __intersect_simple_polygon(self,simple_polygon):
         """Intersection of this simple polygon with another simple polygon
         
         :param simple_polygon SimplePolygon: a simple polygon 
@@ -847,7 +863,7 @@ class SimplePolygon3D(SimplePolygon):
     
     
     
-    def intersect_halfline(self,halfline):
+    def __intersect_halfline(self,halfline):
         """Returns the intersection of this polygon and a halfline
         
         :param line Halfline3D: a 3D halfline 

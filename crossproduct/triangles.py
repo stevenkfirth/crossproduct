@@ -77,6 +77,23 @@ class Triangles(Sequence):
         return ipts, isegments
     
     
+    def intersect_halfline(self,halfline):
+        ""
+        ipts=Points()
+        isegments=Segments()
+        
+        for tr in self:
+            result=tr.intersect_halfline(halfline)
+            if result is None:
+                continue
+            if result.classname=='Point':
+                ipts.append(result,unique=True)
+            elif result.classname=='Segment':
+                isegments.append(result,unique=True)
+        
+        return ipts, isegments
+    
+    
     def intersect_segment(self,segment):
         ""
         ipts=Points()

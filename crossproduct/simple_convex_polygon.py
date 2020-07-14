@@ -361,7 +361,7 @@ class SimpleConvexPolygon3D(SimpleConvexPolygon,SimplePolygon3D):
             if result in self:
                 return result
             else:
-                return Points(),Segments()
+                return None
             
         elif result.classname=='Halfline': # coplanar, look for intersections on 2D plane
             
