@@ -43,8 +43,8 @@ class Point2D(Point):
         
         :param vector Vector2D: a 2D vector
         
-        :return point: the resulting point
-        :rtype Point2D:
+        :return: the resulting point
+        :rtype: Point2D
         
         """
         if isinstance(vector,Vector2D):
