@@ -12,8 +12,7 @@ Geometry in Python - 2D and 3D
    :maxdepth: 2
    :caption: Contents:
 
-.. automodule:: crossproduct.point
-    :members:
+.. autoclass:: crossproduct.point.Point
 
 
 Indices and tables
