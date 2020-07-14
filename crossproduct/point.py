@@ -24,15 +24,23 @@ class Point():
 
 
 class Point2D(Point):
-    """A two dimensional point, situated on an x,y plane.
+    """A two dimensional point, situated on an x, y plane.
     
     :param x: The x coordinate of the point.
     :type x: float
     :param y: The y coordinate of the point.
     :type y: float
     
+    :Example:
     
+        .. code-block:: python
+        
+            >>> p = Point2D(1,2)
+            >>> print(p)
+            Point2D(1,2)
     
+    :Properties and Methods:
+        
     
     """
     
@@ -54,10 +62,10 @@ class Point2D(Point):
     
         .. code-block:: python
         
-           >>> p=Point2D(1,2)
-           >>> result=p+Vector2D(1,1)
-           >>> print(result)
-           Point2D(2,3)
+            >>> p = Point2D(1,2)
+            >>> result = p + Vector2D(1,1)
+            >>> print(result)
+            Point2D(2,3)
         
         
         """
@@ -76,6 +84,14 @@ class Point2D(Point):
         
         :return: True if the point coordinates are the same, otherwise False.
         :rtype: bool
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> result = Point2D(1,2) == Point(2,2)
+            >>> print(result)
+            False
             
         """
         if isinstance(point,Point2D):
@@ -86,7 +102,24 @@ class Point2D(Point):
     
     
     def __lt__(self,point):
-        """Tests is the coordinates of this point are lower than the supplied point
+        """Tests if the coordinates of this point are lower than the supplied point.
+        
+        :param point: The point to be tested.
+        :type point: Point2D
+        
+        :return: True if the x coordinate of this point is lower than the 
+            supplied point, otherwise False. If both x coordinates are equal, then 
+            True if the y coordinate of this point is lower than the 
+            supplied point, otherwise False. 
+        :rtype: bool
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> result = Point2D(1,2) < Point(2,2)
+            >>> print(result)
+            True
         
         """
         if isinstance(point,Point2D):
@@ -113,9 +146,10 @@ class Point2D(Point):
     
     
     def __sub__(self,obj):
-        """Substraction of supplied object from this point
+        """Substraction of supplied object from this point.
         
         :param obj: either a 2D point or a 2D vector
+        :type obj: Point2D or Vector2D
         
         :return obj: the resulting point or vector
             - if obj is a point, then a vector is returned i.e. v=P1-P0

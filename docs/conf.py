@@ -1,6 +1,6 @@
 # added 14-7-2020
 master_doc = 'index'
-
+autosummary_generate = True
 
 
 # Configuration file for the Sphinx documentation builder.
@@ -35,7 +35,8 @@ author = 'Steven K Firth'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.viewcode'
+    'sphinx.ext.viewcode',
+    'sphinx.ext.autosummary'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

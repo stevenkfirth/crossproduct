@@ -8,8 +8,9 @@ Welcome to crossproduct's documentation!
 
 Geometry in Python - 2D and 3D
 
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    Point2D
