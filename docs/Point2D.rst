@@ -6,7 +6,7 @@ Point2D
 .. autoclass:: crossproduct.point.Point2D
    :show-inheritance:
 
-**Properties and Methods**
+.. Rubric:: Properties and Methods
 
 .. autosummary::
    :toctree: _autosummary
