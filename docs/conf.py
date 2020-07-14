@@ -1,3 +1,8 @@
+# added 14-7-2020
+master_doc = 'index'
+
+
+
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
