@@ -1,2 +1,2 @@
 matplotlib
-Sphinx v3.1.2
+sphinx==3.1.2
