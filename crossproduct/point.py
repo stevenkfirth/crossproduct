@@ -24,12 +24,22 @@ class Point():
 
 
 class Point2D(Point):
-    """A 2D point
+    """A two dimensional point, situated on an x,y plane.
     
-    :param x: the x coordinate of the point
+    :param x: The x coordinate of the point.
     :type x: float
-    :param y: the y coordinate of the point
+    :param y: The y coordinate of the point.
     :type y: float
+    
+    :Example: Addition of point and vector
+    
+    .. code-block:: python
+    
+       >>> p=Point2D(1,2)
+       >>> result=p+Vector2D(1,1)
+       >>> print(result)
+       Point2D(2,3)
+    
     
     """
     
@@ -40,12 +50,11 @@ class Point2D(Point):
             
         
     def __add__(self,vector):
-        """Addition of this point and a vector
+        """The addition of this point and a vector.
         
-        :param vector: a 2D vector
+        :param vector: The vector to be added to the point.
         :type vector: Vector2D
         
-        :return: the resulting point
         :rtype: Point2D
         
         """
@@ -57,14 +66,13 @@ class Point2D(Point):
         
         
     def __eq__(self,point):
-        """Tests if this point and the supplied point are equal
+        """Tests if this point and the supplied point are equal.
         
-        :param point Point2D: a 2D point
+        :param point: The point to be tested.
+        :type point: Point2D
         
-        :return result: 
-            - True if the point coordinates are the same
-            - otherwise False
-        :rtype bool:
+        :return: True if the point coordinates are the same, otherwise False.
+        :rtype: bool
             
         """
         if isinstance(point,Point2D):
@@ -293,8 +301,8 @@ class Point3D(Point):
                 - 1 for y
                 - 2 for z
                 
-        :return point: 
-        :rtype Point2D:
+        :return: point
+        :rtype: Point2D
             
         """
         

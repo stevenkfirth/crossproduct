@@ -4,6 +4,7 @@ Point2D
 
 .. autoclass:: crossproduct.point.Point2D
    :members:
-   :special-members:
+   :special-members: __add__,__eq__
    :inherited-members:
-   :exclude-members: __dict__,__weakref__,__init__
+   :show-inheritance:
+   
