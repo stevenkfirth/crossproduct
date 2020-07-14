@@ -31,14 +31,7 @@ class Point2D(Point):
     :param y: The y coordinate of the point.
     :type y: float
     
-    :Example: Addition of point and vector
     
-    .. code-block:: python
-    
-       >>> p=Point2D(1,2)
-       >>> result=p+Vector2D(1,1)
-       >>> print(result)
-       Point2D(2,3)
     
     
     """
@@ -56,6 +49,16 @@ class Point2D(Point):
         :type vector: Vector2D
         
         :rtype: Point2D
+        
+        :Example:
+    
+        .. code-block:: python
+        
+           >>> p=Point2D(1,2)
+           >>> result=p+Vector2D(1,1)
+           >>> print(result)
+           Point2D(2,3)
+        
         
         """
         if isinstance(vector,Vector2D):
