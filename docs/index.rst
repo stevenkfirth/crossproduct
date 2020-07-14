@@ -13,6 +13,7 @@ Geometry in Python - 2D and 3D
    :caption: Contents:
 
 .. autoclass:: crossproduct.point.Point
+   :members:
 
 
 Indices and tables
