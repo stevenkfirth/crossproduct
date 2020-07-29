@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from crossproduct import Point2D, Point3D, Vector2D, Vector3D
+from crossproduct import Point2D, Point3D, Vector2D, Vector3D, Plane3D
 
 
 class Test_Point2D(unittest.TestCase):
@@ -66,13 +66,21 @@ class Test_Point2D(unittest.TestCase):
                          (0,0))
         
         
-    def test_distance_point(self):
+    def test_distance_to_point(self):
         ""
         pt1=Point2D(0,0)
         pt2=Point2D(1,0)
-        self.assertEqual(pt1.distance_point(pt2),
+        self.assertEqual(pt1.distance_to_point(pt2),
                          1)
    
+    
+    def test_project_3D(self):
+        ""
+        pl=Plane3D(Point3D(0,0,1),Vector3D(0,0,1))
+        pt=Point2D(2,2)
+        self.assertEqual(pt.project_3D(pl,2),
+                         Point3D(2,2,1.0))
+    
 
 class Test_Point3D(unittest.TestCase):
     
@@ -140,11 +148,11 @@ class Test_Point3D(unittest.TestCase):
                          (0,0,0))
         
         
-    def test_distance_point(self):
+    def test_distance_to_point(self):
         ""
         pt1=Point3D(0,0,0)
         pt2=Point3D(1,0,0)
-        self.assertEqual(pt1.distance_point(pt2),
+        self.assertEqual(pt1.distance_to_point(pt2),
                          1)
         
         

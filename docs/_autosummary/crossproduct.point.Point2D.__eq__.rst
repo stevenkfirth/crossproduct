@@ -1,6 +1,4 @@
-crossproduct.point.Point2D.\_\_eq\_\_
-=====================================
+Point2D.__eq__
+==============
 
-.. currentmodule:: crossproduct.point
-
-.. automethod:: Point2D.__eq__
+.. automethod:: crossproduct.point.Point2D.__eq__

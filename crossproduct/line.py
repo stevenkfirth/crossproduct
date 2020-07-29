@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 
-from .point import Point, Point2D
-from .vector import Vector, Vector2D
+from .point import Point2D
+from .vector import Vector2D
 
 
 SMALL_NUM=0.00000001
@@ -13,52 +13,55 @@ class Line():
     
     classname='Line'
     
-    def __init__(self,P0,vL):
-        """
-        
-        :param P0 Point: a point on the line
-        :param vL Vector: a vector on the line
-        
-        """
-        if isinstance(P0,Point):
-            self.P0=P0
-        else:
-            raise TypeError
-        
-        if isinstance(vL,Vector):
-            if vL.length>SMALL_NUM:
-                self.vL=vL
-            else:
+    def __init__(self,P0,vL,validate=False):
+        ""
+        if validate:
+            if vL.length<SMALL_NUM:
                 raise ValueError('length of vL must be greater than zero')
-        else:
-            raise TypeError
+                
+        self._P0=P0
+        self._vL=vL
     
     
     def __contains__(self,obj):
         """Tests if the line contains the object
         
-        :param obj: a geometric object 
-            - Point, HalfLine or Segement
+        :param obj: A point, halfline or segment.
+        :type obj: Point2D, Point3D, Halfline2D, Halfline3D, Segment2D or Segment3D
             
-        :return result:
-            - for point, True if the point lies on the line
-            - for halfline, True if the halfline startpoint is on the line and 
-                the halfline vector is collinear to the line vector
-            - for segment, True if the segment start and endpoints are on the line
-        :rtype bool:
+        :return:  For point, True if the point lies on the line; otherwise False. 
+            For halfline, True if the halfline startpoint is on the line and 
+            the halfline vector is collinear to the line vector; otherwise False. 
+            For segment, True if the segment start and endpoints are on the line; otherwise False. 
+        :rtype: bool
         
+        :Example:
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> l = Line2D(Point2D(0,0), Vector2D(1,0))
+           >>> result = Point(2,0) in l
+           >>> print(result)
+           True
+           
+           # 3D example
+           >>> l = Line3D(Point2D(0,0,0), Vector2D(1,0,0))
+           >>> hl = Halfline3D(Point3D(0,0,0), Vector3D(-1,0,0))
+           >>> result = hl in l
+           >>> print(result)
+           True
+            
         """
-        import crossproduct
-        
-        if isinstance(obj,Point):
+        if obj.classname=='Point':
             t=self.calculate_t_from_point(obj)
             pt=self.calculate_point(t)           
             return obj==pt 
                     
-        elif isinstance(obj,crossproduct.halfline.Halfline):
+        elif obj.classname=='Halfline':
             return obj.P0 in self and obj.vL.is_collinear(self.vL)
         
-        elif isinstance(obj,crossproduct.segment.Segment):
+        elif obj.classname=='Segment':
             return obj.P0 in self and obj.P1 in self
         
         else:
@@ -66,16 +69,33 @@ class Line():
         
         
     def __eq__(self,line):
-        """Tests if this line and the supplied line are equal
+        """Tests if this line and the supplied line are equal.
         
-        :param line Line: a line
+        :param line: A line.
+        :type line: Line2D or Line3D
         
-        :return result: 
-            - True if the start point of supplied line lies on line (self),
-                and the vL of supplied line is collinear to the vL of line (self)
-            - otherwise False
-        :rtype bool:
+        :return: True if the start point of supplied line lies on line (self),
+            and the vL of supplied line is collinear to the vL of line (self); 
+            otherwise False.
+        :rtype: bool
             
+        :Example:
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> l = Line2D(Point2D(0,0), Vector2D(1,0))
+           >>> result = l == l
+           >>> print(result)
+           True
+           
+           # 3D example
+           >>> l1 = Line3D(Point3D(0,0,0), Vector3D(1,0,0))
+           >>> l2 = Line3D(Point3D(0,0,0), Vector3D(-1,0,0))
+           >>> result = l1 == l2
+           >>> print(result)
+           True
+           
         """
         if isinstance(line,Line):
             return line.P0 in self and line.vL.is_collinear(self.vL)
@@ -84,33 +104,123 @@ class Line():
         
         
     def calculate_point(self,t):
-        """Returns a point on the line for a given t value
+        """Returns a point on the line for a given t value. 
         
-        :param t int/float: the t value
+        :param t: The t value of the equation of the line.
+        :type t: float
         
-        :return point:
-        :rtype Point
+        :return: A point on the line calcualted using the t value. 
+        :rtype: Point2D or Point3D
+        
+        :Example:
+        
+        .. code-block:: python    
+        
+           # 2D example
+           >>> l = Line2D(Point2D(0,0), Vector2D(1,0))
+           >>> result = l.calcuate_point(3)
+           >>> print(result)
+           Point2D(3,0)
+           
+           # 3D example
+           >>> l = Line3D(Point3D(0,0,0), Vector3D(1,0,0))
+           >>> result = l.calcuate_point(-3)
+           >>> print(result)
+           Point3D(-3,0,0)
         
         """
         return self.P0 + (self.vL * t)
-        
     
-    def closest_point_of_approach(self,line):
-        """This algorithm is for points moving along lines with respect to time
+    
+    def calculate_t_from_x(self,x):
+        """Returns t for a given x coordinate. 
         
-        https://geomalgorithms.com/a07-_distance.html
+        :param x: A x coordinate.
+        :type x: float
+        
+        :return: The calculated t value.
+        :rtype: float
+        
+        :Example:
+        
+        .. code-block:: python
+           
+           # 2D example
+           >>> l = Line2D(Point2D(0,0), Vector2D(1,0))
+           >>> result = l.calculate_t_from_x(3)
+           >>> print(result)
+           3
+           
+           # 3D example
+           >>> l = Line3D(Point3D(0,0,0), Vector3D(1,0,0))
+           >>> result = l.calculate_t_from_x(3)
+           >>> print(result)
+           3
         
         """
-        raise NotImplementedError
+        try:
+            return (x-self.P0.x) / (self.vL.x)
+        except ZeroDivisionError:
+            raise ValueError('%s has a vector with an x component of 0' % self)
     
     
-    def distance_point(self,point):
-        """Returns the distance to the supplied point
+    def calculate_t_from_y(self,y):
+        """Returns t for a given y coordinate. 
         
-        :param point Point: a point instance
+        :param y: A y coordinate.
+        :type y: float
+        
+        :return: The calculated t value.
+        :rtype: float
+        
+        :Example:
+        
+        .. code-block:: python
+           
+           # 2D example
+           >>> l = Line2D(Point2D(0,0), Vector2D(0,1))
+           >>> result = l.calculate_t_from_y(3)
+           >>> print(result)
+           3
+           
+           # 3D example
+           >>> l = Line3D(Point3D(0,0,0), Vector3D(0,1,0))
+           >>> result = l.calculate_t_from_y(3)
+           >>> print(result)
+           3
+           
+        """
+        try:
+            return (y-self.P0.y) / (self.vL.y)
+        except ZeroDivisionError:
+            raise ValueError('%s has a vector with an y component of 0' % self)
+    
+    
+    
+    def distance_to_point(self,point):
+        """Returns the distance to the supplied point.
+        
+        :param point: A point.
+        :type point: Point2D or Point3D
                     
-        :return distance: the distance from the point to the object
-        :rtype float:
+        :return: The distance from the line to the point. 
+        :rtype: float
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> l = Line2D(Point2D(0,0), Vector2D(1,0))
+           >>> result = l.distance_to_point(Point2D(0,10))
+           >>> print(result)
+           10
+           
+           # 3D example
+           >>> l = Line3D(Point3D(0,0,0), Vector3D(1,0,0))
+           >>> result = l.distance_to_point(Point3D(10,0,0))
+           >>> print(result)
+           0
             
         """
         w=point-self.P0
@@ -120,15 +230,34 @@ class Line():
         
     
     def intersect_line(self,line):
-        """Returns the intersection of this line with the supplied line
+        """Returns the intersection of this line with the supplied line. 
         
-        :param line Line: a line 
+        :param line: A line.
+        :type line: Line2D or Line3D
         
-        :return result:
-            - return value can be:
-                - self -> a line (for collinear lines) 
-                - None -> no intersection (for parallel lines)
-                - Point -> a point (for skew lines)
+        :return: Returns a line (this line) if lines are collinear. 
+            Returns None (i.e. no intersection) if lines are parallel. 
+            For 2D, returns a point if lines are skew.  
+            For 3D, returns either None or a point if lines are skew. 
+        :rtype: None, Point2D, Point3D, Line2D or Line3D. 
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> l1 = Line2D(Point2D(0,0), Vector2D(1,0))
+           >>> l2 = Line2D(Point2D(0,0), Vector2D(0,1))
+           >>> result = l.intersect_line(l2)
+           >>> print(result)
+           Point2D(0,0)
+           
+           # 3D example
+           >>> l1 = Line3D(Point3D(0,0,0), Vector3D(1,0,0))
+           >>> l2 = Line3D(Point3D(0,0,1), Vector3D(1,0,0))
+           >>> result = l1.intersect_line(l2)
+           >>> print(result)
+           None
         
         """
         if self==line: # test for collinear lines
@@ -136,71 +265,145 @@ class Line():
         elif self.is_parallel(line): # test for parallel lines
             return None 
         else: # a skew line
-            return self.intersect_line_skew(line)
+            return self._intersect_line_skew(line)
     
         
-    def is_collinear(self,linelike_obj):
-        """Tests if this line and the supplied line-like object are collinear
+    def is_collinear(self,obj):
+        """Tests if this line and the supplied object are collinear. 
         
-        :param linelike_obj: a Line, HalfLine or Segment
+        :param obj: A line, halfLine or segment.
+        :type obj: Line2D, Line3D, Halfline2D, Halfline3D, Segment2D or Segment3D
         
-        :return result: the result of the test
-            - returns True if the linkline_obj is contained in line (self)
-            - otherwise False
-        :rtype bool:
+        :return: Returns True if the obj is equal to or contained within line; 
+            otherwise False.
+        :rtype: bool
+            
+        :Example:
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> l1 = Line2D(Point2D(0,0), Vector2D(1,0))
+           >>> l2 = Line2D(Point2D(0,0), Vector2D(0,1))
+           >>> result = l.is_collinear(l2)
+           >>> print(result)
+           False
+           
+           # 3D example
+           >>> l1 = Line3D(Point3D(0,0,0), Vector3D(1,0,0))
+           >>> l2 = Line3D(Point3D(0,0,0), Vector3D(2,0,0))
+           >>> result = l1.is_collinear(l2)
+           >>> print(result)
+           True
             
         """
         try:
-            return self==linelike_obj.line
+            return self==obj.line
         except AttributeError:
-            return self==linelike_obj
+            return self==obj
         
     
     def is_parallel(self,linelike_obj):
-        """Tests if this line and the supplied line-like object are parallel
+        """Tests if this line and the supplied object are parallel. 
         
-        :param linelike_obj: a Line, HalfLine or Segment
+        :param obj: A line, halfline or segment.
+        :type obj: Line2D, Line3D, Halfline2D, Halfline3D, Segment2D, Segment3D
         
-        :return result: the result of the test
-            - returns True if the linkline_obj vector is collinear with the line (self) vector
-            - otherwise False
-        :rtype bool:
+        :return: Returns True if the obj vector is collinear with the line vector; 
+            otherwise False. 
+        :rtype: bool
+            
+        :Example:
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> l1 = Line2D(Point2D(0,0), Vector2D(1,0))
+           >>> l2 = Line2D(Point2D(0,0), Vector2D(0,1))
+           >>> result = l.is_parallel(l2)
+           >>> print(result)
+           False
+           
+           # 3D example
+           >>> l1 = Line3D(Point3D(0,0,0), Vector3D(1,0,0))
+           >>> l2 = Line3D(Point3D(0,0,1), Vector3D(2,0,0))
+           >>> result = l1.is_parallel(l2)
+           >>> print(result)
+           True
             
         """
         return self.vL.is_collinear(linelike_obj.vL)
+    
+    
+    @property
+    def P0(self):
+        """The starting point of the line.
         
+        :rtype: Point2D or Point3D
+        
+        """
+        return self._P0
+    
+    
+    @property
+    def vL(self):
+        """The vector of the line.
+        
+        :rtype: Vector2D or Vector3D
+        
+        """
+        return self._vL
+
 
 
 class Line2D(Line):
-    """A 2D Line
+    """A two dimensional line, situated on an x, y plane.
     
-    Equation of the line is P(t) = P0 + vL*t
-        where:
-            - P(t) is a point on the line
-            - P0 is the start point of the line
-            - vL is the line vector
-            - t is any real number
+    Equation of the line is P(t) = P0 + vL*t where:
+    
+        - P(t) is a point on the line; 
+        - P0 is the start point of the line; 
+        - vL is the line vector; 
+        - t is any real number.
+    
+    :param P0: The start point of the line.
+    :type P0: Point2D
+    :param vL: The line vector.
+    :type vL: Vector2D
+    
+    :Example:
+    
+    .. code-block:: python
+       
+       >>> l = Line2D(Point2D(0,0), Vector2D(1,0))
+       >>> print(l)
+       Line2D(Point2D(0,0), Vector2D(1,0))
     
     """
-
     
     def __repr__(self):
-        """The string of this line for printing
-        
-        :return result:
-        :rtype str:
-            
-        """
+        ""
         return 'Line2D(%s, %s)' % (self.P0,self.vL)
     
     
     def calculate_t_from_point(self,point):
-        """Returns t for a given point
+        """Returns t for a given point.
         
-        :param point Point2D:
+        :param point: A point on the line.
+        :type point: Point2D
         
-        :return t: the calculated t value
-        :rtype float:
+        :return: The calculated t value.
+        :rtype: float
+        
+        :Example:
+        
+        .. code-block:: python
+           
+           >>> l = Line2D(Point2D(0,0), Vector2D(1,0))
+           >>> result = l.calculate_t_from_point(Point2D(3,0))
+           >>> print(result)
+           3
+            
         """
         try:
             return self.calculate_t_from_x(point.x)
@@ -208,100 +411,114 @@ class Line2D(Line):
             return self.calculate_t_from_y(point.y)
         
     
-    def calculate_t_from_x(self,x):
-        """Returns t for a given x coordinate
+    
+    
+    @property
+    def dimension(self):
+        """The dimension of the line.
         
-        :param x int/float: a x coordinate
+        :return: '2D'
+        :rtype: str
         
-        :return t: the calculated t value
-        :rtype float:
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> l = Line2D(Point2D(0,0), Vector2D(1,0))
+            >>> print(l.dimensions)
+            '2D'     
         
         """
-        try:
-            return (x-self.P0.x) / (self.vL.x)
-        except ZeroDivisionError:
-            raise ValueError('%s has a vector with an x component of 0' % self)
+        
+        return '2D'
     
     
-    def calculate_t_from_y(self,y):
-        """Returns t for a given y coordinate
+    def distance_to_line(self,line):
+        """Returns the distance from this line to the supplied line.
         
-        :param y int/float: a y coordinate
+        :param line: A line.
+        :type line: Line2D
         
-        :return t: the calculated t value
-        :rtype float:
+        :return: The distance between the two lines.
+        :rtype: float
         
-        """
-        try:
-            return (y-self.P0.y) / (self.vL.y)
-        except ZeroDivisionError:
-            raise ValueError('%s has a vector with an y component of 0' % self)
-    
-    
-    def distance_line(self,line):
-        """Returns the distance to the supplied line
+        :Example:
         
-        :param line Line: a line
-        
-        :return distance: the distance from the point to the object
-        :rtype float:
+        .. code-block:: python
+           
+           >>> l1 = Line2D(Point2D(0,0), Vector2D(1,0))
+           >>> l2 = Line2D(Point2D(0,1), Vector2D(1,0))
+           >>> result = l1.distance_to_line(l2)
+           >>> print(result)
+           1
             
         """
         if self.is_parallel(line):
-            return self.distance_point(line.P0)
+            return self.distance_to_point(line.P0)
         else:
             return 0 # as these are skew infinite 2D lines
                     
         
-    def intersect_line_skew(self,skew_line):
-        """Returns the point of intersection of this line and the supplied (skew) line
-        
-        :param line Line2D: a 2D line which is skew to this line (self)
-        
-        :return intersection:
-        :rtype Point2D:
-        
+    def _intersect_line_skew(self,skew_line):
+        """Returns the point of intersection of this line and the supplied skew line
         """
-        if not self.is_parallel(skew_line):
-            u=self.vL
-            v=skew_line.vL
-            w=self.P0-skew_line.P0 
-            t=-v.perp_product(w) / v.perp_product(u)
-            return self.calculate_point(t)
-        else:
-            raise ValueError('%s and %s are not skew lines' % (self,skew_line))
+        u=self.vL
+        v=skew_line.vL
+        w=self.P0-skew_line.P0 
+        t=-v.perp_product(w) / v.perp_product(u)
+        return self.calculate_point(t)
+        
         
         
         
 class Line3D(Line):
-    """A 3D Line
+    """A three dimensional line, situated on an x, y, z plane.
     
-    Equation of the line is P(t) = P0 + vL*t
-        where:
-            - P(t) is a point on the line
-            - P0 is the start point of the line
-            - vL is the line vector
-            - t is any real number
+    Equation of the line is P(t) = P0 + vL*t where:
     
-    """        
+        - P(t) is a point on the line; 
+        - P0 is the start point of the line; 
+        - vL is the line vector; 
+        - t is any real number.
+    
+    :param P0: The start point of the line.
+    :type P0: Point3D
+    :param vL: The line vector.
+    :type vL: Vector3D
+    
+    :Example:
+    
+    .. code-block:: python
+       
+       >>> l = Line3D(Point3D(0,0,0), Vector3D(1,0,0))
+       >>> print(l)
+       Line3D(Point3D(0,0,0), Vector3D(1,0,0))
+    
+    """     
     
     def __repr__(self):
-        """The string of this line for printing
-        
-        :return result:
-        :rtype str:
-            
-        """
+        ""
         return 'Line3D(%s, %s)' % (self.P0,self.vL)
         
         
     def calculate_t_from_point(self,point):
-        """Returns t for a given point
+        """Returns t for a given point.
         
-        :param point Point3D:
+        :param point: A point on the line.
+        :type point: Point3D
         
-        :return t: the calculated t value
-        :rtype float:
+        :return: The calculated t value.
+        :rtype: float
+        
+        :Example:
+        
+        .. code-block:: python
+           
+           >>> l = Line3D(Point3D(0,0), Vector3D(1,0))
+           >>> result = l.calculate_t_from_point(Point3D(3,0))
+           >>> print(result)
+           3
+            
         """
         try:
             return self.calculate_t_from_x(point.x)
@@ -310,45 +527,25 @@ class Line3D(Line):
                 return self.calculate_t_from_y(point.y)
             except ValueError:
                 return self.calculate_t_from_z(point.z)
-    
-    
-    def calculate_t_from_x(self,x):
-        """Returns t for a given x coordinate
-        
-        :param x int/float: a x coordinate
-        
-        :return t: the calculated t value
-        :rtype float:
-        
-        """
-        try:
-            return (x-self.P0.x) / (self.vL.x)
-        except ZeroDivisionError:
-            raise ValueError('%s has a vector with an x component of 0' % self)
-    
-    
-    def calculate_t_from_y(self,y):
-        """Returns t for a given y coordinate
-        
-        :param y int/float: a y coordinate
-        
-        :return t: the calculated t value
-        :rtype float:
-        
-        """
-        try:
-            return (y-self.P0.y) / (self.vL.y)
-        except ZeroDivisionError:
-            raise ValueError('%s has a vector with an y component of 0' % self)
-            
+                
             
     def calculate_t_from_z(self,z):
-        """Returns t for a given z coordinate
+        """Returns t for a given z coordinate. 
         
-        :param y int/float: a z coordinate
+        :param z: A z coordinate.
+        :type z: float
         
-        :return t: the calculated t value
-        :rtype float:
+        :return: The calculated t value.
+        :rtype: float
+        
+        :Example:
+        
+        .. code-block:: python
+           
+           >>> l = Line3D(Point3D(0,0,0), Vector3D(0,0,1))
+           >>> result = l.calculate_t_from_z(3)
+           >>> print(result)
+           3
         
         """
         try:
@@ -357,18 +554,49 @@ class Line3D(Line):
             raise ValueError('%s has a vector with an z component of 0' % self)
     
     
-    def distance_line(self,line):
-        """Returns the distance to the supplied line
+    @property
+    def dimension(self):
+        """The dimension of the line.
         
-        :param line Line: a line
+        :return: '3D'
+        :rtype: str
         
-        :return distance: the distance from the point to the object
-        :rtype float:
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> l = Line3D(Point3D(0,0,0), Vector3D(0,0,1))
+            >>> print(l.dimensions)
+            '3D'     
+        
+        """
+        
+        return '3D'
+    
+    
+    def distance_to_line(self,line):
+        """Returns the distance from this line to the supplied line.
+        
+        :param line: A line.
+        :type line: Line3D
+        
+        :return: The distance between the two lines.
+        :rtype: float
+        
+        :Example:
+        
+        .. code-block:: python
+           
+           >>> l1 = Line3D(Point3D(0,0,0), Vector3D(1,0,0))
+           >>> l2 = Line3D(Point3D(0,1,0), Vector3D(0,0,1))
+           >>> result = l1.distance_to_line(l2)
+           >>> print(result)
+           1
             
         """
         if self.is_parallel(line):
                 
-            return self.distance_point(line.P0)
+            return self.distance_to_point(line.P0)
         
         else:
             
@@ -390,15 +618,12 @@ class Line3D(Line):
             return (Pc-Qc).length
 
         
-    def intersect_line_skew(self,skew_line):
+    def _intersect_line_skew(self,skew_line):
         """Returns the point of intersection of this line and the supplied (skew) line
         
-        :param line Line3D: a 3D line which is skew to this line (self)
-        
-        :return intersection:
-            - return value can be:
-                - None -> no intersection (for skew lines which do not intersect in 3D space)
-                - Point3D -> a point (for skew lines which intersect)
+        - return value can be:
+            - None -> no intersection (for skew lines which do not intersect in 3D space)
+            - Point3D -> a point (for skew lines which intersect)
         
         """
         if not self.is_parallel(skew_line):
@@ -418,7 +643,7 @@ class Line3D(Line):
             #print('skew_line2D',skew_line2D)
             
             # find intersection point for 2D lines
-            ipt=self2D.intersect_line_skew(skew_line2D)
+            ipt=self2D._intersect_line_skew(skew_line2D)
             
             # find t values for the intersection point on each 2D line
             t1=self2D.calculate_t_from_point(ipt)
@@ -439,31 +664,39 @@ class Line3D(Line):
             raise ValueError('%s and %s are not skew lines' % (self,skew_line))
         
         
-    def project_2D(self,i):
-        """Projects the 3D line to a 2D line
+    def project_2D(self,coordinate_index):
+        """Projection of the 3D line as a 2D line.
         
-        :param i int: the coordinte index to ignore
-            - index is the index of the coordinate which is ignored in the projection
-                - 0 for x
-                - 1 for y
-                - 2 for z
-                
-        :return line: 
-        :rtype Line2D:
-            
+        :param coordinate_index: The index of the coordinate to ignore.
+            Use coordinate_index=0 to ignore the x-coordinate, coordinate_index=1 
+            for the y-coordinate and coordinate_index=2 for the z-coordinate.
+        :type coordinate_index: int
+        
+        :return: A 2D line based on the projection of the 3D line.
+        :rtype: Line2D
+               
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> l = Line3D(Point3D(0,0,0), Vector3D(1,2,3))
+            >>> result = l.project_2D(0)
+            >>> print(result)
+            Line2D(Point2D(0,0), Vector2D(2,3))   
+        
         """
         
-        if i==0:
+        if coordinate_index==0:
             return Line2D(Point2D(self.P0.y,self.P0.z),
                           Vector2D(self.vL.y,self.vL.z))
-        elif i==1:
+        elif coordinate_index==1:
             return Line2D(Point2D(self.P0.z,self.P0.x),
                           Vector2D(self.vL.z,self.vL.x))
-        elif i==2:
+        elif coordinate_index==2:
             return Line2D(Point2D(self.P0.x,self.P0.y),
                           Vector2D(self.vL.x,self.vL.y))
         else:
-            raise Exception
+            raise ValueError
                     
         
 

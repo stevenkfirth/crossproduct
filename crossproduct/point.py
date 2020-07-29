@@ -10,13 +10,32 @@ class Point():
 
     classname='Point'
     
-    def distance_point(self,point):
-        """Returns the distance to the supplied point
+    def distance_to_point(self,point):
+        """Returns the distance to the supplied point.
         
-        :param point Point: a n-D point
+        :param point: The point to calculate the distance to.
+        :type point: Point2D or Point3D
         
-        :return distance: the distance from the point to the object
-        :rtype float:
+        :return: The distance between the two points.
+        :rtype: float
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> p1 = Point2D(1,2)
+           >>> p1 = Point2D(2,2)
+           >>> result = p1.distance_to_point(p2)
+           >>> print(result)
+           1
+           
+           # 3D example
+           >>> p1 = Point3D(1,2,3)
+           >>> p1 = Point3D(2,2,3)
+           >>> result = p1.distance_to_point(p2)
+           >>> print(result)
+           1
             
         """
         return (point-self).length
@@ -43,8 +62,8 @@ class Point2D(Point):
     
     def __init__(self,x,y):
         ""
-        self.x=x
-        self.y=y
+        self._x=x
+        self._y=y
             
         
     def __add__(self,vector):
@@ -64,13 +83,10 @@ class Point2D(Point):
             >>> print(result)
             Point2D(2,3)
         
-        
         """
-        if isinstance(vector,Vector2D):
-            return Point2D(self.x+vector.x,
-                           self.y+vector.y)
-        else:
-            raise TypeError('%s is not a Vector2D' % vector)
+        return Point2D(self.x+vector.x,
+                       self.y+vector.y)
+        
         
         
     def __eq__(self,point):
@@ -86,7 +102,7 @@ class Point2D(Point):
     
         .. code-block:: python
         
-            >>> result = Point2D(1,2) == Point(2,2)
+            >>> result = Point2D(1,2) == Point2D(2,2)
             >>> print(result)
             False
             
@@ -114,46 +130,47 @@ class Point2D(Point):
     
         .. code-block:: python
         
-            >>> result = Point2D(1,2) < Point(2,2)
+            >>> result = Point2D(1,2) < Point2D(2,2)
             >>> print(result)
             True
         
         """
-        if isinstance(point,Point2D):
-            if self.x < point.x:
+        if self.x < point.x:
+            return True
+        else:
+            if self.x == point.x and self.y < point.y:
                 return True
             else:
-                if self.x == point.x and self.y < point.y:
-                    return True
-                else:
-                    return False
+                return False
         
-        else:
-            raise TypeError
+        
         
     
     def __repr__(self):
-        """The string of this point for printing
-        
-        :return result:
-        :rtype str:
-            
-        """
+        ""
         return 'Point2D(%s)' % ','.join([str(c) for c in self.coordinates])
     
     
-    def __sub__(self,obj):
-        """Substraction of supplied object from this point.
+    def __sub__(self,point_or_vector):
+        """Subtraction of supplied object from this point.
         
-        :param obj: either a 2D point or a 2D vector
-        :type obj: Point2D or Vector2D
+        :param point_or_vector: Either a 2D point or a 2D vector
+        :type point_or_vector: Point2D or Vector2D
         
-        :return obj: the resulting point or vector
-            - if obj is a point, then a vector is returned i.e. v=P1-P0
-            - if obj is vector, then a point is returned i.e. P1=P0-v
-        :rtype Point2D or Vector2D:
+        :return: If a point is supplied, then a vector is returned (i.e. v=P1-P0). 
+            If a vector is supplied, then a point is returned (i.e. P1=P0-v).
+        :rtype: Point2D or Vector2D
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> result = Point2D(2,2) - Point2D(1,2)
+            >>> print(result)
+            Vector2D(1,0)
         
         """
+        obj=point_or_vector
         if isinstance(obj,Point2D):
             return Vector2D(self.x-obj.x,
                             self.y-obj.y)
@@ -166,10 +183,18 @@ class Point2D(Point):
     
     @property
     def coordinates(self):
-        """Returns the coordinates of the point
+        """The coordinates of the point
         
-        :return coordinates: the x and y coordinates (x,y)
-        :rtype tuple:
+        :return: The x and y coordinates as a tuple (x,y)
+        :rtype: tuple
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> p = Point2D(2,1)
+            >>> print(p.coordinates)
+            (2,1)            
         
         """
         return self.x, self.y
@@ -177,81 +202,147 @@ class Point2D(Point):
     
     @property
     def dimension(self):
-        """Returns the dimension of the object instance
+        """The dimension of the point.
         
         :return: '2D'
         :rtype: str
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> p = Point2D(2,1)
+            >>> print(p.dimensions)
+            '2D'     
         
         """
         
         return '2D'
     
     
-    def project_3D(self,plane,i):
-        """Returns a projection of the point on a 3D plane
+    def project_3D(self,plane,coordinate_index):
+        """Projection of the point on a 3D plane
         
-        :param plane Plane3D: the plane for the projection
-        :param i int: the index of the coordinate which was ignored to create the 2D projection
+        :param plane: The plane for the projection
+        :type plane: Plane3D
+        :param coordinate_index: The index of the coordinate which was ignored 
+            to create the 2D projection. For example, coordinate_index=0
+            means that the x-coordinate was ignored and this point
+            was originally projected onto the yz plane.
+        :type coordinate_index: int
         
-        :return result:
+        :return: The 3D point as projected onto the plane.
+        :rtype: Point3D
                
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> pt = Point2D(2,2)
+            >>> pl = Plane3D(Point3D(0,0,1), Vector3D(0,0,1))
+            >>> result = pt.project_3D(pl, 2)
+            Point3D(2,2,1)   
+        
         """
         
-        if i==0:
+        if coordinate_index==0:
             point=plane.point_yz(self.x,self.y)
-        elif i==1:
+        elif coordinate_index==1:
             point=plane.point_zx(self.x,self.y)
-        elif i==2:
+        elif coordinate_index==2:
             point=plane.point_xy(self.x,self.y)
         else:
-            raise Exception
+            raise ValueError
             
         return point
     
-
-class Point3D(Point):
-    "A 3D point"
     
-    dimension='3D'
-    
-    def __init__(self,x,y,z):
-        """
-        :param x int/float: the x coordinate of the point
-        :param y int/float: the y coordinate of the point
-        :param z int/float: the z coordinate of the point
+    @property
+    def x(self):
+        """The x coordinate of the point.
+        
+        :rtype: float
         
         """
-        self.x=x
-        self.y=y
-        self.z=z
+        return self._x
+    
+    
+    @property
+    def y(self):
+        """The y coordinate of the point.
+        
+        :rtype: float
+        
+        """
+        return self._y
+    
+
+class Point3D(Point):
+    """A three dimensional point, situated on an x, y, z plane.
+    
+    :param x: The x coordinate of the point.
+    :type x: float
+    :param y: The y coordinate of the point.
+    :type y: float
+    :param z: The z coordinate of the point.
+    :type z: float
+    
+    :Example:
+    
+    .. code-block:: python
+       
+       >>> p = Point3D(1,2,3)
+       >>> print(p)
+       Point3D(1,2,3)
+    
+    """
+    
+    def __init__(self,x,y,z):
+        ""
+        self._x=x
+        self._y=y
+        self._z=z
     
     
     def __add__(self,vector):
-        """Addition of this point and a vector
+        """The addition of this point and a vector.
         
-        :param vector Vector3D: a 3D vector
+        :param vector: The vector to be added to the point.
+        :type vector: Vector3D
         
-        :return point: the resulting point
-        :rtype Point3D:
+        :rtype: Point3D
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> p = Point3D(1,2,3)
+            >>> result = p + Vector3D(1,1,1)
+            >>> print(result)
+            Point3D(2,3,4)
         
         """
-        if isinstance(vector,Vector3D):
-            return Point3D(self.x+vector.x,
-                           self.y+vector.y,
-                           self.z+vector.z)
-        else:
-            raise TypeError 
-            
+        return Point3D(self.x+vector.x,
+                       self.y+vector.y,
+                       self.z+vector.z)
+                    
     
     def __eq__(self,point):
-        """Tests if this point and the supplied point are equal
+        """Tests if this point and the supplied point are equal.
         
-        :param point Point3D: a 3D point
+        :param point: The point to be tested.
+        :type point: Point3D
         
-        :return result: 
-            - True if the point coordinates are the same
-            - otherwise False
-        :rtype bool:
+        :return: True if the point coordinates are the same, otherwise False.
+        :rtype: bool
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> result = Point3D(1,2,3) == Point3D(2,2,2)
+            >>> print(result)
+            False
             
         """
         if isinstance(point,Point3D):
@@ -264,22 +355,39 @@ class Point3D(Point):
             
         
     def __lt__(self,point):
-        """Tests is the coordinates of this point are lower than the supplied point
+        """Tests if the coordinates of this point are lower than the supplied point.
+        
+        :param point: The point to be tested.
+        :type point: Point3D
+        
+        :return: True if the x coordinate of this point is lower than the 
+            supplied point, otherwise False. If both x coordinates are equal, then 
+            True if the y coordinate of this point is lower than the 
+            supplied point, otherwise False. If both x and y coordinates are equal, then 
+            True if the z coordinate of this point is lower than the 
+            supplied point, otherwise False. 
+            
+        :rtype: bool
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> result = Point3D(1,2,3) < Point3D(2,2,2)
+            >>> print(result)
+            True
         
         """
-        if isinstance(point,Point3D):
-            if self.x < point.x:
+        if self.x < point.x:
+            return True
+        else:
+            if self.x == point.x and self.y < point.y:
                 return True
             else:
-                if self.x == point.x and self.y < point.y:
+                if self.y == point.y and self.z < point.z:
                     return True
                 else:
-                    if self.y == point.y and self.z < point.z:
-                        return True
-                    else:
-                        return False
-        else:
-            raise TypeError
+                    return False
         
     
     def __repr__(self):
@@ -292,17 +400,26 @@ class Point3D(Point):
         return 'Point3D(%s)' % ','.join([str(c) for c in self.coordinates])
     
     
-    def __sub__(self,obj):
-        """Substraction of supplied object from this point
+    def __sub__(self,point_or_vector):
+        """Subtraction of supplied object from this point.
         
-        :param obj: either a 3D point or a 3D vector
+        :param point_or_vector: Either a 3D point or a 3D vector
+        :type point_or_vector: Point3D or Vector3D
         
-        :return obj: the resulting point or vector
-            - if obj is a point, then a vector is returned i.e. v=P1-P0
-            - if obj is vector, then a point is returned i.e. P1=P0-v
-        :rtype Point3D or Vector3D:
+        :return: If a point is supplied, then a vector is returned (i.e. v=P1-P0). 
+            If a vector is supplied, then a point is returned (i.e. P1=P0-v).
+        :rtype: Point3D or Vector3D
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> result = Point3D(2,2,2) - Point3D(1,2,3)
+            >>> print(result)
+            Vector3D(1,0,-1)
         
         """
+        obj=point_or_vector
         if isinstance(obj,Point3D):
             return Vector3D(self.x-obj.x,
                             self.y-obj.y,
@@ -317,42 +434,103 @@ class Point3D(Point):
     
     @property
     def coordinates(self):
-        """Returns the coordinates of the point
+        """The coordinates of the point
         
-        :return coordinates: the x, y and z coordinates (x,y,z)
-        :rtype tuple:
+        :return: The x, y and z coordinates as a tuple (x,y,z).
+        :rtype: tuple
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> p = Point3D(2,1,3)
+            >>> print(p.coordinates)
+            (2,1,3)            
         
         """
         return self.x, self.y, self.z
     
     
-    def project_2D(self,i):
-        """Projects the 3D point to a 2D point
+    @property
+    def dimension(self):
+        """The dimension of the point.
         
-        :param i int: the coordinte index to ignore
-            - index is the index of the coordinate which is ignored in the projection
-                - 0 for x
-                - 1 for y
-                - 2 for z
-                
-        :return: point
-        :rtype: Point2D
-            
+        :return: '3D'
+        :rtype: str
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> p = Point3D(1,2,3)
+            >>> print(p.dimensions)
+            '3D'     
+        
         """
         
-        if i==0:
+        return '3D'
+    
+    
+    def project_2D(self,coordinate_index):
+        """Projection of the 3D point as a 2D point.
+        
+        :param coordinate_index: The index of the coordinate to ignore.
+            Use coordinate_index=0 to ignore the x-coordinate, coordinate_index=1 
+            for the y-coordinate and coordinate_index=2 for the z-coordinate.
+        :type coordinate_index: int
+        
+        :return: A 2D point based on the projection of the 3D point.
+        :rtype: Point2D
+               
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> pt = Point3D(1,2,3)
+            >>> result = pt.project_2D(1)
+            >>> print(result)
+            Point2D(1,3)   
+        
+        """
+        
+        if coordinate_index==0:
             return Point2D(self.y,self.z)
-        elif i==1:
+        elif coordinate_index==1:
             return Point2D(self.z,self.x)
-        elif i==2:
+        elif coordinate_index==2:
             return Point2D(self.x,self.y)
         else:
-            raise Exception
+            raise ValueError
                     
         
-
+    @property
+    def x(self):
+        """The x coordinate of the point.
+        
+        :rtype: float
+        
+        """
+        return self._x
     
     
+    @property
+    def y(self):
+        """The y coordinate of the point.
+        
+        :rtype: float
+        
+        """
+        return self._y
+    
+    
+    @property
+    def z(self):
+        """The z coordinate of the point.
+        
+        :rtype: float
+        
+        """
+        return self._z
     
     
     

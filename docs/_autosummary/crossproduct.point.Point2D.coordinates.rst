@@ -1,6 +1,4 @@
-crossproduct.point.Point2D.coordinates
-======================================
+Point2D.coordinates
+===================
 
-.. currentmodule:: crossproduct.point
-
-.. autoproperty:: Point2D.coordinates
+.. autoattribute:: crossproduct.point.Point2D.coordinates

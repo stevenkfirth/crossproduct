@@ -89,26 +89,26 @@ class Test_Line2D(unittest.TestCase):
                          3)    
     
 
-    def test_distance_point(self):
+    def test_distance_to_point(self):
         ""
         l=Line2D(P0,vL)
         
-        self.assertEqual(l.distance_point(P0),
+        self.assertEqual(l.distance_to_point(P0),
                          0)
-        self.assertEqual(l.distance_point(P0+vL),
+        self.assertEqual(l.distance_to_point(P0+vL),
                          0)
-        self.assertEqual(l.distance_point(P0+vL.perp_vector),
+        self.assertEqual(l.distance_to_point(P0+vL.perp_vector),
                          vL.length)
 
-    def test_distance_line(self):
+    def test_distance_to_line(self):
         ""
         l=Line2D(P0,vL)
         
-        self.assertEqual(l.distance_line(l),
+        self.assertEqual(l.distance_to_line(l),
                          0)
-        self.assertEqual(l.distance_line(Line2D(P0+vL.perp_vector,vL)),
+        self.assertEqual(l.distance_to_line(Line2D(P0+vL.perp_vector,vL)),
                          vL.length)
-        self.assertEqual(l.distance_line(Line2D(P0,vL.perp_vector)), 
+        self.assertEqual(l.distance_to_line(Line2D(P0,vL.perp_vector)), 
                          0)
         
         
@@ -133,12 +133,12 @@ class Test_Line2D(unittest.TestCase):
                          P0+vL)
         
         
-    def test_intersect_line_skew(self):
+    def test__intersect_line_skew(self):
         ""
         l=Line2D(P0,vL)
-        self.assertEqual(l.intersect_line_skew(Line2D(P0,vL.perp_vector)),
+        self.assertEqual(l._intersect_line_skew(Line2D(P0,vL.perp_vector)),
                          P0)
-        self.assertEqual(l.intersect_line_skew(Line2D(P0+vL,vL.perp_vector)),
+        self.assertEqual(l._intersect_line_skew(Line2D(P0+vL,vL.perp_vector)),
                          P0+vL)
     
     
@@ -243,31 +243,31 @@ class Test_Line3D(unittest.TestCase):
                          3)    
     
 
-    def test_distance_point(self):
+    def test_distance_to_point(self):
         ""
         l=Line3D(P0,vL)
         
         # point
-        self.assertEqual(l.distance_point(P0),
+        self.assertEqual(l.distance_to_point(P0),
                          0)
-        self.assertEqual(l.distance_point(P0+Vector3D(1,-1,0)),
+        self.assertEqual(l.distance_to_point(P0+Vector3D(1,-1,0)),
                          Vector3D(1,-1,0).length)
 
 
-    def test_distance_line(self):
+    def test_distance_to_line(self):
         ""
         l=Line3D(P0,vL)
         
         # line
-        self.assertEqual(l.distance_line(l),
+        self.assertEqual(l.distance_to_line(l),
                          0)
-        self.assertEqual(l.distance_line(Line3D(P0+Vector3D(1,-1,0),vL)),
+        self.assertEqual(l.distance_to_line(Line3D(P0+Vector3D(1,-1,0),vL)),
                          Vector3D(1,-1,0).length)
-        self.assertEqual(l.distance_line(Line3D(P0,Vector3D(1,-1,0))), 
+        self.assertEqual(l.distance_to_line(Line3D(P0,Vector3D(1,-1,0))), 
                          0)
         
         self.assertEqual(Line3D(Point3D(0,0,0),
-                                Vector3D(1,0,0)).distance_line(Line3D(Point3D(0,0,1),
+                                Vector3D(1,0,0)).distance_to_line(Line3D(Point3D(0,0,1),
                                          Vector3D(0,1,0))),
                         1)
                 
@@ -286,24 +286,24 @@ class Test_Line3D(unittest.TestCase):
                          None)
         
         #skew
-        self.assertEqual(l.intersect_line_skew(Line3D(P0,
+        self.assertEqual(l.intersect_line(Line3D(P0,
                                                       Vector3D(1,-1,0))),
                          P0)
-        self.assertEqual(l.intersect_line_skew(Line3D(P0+vL,
+        self.assertEqual(l.intersect_line(Line3D(P0+vL,
                                                       Vector3D(1,-1,0))),
                          P0+vL)
-        self.assertEqual(l.intersect_line_skew(Line3D(Point3D(0,0,1),
+        self.assertEqual(l.intersect_line(Line3D(Point3D(0,0,1),
                                                       Vector3D(1,-1,0))),
                          None)
         
         
-    def test_intersect_line_skew(self):
+    def test__intersect_line_skew(self):
         ""
         l=Line3D(P0,vL)
-        self.assertEqual(l.intersect_line_skew(Line3D(P0,
+        self.assertEqual(l._intersect_line_skew(Line3D(P0,
                                                       Vector3D(1,-1,0))),
                          P0)
-        self.assertEqual(l.intersect_line_skew(Line3D(Point3D(0,0,1),
+        self.assertEqual(l._intersect_line_skew(Line3D(Point3D(0,0,1),
                                                       Vector3D(1,-1,0))),
                          None)
     

@@ -203,7 +203,7 @@ class SimplePolygon():
         ipts, isegments, isimplepolygons=self.triangles.intersect_simple_convex_polygon(simple_convex_polygon)
         #print(ipts, isegments, isimplepolygons)
         isegments.remove_segments_in_polygons(isimplepolygons)
-        ipts.remove_points_in_segments(isegments)
+        ipts=ipts.remove_points_in_segments(isegments)
         isimplepolygons=isimplepolygons.union_adjacent
         #print(ipts, isegments, isimplepolygons)
         return ipts, isegments, isimplepolygons
@@ -221,7 +221,7 @@ class SimplePolygon():
         ipts,isegments,isimplepolygons=self.triangles.intersect_triangles(simple_polygon.triangles)
         
         isegments.remove_segments_in_polygons(isimplepolygons)
-        ipts.remove_points_in_segments(isegments)
+        ipts=ipts.remove_points_in_segments(isegments)
         isimplepolygons=isimplepolygons.union_adjacent
         
         return ipts,isegments,isimplepolygons

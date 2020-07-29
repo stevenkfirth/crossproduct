@@ -11,12 +11,30 @@ Geometry in Python - 2D and 3D
 
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
+   :caption: Overview
 
+   Introduction
+   Geometric_Objects
+   Equality
+   Membership
+   Distances
+   Intersections
+   Differences
+   Unions
+   
+.. toctree::
+   :maxdepth: 1
+   :caption: Geometric Classes
+   
    Point2D
    Point3D
+   Points
    Vector2D
    Vector3D
+   Line2D
+   Line3D
+   Halfline2D
+   Halfline3D
    
 
 

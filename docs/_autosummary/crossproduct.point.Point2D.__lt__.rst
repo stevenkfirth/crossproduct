@@ -1,6 +1,4 @@
-crossproduct.point.Point2D.\_\_lt\_\_
-=====================================
+Point2D.__lt__
+==============
 
-.. currentmodule:: crossproduct.point
-
-.. automethod:: Point2D.__lt__
+.. automethod:: crossproduct.point.Point2D.__lt__

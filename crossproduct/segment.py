@@ -22,7 +22,7 @@ class Segment():
             raise ValueError('P0 and P1 cannot be equal for a segment')
         
         if isinstance(P0, Point):
-            self.P0=P0
+            self._P0=P0
         else:
             raise TypeError
             

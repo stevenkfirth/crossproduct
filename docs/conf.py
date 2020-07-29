@@ -1,6 +1,6 @@
 # added 14-7-2020
 master_doc = 'index'
-autosummary_generate = True
+#autosummary_generate = True
 
 
 # Configuration file for the Sphinx documentation builder.

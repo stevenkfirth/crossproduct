@@ -57,40 +57,19 @@ class Test_Halfline2D(unittest.TestCase):
         self.assertEqual(hl.calculate_point(2),
                          P0+vL*2)
         
-        
-    def test_calculate_t_from_point(self):
-        ""
-        hl=Halfline2D(P0,vL)
-        self.assertEqual(hl.calculate_t_from_point(P0+vL*2),
-                         2)
-    
-
-    def test_calculate_t_from_x(self):
-        ""
-        hl=Halfline2D(P0,vL)
-        self.assertEqual(hl.calculate_t_from_x(2),
-                         2)
-        
-                
-    def test_calculate_t_from_y(self):
-        ""
-        hl=Halfline2D(P0,vL)
-        self.assertEqual(hl.calculate_t_from_y(3),
-                         3)    
-    
-
-    def test_distance_point(self):
+ 
+    def test_distance_to_point(self):
         ""
         hl=Halfline2D(P0,vL)
         
         # point
-        self.assertEqual(hl.distance_point(P0),
+        self.assertEqual(hl.distance_to_point(P0),
                          0)
-        self.assertEqual(hl.distance_point(P0-vL),
+        self.assertEqual(hl.distance_to_point(P0-vL),
                          vL.length)
-        self.assertEqual(hl.distance_point(P0+vL),
+        self.assertEqual(hl.distance_to_point(P0+vL),
                          0)
-        self.assertEqual(hl.distance_point(P0+Vector2D(1,-1)),
+        self.assertEqual(hl.distance_to_point(P0+Vector2D(1,-1)),
                          Vector2D(1,-1).length)
         
         
@@ -232,39 +211,18 @@ class Test_Halfline3D(unittest.TestCase):
                          P0+vL*2)
         
         
-    def test_calculate_t_from_point(self):
-        ""
-        hl=Halfline3D(P0,vL)
-        self.assertEqual(hl.calculate_t_from_point(P0+vL*2),
-                         2)
-    
-
-    def test_calculate_t_from_x(self):
-        ""
-        hl=Halfline3D(P0,vL)
-        self.assertEqual(hl.calculate_t_from_x(2),
-                         2)
-        
-                
-    def test_calculate_t_from_y(self):
-        ""
-        hl=Halfline3D(P0,vL)
-        self.assertEqual(hl.calculate_t_from_y(3),
-                         3)    
-        
-        
-    def test_distance_point(self):
+    def test_distance_to_point(self):
         ""
         hl=Halfline3D(P0,vL)
         
         # point
-        self.assertEqual(hl.distance_point(P0),
+        self.assertEqual(hl.distance_to_point(P0),
                          0)
-        self.assertEqual(hl.distance_point(P0-vL),
+        self.assertEqual(hl.distance_to_point(P0-vL),
                          vL.length)
-        self.assertEqual(hl.distance_point(P0+vL),
+        self.assertEqual(hl.distance_to_point(P0+vL),
                          0)
-        self.assertEqual(hl.distance_point(P0+Vector3D(1,-1,0)),
+        self.assertEqual(hl.distance_to_point(P0+Vector3D(1,-1,0)),
                          Vector3D(1,-1,0).length)
         
         
