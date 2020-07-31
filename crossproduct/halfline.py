@@ -25,15 +25,31 @@ class Halfline():
         
     
     def __contains__(self,obj):
-        """Tests if the halfline contains the object
+        """Tests if the halfline contains the object.
         
-        :param obj: a geometric object 
+        :param obj: A point or segment.
         :type obj: Point2D, Point3D, Segment2D, Segment3D
             
-        :return:
-            - for point, True if the point lies on the halfline
-            - for segment, True if the segment start and endpoints are on the halfline
+        :return: For point, True if the point lies on the halfline; otherwise False. 
+            For segment, True if the segment start point and end point are on the halfline; otherwise False
         :rtype: bool
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> hl = Halfline2D(Point2D(0,0), Vector2D(1,0))
+           >>> result = Point2D(2,0) in l
+           >>> print(result)
+           True
+           
+           # 3D example
+           >>> hl = Halfline3D(Point3D(0,0,0), Vector3D(1,0,0))
+           >>> hl = Halfline3D(Point3D(0,0,0), Vector3D(-1,0,0))
+           >>> result = hl in l
+           >>> print(result)
+           False            
         
         """
         if obj.classname=='Point':
@@ -56,17 +72,31 @@ class Halfline():
         
         
     def __eq__(self,halfline):
-        """Tests if this halfline and the supplied halfline are equal
+        """Tests if this halfline and the supplied halfline are equal.
         
-        :param halfline: a halfline
+        :param halfline: A halfline.
         :type halfline: Halfline2D, Halfline3D
         
-        :return: 
-            - True if 
-                - the start points are the same
-                - the vectors are codirectional
-            - otherwise False
+        :return: True if the start points are the same and the vectors are codirectional;
+            otherwise False.
         :rtype: bool
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> hl = Halfline2D(Point2D(0,0), Vector2D(1,0))
+           >>> result = hl == hl
+           >>> print(result)
+           True
+           
+           # 3D example
+           >>> hl1 = Halfline3D(Point3D(0,0,0), Vector3D(1,0,0))
+           >>> hl2 = Halfline3D(Point3D(0,0,0), Vector3D(-1,0,0))
+           >>> result = hl1 == hl2
+           >>> print(result)
+           False
             
         """
         if isinstance(halfline,Halfline):
@@ -76,13 +106,29 @@ class Halfline():
         
         
     def calculate_point(self,t):
-        """Returns a point on the halfline for a given t value
+        """Returns a point on the halfline for a given t value.
         
-        :param t: the t value
+        :param t: The t value.
         :type t: float
         
-        :return: point
-        :rtype: Point
+        :return: The point based on the t value.
+        :rtype: Point2D, Point3D
+        
+        :Example:
+        
+        .. code-block:: python    
+        
+           # 2D example
+           >>> hl = Halfline2D(Point2D(0,0), Vector2D(1,0))
+           >>> result = hl.calcuate_point(3)
+           >>> print(result)
+           Point2D(3,0)
+           
+           # 3D example
+           >>> hl = Halfline3D(Point3D(0,0,0), Vector3D(1,0,0))
+           >>> result = hl.calcuate_point(3)
+           >>> print(result)
+           Point3D(3,0,0)
         
         """
         if t>=0:
@@ -92,14 +138,30 @@ class Halfline():
         
         
     def distance_to_point(self,point):
-        """Returns the distance to the supplied point
+        """Returns the distance from this halfline to the supplied point.
         
-        :param point: a point
+        :param point: A point.
         :type point: Point2D, Point3D
         
-        :return: the distance from the point to the point
+        :return: The distance from the halfline to the point.
         :rtype: float
             
+        :Example:
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> hl = Halfline2D(Point2D(0,0), Vector2D(1,0))
+           >>> result = hl.distance_to_point(Point2D(0,10))
+           >>> print(result)
+           10
+           
+           # 3D example
+           >>> hl = Halfline3D(Point3D(0,0,0), Vector3D(1,0,0))
+           >>> result = hl.distance_to_point(Point3D(10,0,0))
+           >>> print(result)
+           0
+        
         """
         v=self.vL
         w=point-self.P0 
@@ -111,18 +173,35 @@ class Halfline():
         
         
     def intersect_line(self,line):
-        """Returns the intersection of this halfline with the supplied line
+        """Returns the intersection of this halfline with the supplied line.
         
-        :param line: a  line 
+        :param line: A line.
         :type line: Line2D, Line3D
         
-        :return:
-            - return value can be:
-                - Halfline -> a halfline (for a halfline that lies on the line) 
-                - Point -> a point (for skew halfline and line that intersect)
-                - None -> no intersection (for parallel line and halfline, 
-                    or skew halfline and line that don't intersect)
-        
+        :return: Returns a halfline (this halfline) if the halfline and line are collinear. 
+            Returns a point if the halfline and line are skew and they intersect. 
+            Returns None if the halfline and line are parallel. 
+            Returns None if the halfline and line are skew but do not intersect. 
+        :rtype: None, Point2D, Point3D, Halfline2D, Halfline3D        
+            
+        :Example:
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> hl = Halfline2D(Point2D(0,0), Vector2D(1,0))
+           >>> l = Line2D(Point2D(0,0), Vector2D(0,1))
+           >>> result = hl.intersect_line(l)
+           >>> print(result)
+           Point2D(0,0)
+           
+           # 3D example
+           >>> hl = Halfline3D(Point3D(0,0,0), Vector3D(1,0,0))
+           >>> l = Line3D(Point3D(0,0,1), Vector3D(1,0,0))
+           >>> result = hl.intersect_line(l)
+           >>> print(result)
+           None
+            
         """
         if self.line==line:
             return self
@@ -137,74 +216,9 @@ class Halfline():
                 return None
         
         
-    def is_collinear(self,linelike_obj):
-        """Tests if this halfline and the supplied line-like object are collinear
-        
-        :param linelike_obj: a Line, Halfline or Segment
-        :type linelike_obj: Line2D, Line3D, Halfline2D, Halfline3D, Segment2D, Segment3D
-        
-        :return result: the result of the test
-            - returns True if the linkline_obj is collinear to this halfline
-            - otherwise False
-        :rtype bool:
-            
-        """
-        return self.line.is_collinear(linelike_obj)
-    
-        
-    def is_codirectional(self,halfline):
-        """Tests if this halfline and the supplied halfline are collinear
-        
-        :param halfline: a halfline
-        :type halfline: Halfline2D, Halfline3D
-        
-        :return: 
-            - returns True if the halflines are codirectional
-            - otherwise False
-        :rtype: bool
-            
-        """
-        if isinstance(halfline,Halfline):
-            return self.vL.is_codirectional(halfline.vL)
-        else:
-            return TypeError
-            
-        
-    def is_parallel(self,linelike_obj):
-        """Tests if this halfline and the supplied object are parallel. 
-        
-        :param obj: A line, halfline or segment.
-        :type obj: Line2D, Line3D, Halfline2D, Halfline3D, Segment2D or Segment3D
-        
-        :return: Returns True if the obj vector is collinear with the line vector; 
-            otherwise False. 
-        :rtype: bool
-            
-        :Example:
-    
-        .. code-block:: python
-           
-           # 2D example
-           >>> l1 = Line2D(Point2D(0,0), Vector2D(1,0))
-           >>> l2 = Line2D(Point2D(0,0), Vector2D(0,1))
-           >>> result = l.is_parallel(l2)
-           >>> print(result)
-           False
-           
-           # 3D example
-           >>> l1 = Line3D(Point3D(0,0,0), Vector3D(1,0,0))
-           >>> l2 = Line3D(Point3D(0,0,1), Vector3D(2,0,0))
-           >>> result = l1.is_parallel(l2)
-           >>> print(result)
-           True
-            
-        """
-        return self.vL.is_collinear(linelike_obj.vL)
-        
-        
     @property
     def P0(self):
-        """The starting point of the line.
+        """The starting point of the halfline.
         
         :rtype: Point2D or Point3D
         
@@ -214,7 +228,7 @@ class Halfline():
     
     @property
     def vL(self):
-        """The vector of the line.
+        """The vector of the halfline.
         
         :rtype: Vector2D or Vector3D
         
@@ -235,11 +249,7 @@ class Halfline2D(Halfline):
     """        
     
     def __repr__(self):
-        """The string of this halfline for printing
-        
-        :rtype: str
-            
-        """
+        ""
         return 'Halfline2D(%s, %s)' % (self.P0,self.vL)
              
             
@@ -254,35 +264,42 @@ class Halfline2D(Halfline):
     
         .. code-block:: python
         
-            >>> l = Line2D(Point2D(0,0), Vector2D(1,0))
-            >>> print(l.dimensions)
+            >>> hl = Halfline2D(Point2D(0,0), Vector2D(1,0))
+            >>> print(hl.dimension)
             '2D'     
         
         """
-        
         return '2D'
     
      
     def intersect_halfline(self,halfline):
-        """Returns the intersection of this halfline with the supplied halfline
+        """Returns the intersection of this halfline with the supplied halfline.
         
-        :param halfline: a 2D halfline 
+        :param halfline: A 2D halfline.
         :type halfline:  Halfline2D
         
-        :return:
-            - return value can be:
-                - Halfline2D -> a halfline (for equal halflines) 
-                - Point2D -> a point (for skew halflines that intersect, 
-                    or collinear but non-codirectional halflines that start at the same point)
-                - Segment2D -> a segment (for collinear but non-codirectional 
-                    halflines that intersect but start at different points)
-                - None -> no intersection (for parallel halfline, 
-                    skew halflines that don't intersect,
-                    or for collinear but non-codirectional halflines that don't intersect)
+        :return: Returns None for halflines that are parallel. 
+            Returns None for skew halflines that don't intersect.
+            Returns None for collinear but non-codirectional halflines that don't overlap.
+            Returns a point for skew halflines that intersect. 
+            Returns a point for collinear but non-codirectional halflines that have the same start point. 
+            Returns a segment for collinear but non-codirectional halflines that overlap.
+            Returns a halfline for halflines that are equal.
+        :rtype: None, Point2D, Halfline2D, Segment2D
             
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> hl1 = Halfline2D(Point2D(0,0), Vector2D(1,0))
+           >>> hl2 = Halfline2D(Point2D(0,0), Vector2D(0,1))
+           >>> result = hl1.intersect_line(hl2)
+           >>> print(result)
+           Point2D(0,0)
+        
         """
         if halfline in self.line: # codirectional or non-codirectional
-            if self.is_codirectional(halfline): # codirectional
+            if self.vL.is_codirectional(halfline.vL): # codirectional
                 if self.P0 in halfline: # returns the halfline which is 'inside' the other
                     return self
                 else:
@@ -307,9 +324,20 @@ class Halfline2D(Halfline):
         
     @property
     def line(self):
-        """Return the line which the halfline lies on
+        """Returns the line which the halfline lies on.
         
+        :return: A line with the same start point (P0) and vector (vL) as the halfline.
         :rtype: Line2D
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> hl= Halfline2D(Point2D(0,0), Vector2D(1,0))
+           >>> result = hl.line
+           >>> print(result)
+           Line2D(Point2D(0,0), Vector2D(1,0))
+        
         """
         return Line2D(self.P0,self.vL)
     
@@ -328,8 +356,7 @@ class Halfline3D(Halfline):
     """
     
     def __repr__(self):
-        """The string of this halfline for printing
-        """
+        ""
         return 'Halfline3D(%s, %s)' % (self.P0,self.vL)
     
     
@@ -344,32 +371,39 @@ class Halfline3D(Halfline):
     
         .. code-block:: python
         
-            >>> l = Line3D(Point3D(0,0,0), Vector3D(0,0,1))
-            >>> print(l.dimensions)
+            >>> hl = Halfine3D(Point3D(0,0,0), Vector3D(0,0,1))
+            >>> print(hl.dimension)
             '3D'     
         
         """
-        
         return '3D'
     
     
     def intersect_halfline(self,halfline):
-        """Returns the intersection of this halfline with the supplied halfline
+        """Returns the intersection of this halfline with the supplied halfline.
         
-        :param halfline: a 3D halfline 
-        :type halfline: Halfline3D
+        :param halfline: A 3D halfline.
+        :type halfline:  Halfline3D
         
-        :return:
-            - return value can be:
-                - Halfline3D -> a halfline (for equal halflines) 
-                - Point3D -> a point (for skew halflines that intersect, 
-                    or collinear but non-codirectional halflines that start at the same point)
-                - Segment3D -> a segment (for collinear but non-codirectional 
-                    halflines that intersect but start at different points)
-                - None -> no intersection (for parallel halfline, 
-                    skew halflines that don't intersect,
-                    or for collinear but non-codirectional halflines that don't intersect)
+        :return: Returns None for halflines that are parallel. 
+            Returns None for skew halflines that don't intersect.
+            Returns None for collinear but non-codirectional halflines that don't overlap.
+            Returns a point for skew halflines that intersect. 
+            Returns a point for collinear but non-codirectional halflines that have the same start point. 
+            Returns a segment for collinear but non-codirectional halflines that overlap.
+            Returns a halfline for halflines that are equal.
+        :rtype: None, Point3D, Halfline3D, Segment3D
             
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> hl1 = Halfline3D(Point2D(0,0,0), Vector2D(1,0,0))
+           >>> hl2 = Halfline3D(Point2D(0,0,0), Vector2D(0,1,0))
+           >>> result = hl1.intersect_line(hl2)
+           >>> print(result)
+           Point3D(0,0,0)
+        
         """
         if halfline in self.line: # codirectional or non-codirectional
             if self.is_codirectional(halfline): # codirectional
@@ -397,35 +431,53 @@ class Halfline3D(Halfline):
         
     @property
     def line(self):
-        """Return the line which the halfline lies on
+        """Returns the line which the halfline lies on.
         
+        :return: A line with the same start point (P0) and vector (vL) as the halfline.
         :rtype: Line3D
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> hl= Halfline3D(Point3D(0,0,0), Vector3D(1,0,0))
+           >>> result = hl.line
+           >>> print(result)
+           Line3D(Point3D(0,0,0), Vector3D(1,0,0))
+        
         """
         return Line3D(self.P0,self.vL)
     
     
-    def project_2D(self,i):
-        """Projects the 3D halfline to a 2D halfline
+    def project_2D(self,coordinate_index):
+        """Projection of the 3D halfline as a 2D halfline.
         
-        :param i: the coordinte index to ignore
-            - index is the index of the coordinate which is ignored in the projection
-                - 0 for x
-                - 1 for y
-                - 2 for z
-        :type i: int
-                
-        :return: halfline:
-        :rtype: Halfline2D
-            
+        :param coordinate_index: The index of the coordinate to ignore.
+            Use coordinate_index=0 to ignore the x-coordinate, coordinate_index=1 
+            for the y-coordinate and coordinate_index=2 for the z-coordinate.
+        :type coordinate_index: int
+        
+        :return: A 2D halfline based on the projection of the 3D halfline.
+        :rtype: Halfine2D
+               
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> hl = Halfline3D(Point3D(0,0,0), Vector3D(1,2,3))
+            >>> result = hl.project_2D(0)
+            >>> print(result)
+            Line2D(Point2D(0,0), Vector2D(2,3))   
+        
         """
         
-        if i==0:
+        if coordinate_index==0:
             return Halfline2D(Point2D(self.P0.y,self.P0.z),
                               Vector2D(self.vL.y,self.vL.z))
-        elif i==1:
+        elif coordinate_index==1:
             return Halfline2D(Point2D(self.P0.z,self.P0.x),
                               Vector2D(self.vL.z,self.vL.x))
-        elif i==2:
+        elif coordinate_index==2:
             return Halfline2D(Point2D(self.P0.x,self.P0.y),
                               Vector2D(self.vL.x,self.vL.y))
         else:

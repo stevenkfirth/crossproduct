@@ -2,7 +2,20 @@
 Intersections
 =============
 
+Intersections occur when one geometric object passes over or overlaps with another geometric object. 
+The common region of overlap of both objects is the intersection of the two objects.
 
+Intersections are found using *intersect* methods:
+
+.. code-block:: python
+
+   >>> l1 = Line2D(Point2D(0,0), Vector2D(1,0))
+   >>> l2 = Line2D(Point2D(0,0), Vector2D(0,1))
+   >>> result = l.intersect_line(l2)
+   >>> print(result)
+   Point2D(0,0)
+
+The following intersection methods are available:
 
 +---------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------+
 | Geometric class                                                                 | Intersection method                                                                                              | Return classes                                                              |

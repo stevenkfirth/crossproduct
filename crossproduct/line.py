@@ -41,12 +41,12 @@ class Line():
            
            # 2D example
            >>> l = Line2D(Point2D(0,0), Vector2D(1,0))
-           >>> result = Point(2,0) in l
+           >>> result = Point2D(2,0) in l
            >>> print(result)
            True
            
            # 3D example
-           >>> l = Line3D(Point2D(0,0,0), Vector2D(1,0,0))
+           >>> l = Line3D(Point3D(0,0,0), Vector3D(1,0,0))
            >>> hl = Halfline3D(Point3D(0,0,0), Vector3D(-1,0,0))
            >>> result = hl in l
            >>> print(result)
@@ -198,7 +198,7 @@ class Line():
     
     
     def distance_to_point(self,point):
-        """Returns the distance to the supplied point.
+        """Returns the distance from this line to the supplied point.
         
         :param point: A point.
         :type point: Point2D or Point3D
@@ -239,7 +239,7 @@ class Line():
             Returns None (i.e. no intersection) if lines are parallel. 
             For 2D, returns a point if lines are skew.  
             For 3D, returns either None or a point if lines are skew. 
-        :rtype: None, Point2D, Point3D, Line2D or Line3D. 
+        :rtype: None, Point2D, Point3D, Line2D, Line3D. 
         
         :Example:
     
@@ -267,49 +267,14 @@ class Line():
         else: # a skew line
             return self._intersect_line_skew(line)
     
-        
-    def is_collinear(self,obj):
-        """Tests if this line and the supplied object are collinear. 
-        
-        :param obj: A line, halfLine or segment.
-        :type obj: Line2D, Line3D, Halfline2D, Halfline3D, Segment2D or Segment3D
-        
-        :return: Returns True if the obj is equal to or contained within line; 
-            otherwise False.
-        :rtype: bool
-            
-        :Example:
     
-        .. code-block:: python
-           
-           # 2D example
-           >>> l1 = Line2D(Point2D(0,0), Vector2D(1,0))
-           >>> l2 = Line2D(Point2D(0,0), Vector2D(0,1))
-           >>> result = l.is_collinear(l2)
-           >>> print(result)
-           False
-           
-           # 3D example
-           >>> l1 = Line3D(Point3D(0,0,0), Vector3D(1,0,0))
-           >>> l2 = Line3D(Point3D(0,0,0), Vector3D(2,0,0))
-           >>> result = l1.is_collinear(l2)
-           >>> print(result)
-           True
-            
-        """
-        try:
-            return self==obj.line
-        except AttributeError:
-            return self==obj
+    def is_parallel(self,line):
+        """Tests if this line and the supplied line are parallel. 
         
-    
-    def is_parallel(self,linelike_obj):
-        """Tests if this line and the supplied object are parallel. 
+        :param obj: A line.
+        :type obj: Line2D, Line3D
         
-        :param obj: A line, halfline or segment.
-        :type obj: Line2D, Line3D, Halfline2D, Halfline3D, Segment2D, Segment3D
-        
-        :return: Returns True if the obj vector is collinear with the line vector; 
+        :return: Returns True if the lines are parallel; 
             otherwise False. 
         :rtype: bool
             
@@ -332,7 +297,7 @@ class Line():
            True
             
         """
-        return self.vL.is_collinear(linelike_obj.vL)
+        return self.vL.is_collinear(line.vL)
     
     
     @property
@@ -411,8 +376,6 @@ class Line2D(Line):
             return self.calculate_t_from_y(point.y)
         
     
-    
-    
     @property
     def dimension(self):
         """The dimension of the line.
@@ -425,7 +388,7 @@ class Line2D(Line):
         .. code-block:: python
         
             >>> l = Line2D(Point2D(0,0), Vector2D(1,0))
-            >>> print(l.dimensions)
+            >>> print(l.dimension)
             '2D'     
         
         """
@@ -566,7 +529,7 @@ class Line3D(Line):
         .. code-block:: python
         
             >>> l = Line3D(Point3D(0,0,0), Vector3D(0,0,1))
-            >>> print(l.dimensions)
+            >>> print(l.dimension)
             '3D'     
         
         """

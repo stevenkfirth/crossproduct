@@ -48,7 +48,7 @@ class Points(Sequence):
             True
             
         """
-        if isinstance(points,Points) and self._points==points.points:
+        if isinstance(points,Points) and self._points==points._points:
             return True
         else:
             return False

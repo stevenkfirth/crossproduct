@@ -141,14 +141,6 @@ class Test_Line2D(unittest.TestCase):
         self.assertEqual(l._intersect_line_skew(Line2D(P0+vL,vL.perp_vector)),
                          P0+vL)
     
-    
-    def test_is_collinear(self):
-        ""
-        l=Line2D(P0,vL)
-        self.assertTrue(l.is_collinear(l))
-        self.assertTrue(l.is_collinear(Line2D(P0,vL.opposite)))
-        self.assertFalse(l.is_collinear(Line2D(P0+vL.perp_vector,vL)))
-        
         
     def test_is_parallel(self):
         ""
@@ -307,14 +299,6 @@ class Test_Line3D(unittest.TestCase):
                                                       Vector3D(1,-1,0))),
                          None)
     
-    
-    def test_is_collinear(self):
-        ""
-        l=Line3D(P0,vL)
-        self.assertTrue(l.is_collinear(l))
-        self.assertTrue(l.is_collinear(Line3D(P0,vL.opposite)))
-        self.assertFalse(l.is_collinear(Line3D(P0+Vector3D(1,-1,0),vL)))
-        
         
     def test_is_parallel(self):
         ""

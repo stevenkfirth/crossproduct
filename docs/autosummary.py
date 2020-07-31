@@ -82,5 +82,7 @@ create_pages(crossproduct.Line2D)
 create_pages(crossproduct.Line3D)
 create_pages(crossproduct.Halfline2D)
 create_pages(crossproduct.Halfline3D)
+create_pages(crossproduct.Segment2D)
+create_pages(crossproduct.Segment3D)
 
 

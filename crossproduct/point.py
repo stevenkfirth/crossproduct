@@ -212,7 +212,7 @@ class Point2D(Point):
         .. code-block:: python
         
             >>> p = Point2D(2,1)
-            >>> print(p.dimensions)
+            >>> print(p.dimension)
             '2D'     
         
         """
@@ -463,7 +463,7 @@ class Point3D(Point):
         .. code-block:: python
         
             >>> p = Point3D(1,2,3)
-            >>> print(p.dimensions)
+            >>> print(p.dimension)
             '3D'     
         
         """

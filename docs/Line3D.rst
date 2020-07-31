@@ -21,7 +21,6 @@ Line3D
    ~crossproduct.line.Line3D.distance_to_line
    ~crossproduct.line.Line3D.distance_to_point
    ~crossproduct.line.Line3D.intersect_line
-   ~crossproduct.line.Line3D.is_collinear
    ~crossproduct.line.Line3D.is_parallel
    ~crossproduct.line.Line3D.project_2D
    ~crossproduct.line.Line3D.vL

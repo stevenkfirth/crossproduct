@@ -315,7 +315,7 @@ class Vector2D(Vector):
         .. code-block:: python
         
             >>> v = Vector2D(2,1)
-            >>> print(v.dimensions)
+            >>> print(v.dimension)
             '2D'     
         
         """
@@ -679,7 +679,7 @@ class Vector3D(Vector):
         .. code-block:: python
         
             >>> v = Vector3D(1,2,3)
-            >>> print(v.dimensions)
+            >>> print(v.dimension)
             '3D'     
         
         """

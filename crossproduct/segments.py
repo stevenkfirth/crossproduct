@@ -2,8 +2,6 @@
 
 
 from collections.abc import Sequence
-from .segment import Segment
-from .point import Point
 from .points import Points
 from .polylines import Polylines
 
@@ -64,6 +62,41 @@ class Segments(Sequence):
                 
         else:
             raise TypeError
+    
+    
+    def difference_segment(self,segment):
+        """Returns the difference between this segments sequence and self.
+        
+        
+
+        """
+        
+        def rf(result,segments):
+            if len(segments)==0:
+                return result
+            else:
+                diff=result.difference_segment(segments[0])
+                #print('diff',diff)
+                if diff is None:
+                    return None
+                elif len(diff)==1:
+                    if len(segments)>1:
+                        result=rf(diff[0],segments[1:])
+                    else:
+                        result=diff[0],
+                    return result
+                elif len(diff)==2:
+                    if len(segments)>1:
+                        result=tuple(list(rf(diff[0],segments[1:]))+list(rf(diff[1],segments[1:])))
+                    else:
+                        result=diff[0],diff[1]
+                    return result
+                else:
+                    raise Exception
+                
+        result=segment
+        result=rf(result,self)
+        return result
     
     
     def difference_segments(self,segments):

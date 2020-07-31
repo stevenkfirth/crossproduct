@@ -141,15 +141,6 @@ class Test_Halfline2D(unittest.TestCase):
         self.assertEqual(hl.intersect_line(Line2D(Point2D(0.5,0),
                                                   Vector2D(0,1))),
                          Point2D(0.5,0.5))
-        
-
-    def test_is_codirectional(self):
-        ""
-        hl=Halfline2D(P0,vL)
-        self.assertTrue(hl.is_codirectional(hl))
-        self.assertTrue(hl.is_codirectional(Halfline2D(P0+vL.perp_vector,vL)))
-        self.assertFalse(hl.is_codirectional(Halfline2D(P0,vL.opposite)))
-        
     
     
     def test_line(self):
@@ -224,14 +215,6 @@ class Test_Halfline3D(unittest.TestCase):
                          0)
         self.assertEqual(hl.distance_to_point(P0+Vector3D(1,-1,0)),
                          Vector3D(1,-1,0).length)
-        
-        
-    def test_is_codirectional(self):
-        ""
-        hl=Halfline3D(P0,vL)
-        self.assertTrue(hl.is_codirectional(hl))
-        self.assertFalse(hl.is_codirectional(Halfline3D(P0,vL.opposite)))
-        self.assertTrue(hl.is_codirectional(Halfline3D(P0+Vector3D(1,-1,0),vL)))
     
     
     def test_line(self):

@@ -35,6 +35,8 @@ Geometry in Python - 2D and 3D
    Line3D
    Halfline2D
    Halfline3D
+   Segment2D
+   Segment3D
    
 
 
