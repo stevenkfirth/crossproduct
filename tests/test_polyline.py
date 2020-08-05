@@ -6,7 +6,7 @@ import mpl_toolkits.mplot3d
 
 from crossproduct import Point2D, Point3D,Vector2D, Vector3D, \
     Halfline2D, Halfline3D, Line2D, Line3D, Segment2D, Segment3D, \
-    Polyline2D, Polyline3D, Segments
+    Polyline2D, Polyline3D, Segments, Points
 
 plot=False
 
@@ -24,6 +24,49 @@ class Test_Polyline2D(unittest.TestCase):
         self.assertEqual(pl.points,points)
         
         
+    def test___add__(self):
+        ""
+        pl=Polyline2D(*points)
+        
+        # # no union
+        # self.assertEqual(pl+Polyline2D(Point2D(2,2),
+        #                                      Point2D(3,3)),
+        #                  None) # now raises a ValueError
+    
+        # union
+        self.assertEqual(pl+Polyline2D(Point2D(1,1),
+                                       Point2D(1,2),
+                                       Point2D(2,2)),
+                         Polyline2D(Point2D(0,0),
+                                    Point2D(0,1),
+                                    Point2D(1,1),
+                                    Point2D(1,2),
+                                    Point2D(2,2)))
+        
+        self.assertEqual(pl+Polyline2D(Point2D(2,2),
+                                       Point2D(1,2),
+                                       Point2D(1,1)),
+                         Polyline2D(Point2D(0,0),
+                                    Point2D(0,1),
+                                    Point2D(1,1),
+                                    Point2D(1,2),
+                                    Point2D(2,2)))
+            
+        self.assertEqual(pl+Polyline2D(Point2D(1,0),
+                                       Point2D(0,0)),
+                         Polyline2D(Point2D(1,0),
+                                    Point2D(0,0),
+                                    Point2D(0,1),
+                                    Point2D(1,1)))
+            
+        self.assertEqual(pl+Polyline2D(Point2D(0,0),
+                                       Point2D(1,0)),
+                         Polyline2D(Point2D(1,0),
+                                    Point2D(0,0),
+                                    Point2D(0,1),
+                                    Point2D(1,1)))
+        
+        
     def test___eq__(self):
         ""
         pl=Polyline2D(*points)
@@ -39,27 +82,27 @@ class Test_Polyline2D(unittest.TestCase):
         self.assertEqual(str(pl),'Polyline2D(Point2D(0,0),Point2D(0,1),Point2D(1,1))')
         
     
-    def test_merge_codirectional_segments(self):
-        ""
-        pl=Polyline2D(*points)
-        self.assertEqual(pl.merge_codirectional_segments,
-                         pl)
+    # def test_merge_codirectional_segments(self):
+    #     ""
+    #     pl=Polyline2D(*points)
+    #     self.assertEqual(pl.merge_codirectional_segments,
+    #                      pl)
         
-        pl=Polyline2D(Point2D(0,0),
-                      Point2D(1,0),
-                      Point2D(2,0))
-        self.assertEqual(pl.merge_codirectional_segments,
-                         Polyline2D(Point2D(0,0),
-                                    Point2D(2,0)))
+    #     pl=Polyline2D(Point2D(0,0),
+    #                   Point2D(1,0),
+    #                   Point2D(2,0))
+    #     self.assertEqual(pl.merge_codirectional_segments,
+    #                      Polyline2D(Point2D(0,0),
+    #                                 Point2D(2,0)))
         
-        pl=Polyline2D(Point2D(0,0),
-                      Point2D(1,0),
-                      Point2D(2,0),
-                      Point2D(2,1))
-        self.assertEqual(pl.merge_codirectional_segments,
-                         Polyline2D(Point2D(0,0),
-                                    Point2D(2,0),
-                                    Point2D(2,1)))
+    #     pl=Polyline2D(Point2D(0,0),
+    #                   Point2D(1,0),
+    #                   Point2D(2,0),
+    #                   Point2D(2,1))
+    #     self.assertEqual(pl.merge_codirectional_segments,
+    #                      Polyline2D(Point2D(0,0),
+    #                                 Point2D(2,0),
+    #                                 Point2D(2,1)))
         
         
     def test_is_intersecting(self):
@@ -98,47 +141,7 @@ class Test_Polyline2D(unittest.TestCase):
                                             Point2D(1,1))))
     
     
-    def test_union(self):
-        ""
-        pl=Polyline2D(*points)
-        
-        # no union
-        self.assertEqual(pl.union(Polyline2D(Point2D(2,2),
-                                             Point2D(3,3))),
-                         None)
     
-        # union
-        self.assertEqual(pl.union(Polyline2D(Point2D(1,1),
-                                             Point2D(1,2),
-                                             Point2D(2,2))),
-                         Polyline2D(Point2D(0,0),
-                                    Point2D(0,1),
-                                    Point2D(1,1),
-                                    Point2D(1,2),
-                                    Point2D(2,2)))
-        
-        self.assertEqual(pl.union(Polyline2D(Point2D(2,2),
-                                             Point2D(1,2),
-                                             Point2D(1,1))),
-                         Polyline2D(Point2D(0,0),
-                                    Point2D(0,1),
-                                    Point2D(1,1),
-                                    Point2D(1,2),
-                                    Point2D(2,2)))
-            
-        self.assertEqual(pl.union(Polyline2D(Point2D(1,0),
-                                             Point2D(0,0))),
-                         Polyline2D(Point2D(1,0),
-                                    Point2D(0,0),
-                                    Point2D(0,1),
-                                    Point2D(1,1)))
-            
-        self.assertEqual(pl.union(Polyline2D(Point2D(0,0),
-                                             Point2D(1,0))),
-                         Polyline2D(Point2D(1,0),
-                                    Point2D(0,0),
-                                    Point2D(0,1),
-                                    Point2D(1,1)))
         
             
 class Test_Polyline3D(unittest.TestCase):
@@ -171,27 +174,27 @@ class Test_Polyline3D(unittest.TestCase):
         self.assertEqual(str(pl),'Polyline3D(Point3D(0,0,0),Point3D(0,1,0),Point3D(1,1,0))')
         
         
-    def test_merge_codirectional_segments(self):
-        ""
-        pl=Polyline3D(*points)
-        self.assertEqual(pl.merge_codirectional_segments,
-                         pl)
+    # def test_merge_codirectional_segments(self):
+    #     ""
+    #     pl=Polyline3D(*points)
+    #     self.assertEqual(pl.merge_codirectional_segments,
+    #                      pl)
         
-        pl=Polyline3D(Point3D(0,0,1),
-                      Point3D(1,0,1),
-                      Point3D(2,0,1))
-        self.assertEqual(pl.merge_codirectional_segments,
-                         Polyline3D(Point3D(0,0,1),
-                                    Point3D(2,0,1)))
+    #     pl=Polyline3D(Point3D(0,0,1),
+    #                   Point3D(1,0,1),
+    #                   Point3D(2,0,1))
+    #     self.assertEqual(pl.merge_codirectional_segments,
+    #                      Polyline3D(Point3D(0,0,1),
+    #                                 Point3D(2,0,1)))
         
-        pl=Polyline3D(Point3D(0,0,1),
-                      Point3D(1,0,1),
-                      Point3D(2,0,1),
-                      Point3D(2,1,1))
-        self.assertEqual(pl.merge_codirectional_segments,
-                         Polyline3D(Point3D(0,0,1),
-                                    Point3D(2,0,1),
-                                    Point3D(2,1,1)))
+    #     pl=Polyline3D(Point3D(0,0,1),
+    #                   Point3D(1,0,1),
+    #                   Point3D(2,0,1),
+    #                   Point3D(2,1,1))
+    #     self.assertEqual(pl.merge_codirectional_segments,
+    #                      Polyline3D(Point3D(0,0,1),
+    #                                 Point3D(2,0,1),
+    #                                 Point3D(2,1,1)))
         
                 
     def test_is_intersecting(self):
@@ -234,12 +237,12 @@ class Test_Polyline3D(unittest.TestCase):
     
 if __name__=='__main__':
     
-    points=(Point2D(0,0),
-            Point2D(0,1),
-            Point2D(1,1))
+    points=Points(Point2D(0,0),
+                  Point2D(0,1),
+                  Point2D(1,1))
     unittest.main(Test_Polyline2D())
     
-    points=(Point3D(0,0,0),
-            Point3D(0,1,0),
-            Point3D(1,1,0))
+    points=Points(Point3D(0,0,0),
+                  Point3D(0,1,0),
+                  Point3D(1,1,0))
     unittest.main(Test_Polyline3D())

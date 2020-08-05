@@ -62,6 +62,16 @@ class Test_Segments(unittest.TestCase):
         self.assertEqual(len(s),4)
     
     
+    def test_contains_point(self):
+        ""
+        s=Segments(*segments)
+        
+        # point
+        self.assertTrue(s.contains_point(Point2D(0,0)))
+        self.assertTrue(s.contains_point(Point2D(0.5,0)))
+        self.assertFalse(s.contains_point(Point2D(-1,0)))
+        
+    
     def test_difference_segments(self):
         ""
         s=Segments(*segments)
@@ -70,20 +80,20 @@ class Test_Segments(unittest.TestCase):
         s1=Segments(Segment2D(Point2D(0,5),
                               Point2D(0,6)))
         self.assertEqual(s.difference_segments(s1),
-                         s)
+                          s)
     
         # edge intersection - single edge
         s1=Segments(Segment2D(Point2D(0,0),
                               Point2D(1,0)))
         self.assertEqual(s.difference_segments(s1),
-                         Segments(Segment2D(Point2D(1,0), 
+                          Segments(Segment2D(Point2D(1,0), 
                                             Point2D(1,1))))
         
         # edge intersection - mid to end single edge
         s1=Segments(Segment2D(Point2D(0,0),
                               Point2D(0.5,0)))
         self.assertEqual(s.difference_segments(s1),
-                         Segments(Segment2D(Point2D(0.5,0), 
+                          Segments(Segment2D(Point2D(0.5,0), 
                                             Point2D(1,0)), 
                                   Segment2D(Point2D(1,0), 
                                             Point2D(1,1))))
@@ -92,16 +102,14 @@ class Test_Segments(unittest.TestCase):
         s1=Segments(Segment2D(Point2D(0.5,0),
                               Point2D(1,0)))
         self.assertEqual(s.difference_segments(s1),
-                         Segments(Segment2D(Point2D(0,0), 
+                          Segments(Segment2D(Point2D(0,0), 
                                             Point2D(0.5,0)), 
                                   Segment2D(Point2D(1,0), 
                                             Point2D(1,1))))
         
         # self intersection
         self.assertEqual(s.difference_segments(s),
-                         None)
-        
-        
+                         Segments())
         
         #
         s1=Segments(Segment2D(Point2D(1.0,1.0), Point2D(0.5,1)), 
@@ -113,7 +121,7 @@ class Test_Segments(unittest.TestCase):
                     Segment2D(Point2D(1,1), Point2D(0,1)), 
                     Segment2D(Point2D(0,1), Point2D(0,0)))
         self.assertEqual(s1.difference_segments(s2),
-                         Segments(Segment2D(Point2D(0.5,1), 
+                          Segments(Segment2D(Point2D(0.5,1), 
                                             Point2D(0.5,0.0))))
     
         #
@@ -126,21 +134,13 @@ class Test_Segments(unittest.TestCase):
                     Segment2D(Point2D(1.5,1), Point2D(0.5,1)), 
                     Segment2D(Point2D(0.5,1), Point2D(0.5,0)))
         self.assertEqual(s1.difference_segments(s2),
-                         Segments(Segment2D(Point2D(0,0), Point2D(0.5,0.0)), 
+                          Segments(Segment2D(Point2D(0,0), Point2D(0.5,0.0)), 
                                   Segment2D(Point2D(1.5,0.0), Point2D(2,0)), 
                                   Segment2D(Point2D(2,0), Point2D(2,1)), 
                                   Segment2D(Point2D(2,1), Point2D(1.5,1.0)), 
                                   Segment2D(Point2D(0.5,1.0), Point2D(0,1)), 
                                   Segment2D(Point2D(0,1), Point2D(0,0))))
     
-    
-    def test_intersect_point(self):
-        ""
-        s=Segments(*segments)
-        self.assertTrue(s.intersect_point(Point2D(0,0)))
-        self.assertTrue(s.intersect_point(Point2D(0.5,0)))
-        self.assertFalse(s.intersect_point(Point2D(-0.5,0)))
-        
         
     def test_intersect_segment(self):
         ""
@@ -148,47 +148,47 @@ class Test_Segments(unittest.TestCase):
         
         # no intersection
         self.assertEqual(s.intersect_segment(Segment2D(Point2D(-1,0),
-                                                       Point2D(-0.5,0))),
-                         (Points(),
+                                                        Point2D(-0.5,0))),
+                          (Points(),
                           Segments()))
     
         # single point intersection
         self.assertEqual(s.intersect_segment(Segment2D(Point2D(-1,0),
-                                                       Point2D(0,0))),
-                         (Points(Point2D(0,0)),
+                                                        Point2D(0,0))),
+                          (Points(Point2D(0,0)),
                           Segments()))
             
         # two point intersection
         self.assertEqual(s.intersect_segment(Segment2D(Point2D(0,0),
-                                                       Point2D(1,1))),
-                         (Points(Point2D(0,0),
-                                 Point2D(1,1)),
+                                                        Point2D(1,1))),
+                          (Points(Point2D(0,0),
+                                  Point2D(1,1)),
                           Segments()))
             
         # segment intersection
         self.assertEqual(s.intersect_segment(Segment2D(Point2D(0,0),
-                                                       Point2D(1,0))),
-                         (Points(),
+                                                        Point2D(1,0))),
+                          (Points(),
                           Segments(Segment2D(Point2D(0,0),
-                                                       Point2D(1,0)))))
+                                                        Point2D(1,0)))))
             
         self.assertEqual(s.intersect_segment(Segment2D(Point2D(-1,0),
-                                                       Point2D(1,0))),
-                         (Points(),
+                                                        Point2D(1,0))),
+                          (Points(),
                           Segments(Segment2D(Point2D(0,0),
-                                                       Point2D(1,0)))))
+                                                        Point2D(1,0)))))
             
         self.assertEqual(s.intersect_segment(Segment2D(Point2D(0,0),
-                                                       Point2D(2,0))),
-                         (Points(),
+                                                        Point2D(2,0))),
+                          (Points(),
                           Segments(Segment2D(Point2D(0,0),
-                                                       Point2D(1,0)))))
+                                                        Point2D(1,0)))))
             
         self.assertEqual(s.intersect_segment(Segment2D(Point2D(-1,0),
-                                                       Point2D(2,0))),
-                         (Points(),
+                                                        Point2D(2,0))),
+                          (Points(),
                           Segments(Segment2D(Point2D(0,0),
-                                                       Point2D(1,0)))))
+                                                        Point2D(1,0)))))
         
             
     def test_intersect_segments(self):
@@ -196,167 +196,167 @@ class Test_Segments(unittest.TestCase):
         s=Segments(*segments)
         
         self.assertEqual(s.intersect_segments(s),
-                         (Points(),
+                          (Points(),
                           s))
             
         
-    def test_polyline(self):
-        ""
-        # two segment polyline
-        s=Segments(*segments)
-        self.assertEqual(s.polyline,
-                         Polyline2D(Point2D(0,0),
-                                     Point2D(1,0),
-                                     Point2D(1,1)))
+    # def test_polyline(self):
+    #     ""
+    #     # two segment polyline
+    #     s=Segments(*segments)
+    #     self.assertEqual(s.polyline,
+    #                      Polyline2D(Point2D(0,0),
+    #                                  Point2D(1,0),
+    #                                  Point2D(1,1)))
         
-        # three segment polyline
-        s=Segments(Segment2D(Point2D(0,0),
-                             Point2D(1,0)),
-                   Segment2D(Point2D(1,0), 
-                             Point2D(1,1)),
-                   Segment2D(Point2D(1,1), 
-                             Point2D(2,1)))
-        self.assertEqual(s.polyline,
-                         Polyline2D(Point2D(0,0),
-                                    Point2D(1,0),
-                                    Point2D(1,1),
-                                    Point2D(2,1)))
+    #     # three segment polyline
+    #     s=Segments(Segment2D(Point2D(0,0),
+    #                          Point2D(1,0)),
+    #                Segment2D(Point2D(1,0), 
+    #                          Point2D(1,1)),
+    #                Segment2D(Point2D(1,1), 
+    #                          Point2D(2,1)))
+    #     self.assertEqual(s.polyline,
+    #                      Polyline2D(Point2D(0,0),
+    #                                 Point2D(1,0),
+    #                                 Point2D(1,1),
+    #                                 Point2D(2,1)))
         
-        # no polyline
-        s=Segments(Segment2D(Point2D(0,0),
-                             Point2D(1,0)),
-                   Segment2D(Point2D(1,1), 
-                             Point2D(2,1)))
-        self.assertEqual(s.polyline,
-                         None)
+    #     # no polyline
+    #     s=Segments(Segment2D(Point2D(0,0),
+    #                          Point2D(1,0)),
+    #                Segment2D(Point2D(1,1), 
+    #                          Point2D(2,1)))
+    #     self.assertEqual(s.polyline,
+    #                      None)
     
 
-    def test_polylines(self):
-        #
-        s=Segments(Segment2D(Point2D(0,0), Point2D(0.5,0.0)), 
-                   Segment2D(Point2D(1.5,0.0), Point2D(2,0)), 
-                   Segment2D(Point2D(2,0), Point2D(2,1)), 
-                   Segment2D(Point2D(2,1), Point2D(1.5,1.0)), 
-                   Segment2D(Point2D(0.5,1.0), Point2D(0,1)), 
-                   Segment2D(Point2D(0,1), Point2D(0,0)))
-        self.assertEqual(s.polylines,
-                         Polylines(Polyline2D(Point2D(0.5,1.0),
-                                              Point2D(0,1),
-                                              Point2D(0,0),
-                                              Point2D(0.5,0.0)), 
-                                   Polyline2D(Point2D(1.5,0.0),
-                                              Point2D(2,0),
-                                              Point2D(2,1),
-                                              Point2D(1.5,1.0))))
+    # def test_polylines(self):
+    #     #
+    #     s=Segments(Segment2D(Point2D(0,0), Point2D(0.5,0.0)), 
+    #                Segment2D(Point2D(1.5,0.0), Point2D(2,0)), 
+    #                Segment2D(Point2D(2,0), Point2D(2,1)), 
+    #                Segment2D(Point2D(2,1), Point2D(1.5,1.0)), 
+    #                Segment2D(Point2D(0.5,1.0), Point2D(0,1)), 
+    #                Segment2D(Point2D(0,1), Point2D(0,0)))
+    #     self.assertEqual(s.polylines,
+    #                      Polylines(Polyline2D(Point2D(0.5,1.0),
+    #                                           Point2D(0,1),
+    #                                           Point2D(0,0),
+    #                                           Point2D(0.5,0.0)), 
+    #                                Polyline2D(Point2D(1.5,0.0),
+    #                                           Point2D(2,0),
+    #                                           Point2D(2,1),
+    #                                           Point2D(1.5,1.0))))
 
 
-    def test_union(self):
-        ""
-        s=Segments(*segments)
+    # def test_union(self):
+    #     ""
+    #     s=Segments(*segments)
         
-        # no unions
-        self.assertEqual(s.union,
-                         s)
+    #     # no unions
+    #     self.assertEqual(s.union,
+    #                      s)
             
-        # a union
-        s=Segments(Segment2D(Point2D(0,0), Point2D(1,0)), 
-                   Segment2D(Point2D(1,0), Point2D(2,0)))
-        self.assertEqual(s.union,
-                         Segments(Segment2D(Point2D(0,0), 
-                                            Point2D(2,0))))
+    #     # a union
+    #     s=Segments(Segment2D(Point2D(0,0), Point2D(1,0)), 
+    #                Segment2D(Point2D(1,0), Point2D(2,0)))
+    #     self.assertEqual(s.union,
+    #                      Segments(Segment2D(Point2D(0,0), 
+    #                                         Point2D(2,0))))
         
-        # reversed
-        s=Segments(Segment2D(Point2D(1,0), Point2D(2,0)), 
-                   Segment2D(Point2D(0,0), Point2D(1,0)))
-        self.assertEqual(s.union,
-                         Segments(Segment2D(Point2D(0,0), 
-                                            Point2D(2,0))))
+    #     # reversed
+    #     s=Segments(Segment2D(Point2D(1,0), Point2D(2,0)), 
+    #                Segment2D(Point2D(0,0), Point2D(1,0)))
+    #     self.assertEqual(s.union,
+    #                      Segments(Segment2D(Point2D(0,0), 
+    #                                         Point2D(2,0))))
         
-        # gap
-        # a union
-        s=Segments(Segment2D(Point2D(0,0), Point2D(1,0)), 
-                   Segment2D(Point2D(2,0), Point2D(3,0)))
-        self.assertEqual(s.union,
-                         s)
-        
-        
-        
-    def test_union_polyline(self):
-        ""
-        s=Segments(*segments)
-        
-        # no union
-        self.assertEqual(s.union_polyline(Polyline2D(Point2D(3,1),
-                                                   Point2D(4,1))),
-                         None)
-        
-        # segment union
-        self.assertEqual(s.union_polyline(Polyline2D(Point2D(1,1),
-                                                   Point2D(1,2))),
-                         (Polyline2D(Point2D(1,0),
-                                     Point2D(1,1),
-                                     Point2D(1,2)), 
-                          Segments(Segment2D(Point2D(0,0), 
-                                             Point2D(1,0)))))
-        
-        # polyline union
-        self.assertEqual(s.union_polyline(Polyline2D(Point2D(1,1),
-                                                   Point2D(2,1))),
-                         (Polyline2D(Point2D(1,0),
-                                     Point2D(1,1),
-                                     Point2D(2,1)), 
-                          Segments(Segment2D(Point2D(0,0), 
-                                             Point2D(1,0)))))
+    #     # gap
+    #     # a union
+    #     s=Segments(Segment2D(Point2D(0,0), Point2D(1,0)), 
+    #                Segment2D(Point2D(2,0), Point2D(3,0)))
+    #     self.assertEqual(s.union,
+    #                      s)
         
         
         
-    def test_union_segment(self):
-        ""
-        s=Segments(*segments)
+    # def test_union_polyline(self):
+    #     ""
+    #     s=Segments(*segments)
         
-        # no union
-        self.assertEqual(s.union_segment(Segment2D(Point2D(3,1),
-                                                   Point2D(4,1))),
-                         None)
+    #     # no union
+    #     self.assertEqual(s.union_polyline(Polyline2D(Point2D(3,1),
+    #                                                Point2D(4,1))),
+    #                      None)
         
-        # segment union
-        self.assertEqual(s.union_segment(Segment2D(Point2D(1,1),
-                                                   Point2D(1,2))),
-                         (Polyline2D(Point2D(1,0),
-                                     Point2D(1,1),
-                                     Point2D(1,2)), 
-                          Segments(Segment2D(Point2D(0,0), 
-                                             Point2D(1,0)))))
+    #     # segment union
+    #     self.assertEqual(s.union_polyline(Polyline2D(Point2D(1,1),
+    #                                                Point2D(1,2))),
+    #                      (Polyline2D(Point2D(1,0),
+    #                                  Point2D(1,1),
+    #                                  Point2D(1,2)), 
+    #                       Segments(Segment2D(Point2D(0,0), 
+    #                                          Point2D(1,0)))))
         
-        # polyline union
-        self.assertEqual(s.union_segment(Segment2D(Point2D(1,1),
-                                                   Point2D(2,1))),
-                         (Polyline2D(Point2D(1,0),
-                                     Point2D(1,1),
-                                     Point2D(2,1)), 
-                          Segments(Segment2D(Point2D(0,0), 
-                                             Point2D(1,0)))))
-        
-        
+    #     # polyline union
+    #     self.assertEqual(s.union_polyline(Polyline2D(Point2D(1,1),
+    #                                                Point2D(2,1))),
+    #                      (Polyline2D(Point2D(1,0),
+    #                                  Point2D(1,1),
+    #                                  Point2D(2,1)), 
+    #                       Segments(Segment2D(Point2D(0,0), 
+    #                                          Point2D(1,0)))))
         
         
         
-#    def test_polylines(self):
-#        ""
-#        s=Segments(*segments)
-#        self.assertEqual(s.polylines,
-#                         (SimplePolyline2D(Point2D(0,0),
-#                                           Point2D(1,0),
-#                                           Point2D(1,1)),))
-#        
-#        s.append(Segment2D(Point2D(2,2),
-#                           Point2D(3,3)))     
-#        self.assertEqual(s.polylines,
-#                         (SimplePolyline2D(Point2D(0,0),
-#                                           Point2D(1,0),
-#                                           Point2D(1,1)), 
-#                          SimplePolyline2D(Point2D(2,2),
-#                                           Point2D(3,3))))
+    # def test_union_segment(self):
+    #     ""
+    #     s=Segments(*segments)
+        
+    #     # no union
+    #     self.assertEqual(s.union_segment(Segment2D(Point2D(3,1),
+    #                                                Point2D(4,1))),
+    #                      None)
+        
+    #     # segment union
+    #     self.assertEqual(s.union_segment(Segment2D(Point2D(1,1),
+    #                                                Point2D(1,2))),
+    #                      (Polyline2D(Point2D(1,0),
+    #                                  Point2D(1,1),
+    #                                  Point2D(1,2)), 
+    #                       Segments(Segment2D(Point2D(0,0), 
+    #                                          Point2D(1,0)))))
+        
+    #     # polyline union
+    #     self.assertEqual(s.union_segment(Segment2D(Point2D(1,1),
+    #                                                Point2D(2,1))),
+    #                      (Polyline2D(Point2D(1,0),
+    #                                  Point2D(1,1),
+    #                                  Point2D(2,1)), 
+    #                       Segments(Segment2D(Point2D(0,0), 
+    #                                          Point2D(1,0)))))
+        
+        
+        
+        
+        
+    # def test_polylines(self):
+    #     ""
+    #     s=Segments(*segments)
+    #     self.assertEqual(s.polylines,
+    #                     (SimplePolyline2D(Point2D(0,0),
+    #                                       Point2D(1,0),
+    #                                       Point2D(1,1)),))
+        
+    #     s.append(Segment2D(Point2D(2,2),
+    #                       Point2D(3,3)))     
+    #     self.assertEqual(s.polylines,
+    #                     (SimplePolyline2D(Point2D(0,0),
+    #                                       Point2D(1,0),
+    #                                       Point2D(1,1)), 
+    #                       SimplePolyline2D(Point2D(2,2),
+    #                                       Point2D(3,3))))
         
     
 if __name__=='__main__':

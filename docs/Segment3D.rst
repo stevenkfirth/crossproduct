@@ -16,6 +16,7 @@ Segment3D
    ~crossproduct.segment.Segment3D.__eq__
    ~crossproduct.segment.Segment3D.calculate_point
    ~crossproduct.segment.Segment3D.difference_segment
+   ~crossproduct.segment.Segment3D.difference_segments
    ~crossproduct.segment.Segment3D.dimension
    ~crossproduct.segment.Segment3D.distance_to_point
    ~crossproduct.segment.Segment3D.distance_to_segment

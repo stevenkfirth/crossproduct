@@ -105,63 +105,62 @@ class Test_Segment2D(unittest.TestCase):
                          Segments())
         
         
-    # def test_difference_segments(self):
-    #     ""
-    #     s=Segment2D(P0,P1)
+    def test_difference_segments(self):
+        ""
         
-    #     # self intersection - intersection first
-    #     s1=Segments(Segment2D(Point2D(0,0), Point2D(1,1)), 
-    #                 Segment2D(Point2D(1,1), Point2D(2,1)),
-    #                 Segment2D(Point2D(4,1), Point2D(5,1)))
-    #     self.assertEqual(s.difference_segments(s1),
-    #                      None)
+        s=Segment2D(P0,P1)
         
-    #     # self intersection - intersection last
-    #     s1=Segments(Segment2D(Point2D(4,1), Point2D(5,1)), 
-    #                 Segment2D(Point2D(1,1), Point2D(2,1)),
-    #                 Segment2D(Point2D(0,0), Point2D(1,1)))
-    #     self.assertEqual(s.difference_segments(s1),
-    #                      None)
+        # self intersection - intersection first
+        s1=Segments(Segment2D(Point2D(0,0), Point2D(1,1)), 
+                    Segment2D(Point2D(1,1), Point2D(2,1)),
+                    Segment2D(Point2D(4,1), Point2D(5,1)))
+        self.assertEqual(s.difference_segments(s1),
+                         Segments())
         
+        # self intersection - intersection last
+        s1=Segments(Segment2D(Point2D(4,1), Point2D(5,1)), 
+                    Segment2D(Point2D(1,1), Point2D(2,1)),
+                    Segment2D(Point2D(0,0), Point2D(1,1)))
+        self.assertEqual(s.difference_segments(s1),
+                         Segments())
+                
+        # no intersection
+        s1=Segments(Segment2D(Point2D(0,0), Point2D(1,0)), 
+                    Segment2D(Point2D(1,1), Point2D(2,1)))
+        self.assertEqual(s.difference_segments(s1),
+                         Segments(s))
         
-    #     # no intersection
-    #     s1=Segments(Segment2D(Point2D(0,0), Point2D(1,0)), 
-    #                 Segment2D(Point2D(1,1), Point2D(2,1)))
-    #     self.assertEqual(s.difference_segments(s1),
-    #                      (s,))
+        # mid intersection
+        s1=Segments(Segment2D(Point2D(0,0), Point2D(0.5,0.5)), 
+                    Segment2D(Point2D(1,1), Point2D(2,1)))
+        self.assertEqual(s.difference_segments(s1),
+                         Segments(Segment2D(Point2D(0.5,0.5), Point2D(1,1))))
         
-    #     # mid intersection
-    #     s1=Segments(Segment2D(Point2D(0,0), Point2D(0.5,0.5)), 
-    #                 Segment2D(Point2D(1,1), Point2D(2,1)))
-    #     self.assertEqual(s.difference_segments(s1),
-    #                      (Segment2D(Point2D(0.5,0.5), Point2D(1,1)),))
+        # full intersection using two segments
+        s1=Segments(Segment2D(Point2D(0,0), Point2D(0.5,0.5)), 
+                    Segment2D(Point2D(0.5,0.5), Point2D(1,1)))
+        self.assertEqual(s.difference_segments(s1),
+                         Segments())
         
-    #     # full intersection using two segments
-    #     s1=Segments(Segment2D(Point2D(0,0), Point2D(0.5,0.5)), 
-    #                 Segment2D(Point2D(0.5,0.5), Point2D(1,1)))
-    #     self.assertEqual(s.difference_segments(s1),
-    #                      None)
+        # intersection inside original
+        s1=Segments(Segment2D(Point2D(0.25,0.25),Point2D(0.75,0.75)), 
+                    Segment2D(Point2D(1,1), Point2D(2,2)))
+        self.assertEqual(s.difference_segments(s1),
+                         Segments(Segment2D(Point2D(0,0), 
+                                            Point2D(0.25,0.25)), 
+                                  Segment2D(Point2D(0.75,0.75), 
+                                            Point2D(1,1))))
         
-    #     # intersection inside original
-    #     s1=Segments(Segment2D(Point2D(0.25,0.25),Point2D(0.75,0.75)), 
-    #                 Segment2D(Point2D(1,1), Point2D(2,2)))
-    #     self.assertEqual(s.difference_segments(s1),
-    #                      (Segment2D(Point2D(0,0), 
-    #                                 Point2D(0.25,0.25)), 
-    #                       Segment2D(Point2D(0.75,0.75), 
-    #                                 Point2D(1,1))))
-        
-    #     # intersection inside original
-    #     s1=Segments(Segment2D(Point2D(0.2,0.2),Point2D(0.4,0.4)), 
-    #                 Segment2D(Point2D(0.6,0.6), Point2D(0.8,0.8)))
-    #     self.assertEqual(s.difference_segments(s1),
-    #                      (Segment2D(Point2D(0,0), 
-    #                                 Point2D(0.2,0.2)), 
-    #                       Segment2D(Point2D(0.4,0.4), 
-    #                                 Point2D(0.6,0.6)), 
-    #                       Segment2D(Point2D(0.8,0.8), 
-    #                                 Point2D(1.0,1.0))))
-        
+        # intersection inside original
+        s1=Segments(Segment2D(Point2D(0.2,0.2),Point2D(0.4,0.4)), 
+                    Segment2D(Point2D(0.6,0.6), Point2D(0.8,0.8)))
+        self.assertEqual(s.difference_segments(s1),
+                         Segments(Segment2D(Point2D(0,0), 
+                                            Point2D(0.2,0.2)), 
+                                  Segment2D(Point2D(0.4,0.4), 
+                                            Point2D(0.6,0.6)), 
+                                  Segment2D(Point2D(0.8,0.8), 
+                                            Point2D(1.0,1.0))))
         
         
     def test_distance_to_point(self):

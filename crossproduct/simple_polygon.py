@@ -7,7 +7,7 @@ from .point import Point2D, Point3D
 from .points import Points
 from .segment import Segment2D, Segment3D
 from .segments import Segments
-from .simple_polyline import SimplePolyline2D, SimplePolyline3D
+from .polyline import Polyline2D, Polyline3D
 from .simple_polygons import SimplePolygons
 from .plane import Plane3D
 from .vector import Vector3D

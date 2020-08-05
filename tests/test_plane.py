@@ -156,21 +156,21 @@ class Test_Plane3D(unittest.TestCase):
                          None)
             
     
-    def test_intersect_line_skew(self):
+    def test__intersect_line_skew(self):
         ""
         pl=Plane3D(P0,N)
         
         # perpendicular line passing through P0
-        self.assertEqual(pl.intersect_line_skew(Line3D(P0,
-                                                       N)),
+        self.assertEqual(pl._intersect_line_skew(Line3D(P0,
+                                                        N)),
                          P0)
-        self.assertEqual(pl.intersect_line_skew(Line3D(P0+N,
-                                                       N)),
+        self.assertEqual(pl._intersect_line_skew(Line3D(P0+N,
+                                                        N)),
                          P0)
         
         # non perpendicular line not passing through P0
-        self.assertEqual(pl.intersect_line_skew(Line3D(Point3D(0,0,1),
-                                                       Vector3D(1,0,-1))),
+        self.assertEqual(pl._intersect_line_skew(Line3D(Point3D(0,0,1),
+                                                        Vector3D(1,0,-1))),
                          Point3D(1,0,0))
             
             
@@ -210,48 +210,48 @@ class Test_Plane3D(unittest.TestCase):
                          Line3D(Point3D(1,0,0), Vector3D(0,1,0)))
         
         
-    def test_is_parallel(self):
-        ""
-        pl=Plane3D(P0,N)
+    # def test_is_parallel(self):
+    #     ""
+    #     pl=Plane3D(P0,N)
         
-        # line
-        self.assertTrue(pl.is_parallel(Line3D(P0,
-                                              Vector3D(1,0,0))))
-        self.assertFalse(pl.is_parallel(Line3D(P0,
-                                               N)))
-        self.assertTrue(pl.is_parallel(Line3D(P0+N,
-                                              Vector3D(1,0,0))))
+    #     # line
+    #     self.assertTrue(pl.is_parallel(Line3D(P0,
+    #                                           Vector3D(1,0,0))))
+    #     self.assertFalse(pl.is_parallel(Line3D(P0,
+    #                                            N)))
+    #     self.assertTrue(pl.is_parallel(Line3D(P0+N,
+    #                                           Vector3D(1,0,0))))
         
-        # plane
-        self.assertTrue(pl.is_parallel(pl))
-        self.assertTrue(pl.is_parallel(Plane3D(P0+N,
-                                               N)))
-        self.assertFalse(pl.is_parallel(Plane3D(P0,
-                                                Vector3D(1,0,0))))
+    #     # plane
+    #     self.assertTrue(pl.is_parallel(pl))
+    #     self.assertTrue(pl.is_parallel(Plane3D(P0+N,
+    #                                            N)))
+    #     self.assertFalse(pl.is_parallel(Plane3D(P0,
+    #                                             Vector3D(1,0,0))))
         
-        # polygon
+    #     # polygon
         
         
-    def test_is_perpendicular(self):
-        ""
-        pl=Plane3D(P0,N)
+    # def test_is_perpendicular(self):
+    #     ""
+    #     pl=Plane3D(P0,N)
         
-        # line
-        self.assertFalse(pl.is_perpendicular(Line3D(P0,
-                                             Vector3D(1,0,0))))
-        self.assertTrue(pl.is_perpendicular(Line3D(P0,
-                                                   N)))
-        self.assertFalse(pl.is_perpendicular(Line3D(P0+N,
-                                                    Vector3D(1,0,0))))
+    #     # line
+    #     self.assertFalse(pl.is_perpendicular(Line3D(P0,
+    #                                          Vector3D(1,0,0))))
+    #     self.assertTrue(pl.is_perpendicular(Line3D(P0,
+    #                                                N)))
+    #     self.assertFalse(pl.is_perpendicular(Line3D(P0+N,
+    #                                                 Vector3D(1,0,0))))
         
-        # plane
-        self.assertFalse(pl.is_perpendicular(pl))
-        self.assertFalse(pl.is_perpendicular(Plane3D(P0+N,
-                                                     N)))
-        self.assertTrue(pl.is_perpendicular(Plane3D(P0,
-                                                    Vector3D(1,0,0))))
+    #     # plane
+    #     self.assertFalse(pl.is_perpendicular(pl))
+    #     self.assertFalse(pl.is_perpendicular(Plane3D(P0+N,
+    #                                                  N)))
+    #     self.assertTrue(pl.is_perpendicular(Plane3D(P0,
+    #                                                 Vector3D(1,0,0))))
         
-        # polygon
+    #     # polygon
         
         
         

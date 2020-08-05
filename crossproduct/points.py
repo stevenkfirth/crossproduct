@@ -174,7 +174,7 @@ class Points(Sequence):
             Points(Point2D(1,0))
         
         """
-        points=[pt for pt in self if not segments.intersect_point(pt)]
+        points=[pt for pt in self if not segments.contains_point(pt)]
         return Points(*points)
         
     

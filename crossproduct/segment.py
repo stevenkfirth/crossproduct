@@ -83,8 +83,8 @@ class Segment():
         :param obj: A point or segment. 
         :type obj: Point2D, Point3D, Segment2D, Segment3D
             
-        :return: For point, True if the point lies on the halfline; otherwise False. 
-            For segment, True if the segment start and endpoints are on the halfline; otherwise False. 
+        :return: For point, True if the point lies on the segment; otherwise False. 
+            For segment, True if the segment start and endpoints are on the segment; otherwise False. 
         :rtype: bool
         
         :Example:
@@ -250,47 +250,65 @@ class Segment():
             return Segments(self)
         
         
-    # def difference_segments(self,segments):
-    #     """Returns the difference between this segment and a Segments sequence
+    def difference_segments(self,segments):
+        """Returns the difference between this segment and a segments sequence.
         
-    #     :param segments Segments:
+        :param segments: A segments sequence.
+        :type segments: Segments
         
-    #     :return result:
-    #         - a tuple of one or more segments
-    #         - None
-    #     :rtype tuple or None:
+        :return: Any parts of this segment which are not also part of the segments in the sequence.
+        :rtype: Segments
         
-    #     # SHOULD THIS INSTEAD BE IN THE SEGMENTS MODULE ? #    
+        :Example:
         
+        .. code-block:: python    
         
-    #     """
-    #     def rf(result,segments):
-    #         if len(segments)==0:
-    #             return result
-    #         else:
-    #             diff=result.difference_segment(segments[0])
-    #             #print('diff',diff)
-    #             if diff is None:
-    #                 return None
-    #             elif len(diff)==1:
-    #                 if len(segments)>1:
-    #                     result=rf(diff[0],segments[1:])
-    #                 else:
-    #                     result=diff[0],
-    #                 return result
-    #             elif len(diff)==2:
-    #                 if len(segments)>1:
-    #                     result=tuple(list(rf(diff[0],segments[1:]))+list(rf(diff[1],segments[1:])))
-    #                 else:
-    #                     result=diff[0],diff[1]
-    #                 return result
-    #             else:
-    #                 raise Exception
+           # 2D example
+           >>> s = Segment2D(Point2D(0,0), Point2D(1,0))
+           >>> sgmts = Segments(Segment2D(Point2D(0.2,0), Point2D(0.8,0))
+           >>> result = s.difference_segments(sgmts)
+           >>> print(result)
+           Segments(Segment2D(Point2D(0,0), Point2D(0.2,0)),
+                    Segment2D(Point2D(0.8,0),Point2D(1,0)))
+           
+           # 3D example
+           >>> s = Segment3D(Point3D(0,0,0), Point3D(1,0,0))
+           >>> sgmts = Segments(Segment3D(Point3D(-1,0,0), Point3D(2,0,0))
+           >>> result = s.difference_segment(sgmts)
+           >>> print(result)
+           Segments()               
+        
+        """
+        def rf(result,segments):
+            if len(segments)==0:
+                return result
+            else:
+                diff=result.difference_segment(segments[0])
+                #print('diff',diff)
+                if len(diff)==0:
+                    return None
+                elif len(diff)==1:
+                    if len(segments)>1:
+                        result=rf(diff[0],segments[1:])
+                    else:
+                        result=diff[0],
+                    return result
+                elif len(diff)==2:
+                    if len(segments)>1:
+                        result=tuple(list(rf(diff[0],segments[1:]))+list(rf(diff[1],segments[1:])))
+                    else:
+                        result=diff[0],diff[1]
+                    return result
+                else:
+                    raise Exception
                 
-    #     result=self
-    #     result=rf(result,segments)
-    #     return result
+        result=self
+        result=rf(result,segments)
         
+        if result is None:
+            return Segments()
+        else:
+            return Segments(*result)        
         
             
     def distance_to_point(self,point):
@@ -723,7 +741,7 @@ class Segment2D(Segment):
         
     
     def project_3D(self,plane,coordinate_index):
-        """Projection of 2D segment on a 3D plane
+        """Projection of 2D segment on a 3D plane.
         
         :param plane: The plane for the projection
         :type plane: Plane3D
@@ -742,7 +760,7 @@ class Segment2D(Segment):
         
             >>> s = Segment2D(Point2D(0,0), Point2D(1,0))
             >>> pl = Plane3D(Point3D(0,0,1), Vector3D(0,0,1))
-            >>> result = pts.project_3D(pl, 2)
+            >>> result = s.project_3D(pl, 2)
             Segment3D(Point3D(0,0,1),Point3D(1,0,1))
         
         """
@@ -771,7 +789,7 @@ class Segment3D(Segment):
     
     @property
     def dimension(self):
-        """The dimension of the segmente.
+        """The dimension of the segment.
         
         :return: '3D'
         :rtype: str

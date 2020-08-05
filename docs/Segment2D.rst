@@ -16,6 +16,7 @@ Segment2D
    ~crossproduct.segment.Segment2D.__eq__
    ~crossproduct.segment.Segment2D.calculate_point
    ~crossproduct.segment.Segment2D.difference_segment
+   ~crossproduct.segment.Segment2D.difference_segments
    ~crossproduct.segment.Segment2D.dimension
    ~crossproduct.segment.Segment2D.distance_to_point
    ~crossproduct.segment.Segment2D.intersect_halfline

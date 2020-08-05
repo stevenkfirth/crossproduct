@@ -7,105 +7,189 @@ from .polylines import Polylines
 
 
 class Segments(Sequence):
-    """A sequence of segments    
+    """A sequence of segments.    
+    
+    :param segments: A sequence of Segment2D or Segment3D instances. 
+    :type points: Iterable
+    
+    :Example:
+        
+    .. code-block:: python
+        
+        >>> sgmts = Segments(Segment2D(Point2D(0,0), Point2D(1,0)))                             
+        >>> print(sgmts)
+        Segments(Segment2D(Point2D(0,0), Point2D(1,0)))
+        
+        >>> print(sgmts[0])
+        Segment2D(Point2D(0,0), Point2D(1,0))
     
     """
     
     def __init__(self,*segments):
-        """
-        """
+        ""
     
-        self.segments=list(segments)
+        self._segments=list(segments)
         
         
-    def __eq__(self,obj):
+# DONT USE AS A SEQUENCE ALREADY IMPLICITLY HAS A __CONTAINS__ METHOD
+    # def __contains__(self,obj):
+    #     """Tests if the segment sequence contains the object.
+        
+    #     :param obj: A point or segment. 
+    #     :type obj: Point2D, Point3D, Segment2D, Segment3D
+            
+    #     :return: For point, True if the point lies on one of the segments; otherwise False. 
+    #         For segment, True if the segment start and endpoints are on one of the the segments; otherwise False. 
+    #     :rtype: bool
+        
+    #     :Example:
+    
+    #     .. code-block:: python
+           
+    #        # 2D example
+    #        >>> s = Segment2D(Point2D(0,0), Point2D(1,0))
+    #        >>> result = Point2D(2,0) in l
+    #        >>> print(result)
+    #        False
+           
+    #        # 3D example
+    #        >>> s1 = Segment3D(Point2D(0,0,0), Point3D(1,0,0))
+    #        >>> s2 = Segment3D(Point3D(0,0,0), Point3D(0.5,0,0))
+    #        >>> result = s2 in s1
+    #        >>> print(result)
+    #        True        
+        
+    #     """
+    #     if obj.classname in ['Point','Segment']:
+            
+    #         for s in self.segments:
+    #             if obj in s:
+    #                 return True
+    #         return False
+            
+    #     else:
+    #         return TypeError()
+        
+        
+    def __eq__(self,segments):
+        """Tests if this segments sequence and the supplied segments sequence are equal.
+        
+        :param segments: The segments sequence to be tested.
+        :type segments: Segments
+        
+        :return: True if the sequence items are equal, otherwise False.
+        :rtype: bool
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> sgmts1 = Segments(Segment2D((Point2D(0,0), Point2D(1,0)))
+            >>> sgmts2 = Segments(Segment2D((Point2D(0,0), Point2D(1,0)))
+            >>> result = sgmts1 == sgmts2
+            >>> print(result)
+            True
+            
         """
-        """
-        if isinstance(obj,Segments) and self.segments==obj.segments:
+        if isinstance(segments,Segments) and self._segments==segments._segments:
             return True
         else:
             return False
-        
-        
+                
         
     def __getitem__(self,i):
-        """
-        """
-        return self.segments[i]
+        ""
+        return self._segments[i]
         
     
     def __len__(self):
-        """
-        """
-        return len(self.segments)
+        ""
+        return len(self._segments)
     
     
     def __repr__(self):
-        """The string of this segment for printing
-        
-        :return result:
-        :rtype str:
-            
-        """
-        return 'Segments(%s)' % ', '.join([str(s) for s in self.segments])
+        ""
+        return 'Segments(%s)' % ', '.join([str(s) for s in self._segments])
     
     
     def append(self,segment,unique=False):
-        """
+        """Appends supplied segment to this segments sequence.
+        
+        :param segment: The segment to be appended.
+        :type segment: Segment2D or Segment3D
+        :param unique: If True, degment is only appended if it does not already
+            exist in the sequence; defaults to False.
+        :type unique: bool
+        
+        :rtype: None
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> sgmts = Segments(Segment2D(Point2D(0,0), Point2D(1,0)))
+            >>> sgmts.append(Segment2D(Point2D(1,0), Point2D(2,0)))
+            >>> print(sgmts)
+            Segments(Segment2D(Point2D(0,0), Point2D(1,0)),
+                     Segment2D(Point2D(1,0), Point2D(2,0)))
+        
         """
         if segment.classname=='Segment':
             if unique:
                 if not segment in self:
-                    self.segments.append(segment)
+                    self._segments.append(segment)
             else:
-                self.segments.append(segment)
+                self._segments.append(segment)
                 
         else:
             raise TypeError
     
     
-    def difference_segment(self,segment):
-        """Returns the difference between this segments sequence and self.
+    def contains_point(self,point):
+        """Tests if the segment sequence contains the object.
         
+        :param obj: A point or segment. 
+        :type obj: Point2D, Point3D, Segment2D, Segment3D
+            
+        :return: For point, True if the point lies on one of the segments; otherwise False. 
+            For segment, True if the segment start and endpoints are on one of the the segments; otherwise False. 
+        :rtype: bool
         
-
+        :Example:
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> sgmts = Segments(Segment2D(Point2D(0,0), Point2D(1,0)))
+           >>> result = sgmts.contains_point(Point2D(2,0))
+           >>> print(result)
+           False
+           
         """
-        
-        def rf(result,segments):
-            if len(segments)==0:
-                return result
-            else:
-                diff=result.difference_segment(segments[0])
-                #print('diff',diff)
-                if diff is None:
-                    return None
-                elif len(diff)==1:
-                    if len(segments)>1:
-                        result=rf(diff[0],segments[1:])
-                    else:
-                        result=diff[0],
-                    return result
-                elif len(diff)==2:
-                    if len(segments)>1:
-                        result=tuple(list(rf(diff[0],segments[1:]))+list(rf(diff[1],segments[1:])))
-                    else:
-                        result=diff[0],diff[1]
-                    return result
-                else:
-                    raise Exception
-                
-        result=segment
-        result=rf(result,self)
-        return result
+        for s in self.segments:
+            if point in s:
+                return True
+        return False
     
     
     def difference_segments(self,segments):
-        """Returns the difference between self and segments
+        """Returns the difference between this segments sequence and the supplied segments sequence.
         
-        :param segments Segments:
+        :param segments: A segments sequence.
+        :type segments: Segments
             
-        :return result:
-        :rtype Segments:
+        :return: Any parts of this segments sequence which are not also part of the segments in the supplied sequence.
+        :rtype: Segments
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> sgmts1 = Segments(Segment2D(Point2D(0,0), Point2D(1,0)))
+            >>> sgmts2 = Segments(Segment2D(Point2D(0.5,0), Point2D(1,0)))
+            >>> result = sgmts1.difference_segments(sgmts2)
+            >>> print(result)
+            Segments(Segment2D(Point2D(0,0), Point2D(0.5,0)))
         
         """
         diff_segments=Segments()
@@ -118,19 +202,20 @@ class Segments(Sequence):
                 for s1 in result:
                     diff_segments.append(s1)
         if len(diff_segments)==0:
-            return None
+            return Segments() #None
         else:
             return diff_segments
     
     
     def intersect_halfline(self,halfline):
-        """Returns the intersection of this segments sequence and a halfline
+        """Returns the intersection of this segments sequence and a halfline.
         
-        :param halfline Halfline: a halfline
+        :param halfline: A halfline.
+        :type halfline: Halfline2D, Halfline3D
         
-        :return (ipts,isegments): (tuple of intersetion points, 
-                                   tuple of intersection segments)
-        :rtype tuple:
+        :return: A tuple of intersection points and intersection segments 
+            (Points,Segments)
+        :rtype: tuple
             
         """
         ipts=Points()
@@ -147,19 +232,20 @@ class Segments(Sequence):
                 raise Exception
         
         # remove points which exist in the segments
-        ipts.remove_points_in_segments(isegments)
+        ipts=ipts.remove_points_in_segments(isegments)
         
         return ipts, isegments
     
     
     def intersect_line(self,line):
-        """Returns the intersection of this segments sequence and a line
+        """Returns the intersection of this segments sequence and a line.
         
-        :param line Line: a line
+        :param line: A line.
+        :type line: Line2D, Line3D
         
-        :return (ipts,isegments): (tuple of intersetion points, 
-                                   tuple of intersection segments)
-        :rtype tuple:
+        :return: A tuple of intersection points and intersection segments 
+            (Points,Segments)
+        :rtype: tuple
             
         """
         ipts=Points()
@@ -176,32 +262,20 @@ class Segments(Sequence):
                 raise Exception
         
         # remove points which exist in the segments
-        ipts.remove_points_in_segments(isegments)
+        ipts=ipts.remove_points_in_segments(isegments)
         
         return ipts, isegments
     
     
-    def intersect_point(self,point):
-        """Test if the point intersects with any of the segments
-        
-        :return result:
-        :rtype bool:        
-        
-        """
-        for s in self:
-            if point in s:
-                return True
-        return False
-    
-    
     def intersect_segment(self,segment):
-        """Returns the intersection of this segments sequence and a segment
+        """Returns the intersection of this segments sequence and a segment.
         
-        :param segment Segment: a segment
+        :param segment: A segment.
+        :type segment: Segment2D, Segment3D
         
-        :return (ipts,isegments): (tuple of intersetion points, 
-                                   tuple of intersection segments)
-        :rtype tuple:
+        :return: A tuple of intersection points and intersection segments 
+            (Points,Segments)
+        :rtype: tuple
             
         """
         ipts=Points()
@@ -218,19 +292,20 @@ class Segments(Sequence):
                 raise Exception
         
         # remove points which exist in the segments
-        ipts.remove_points_in_segments(isegments)
+        ipts=ipts.remove_points_in_segments(isegments)
         
         return ipts, isegments
         
     
     def intersect_segments(self,segments):
-        """Returns the intersection of this segments sequence and another segments sequence
+        """Returns the intersection of this segments sequence and another segments sequence.
         
-        :param segments Segments: a segments sequence
+        :param segments: A segments sequence.
+        :type segments: Segments
         
-        :return (ipts,isegments): (tuple of intersetion points, 
-                                   tuple of intersection segments)
-        :rtype tuple:
+        :return: A tuple of intersection points and intersection segments 
+            (Points,Segments)
+        :rtype: tuple
             
         """
         ipts=Points()
@@ -243,150 +318,172 @@ class Segments(Sequence):
                 isegments.append(s1,unique=True)
         
         # remove points which exist in the segments
-        ipts.remove_points_in_segments(isegments)
+        ipts=ipts.remove_points_in_segments(isegments)
         
         return ipts, isegments
     
     
-    def project_2D(self,i):
-        """Returns a projection of the segments on a 2D plane
+    def project_2D(self,coordinate_index):
+        """Projection of a sequence of 3D segments as a sequence of 2D segments.
         
-        :param i int: the index of the coordinate which was ignored to create the 2D projection
+        :param coordinate_index: The index of the coordinate to ignore.
+            Use coordinate_index=0 to ignore the x-coordinate, coordinate_index=1 
+            for the y-coordinate and coordinate_index=2 for the z-coordinate.
+        :type coordinate_index: int
         
-        :return result:
+        :return: A 2D segment sequence based on the projection of the 3D segment sequece.
+        :rtype: Segments
                
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> sgmts = Segments(Segment3D(Point3D(0,0,0), Point3D(1,2,3)))
+            >>> result = sgmts.project_2D(0)
+            >>> print(result)
+            Segments(Segment2D(Point2D(0,0), Point2D(2,3)))
+        
         """
-        segments=[s.project_2D(i) for s in self]
+        segments=[s.project_2D(coordinate_index) for s in self]
         return Segments(*segments)
     
     
-    def project_3D(self,plane,i):
-        """Returns a projection of the segments on a 3D plane
+    def project_3D(self,plane,coordinate_index):
+        """Projection of sequence of 2D segment on a 3D plane.
         
-        :param plane Plane3D: the plane for the projection
-        :param i int: the index of the coordinate which was ignored to create the 2D projection
+        :param plane: The plane for the projection
+        :type plane: Plane3D
+        :param coordinate_index: The index of the coordinate which was ignored 
+            to create the 2D projection. For example, coordinate_index=0
+            means that the x-coordinate was ignored and this point
+            was originally projected onto the yz plane.
+        :type coordinate_index: int
         
-        :return result:
+        :return: 3D segment sequence which has been projected from the 2D segment sequence.
+        :rtype: Segments
                
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> sgmts = Segments(Segment2D(Point2D(0,0), Point2D(1,0)))
+            >>> pl = Plane3D(Point3D(0,0,1), Vector3D(0,0,1))
+            >>> result = sgmts.project_3D(pl, 2)
+            Segments(Segment3D(Point3D(0,0,1),Point3D(1,0,1)))
+        
         """
-        segments=[s.project_3D(plane,i) for s in self]
+        segments=[s.project_3D(plane,coordinate_index) for s in self]
         return Segments(*segments)
     
     
-    @property
-    def polyline(self):
-        """Returns a polyline of the segments
+    # @property
+    # def polyline(self):
+    #     """Returns a polyline of the segments
         
-        :return result:
-        :rtype: Polyline or None
+    #     :return result:
+    #     :rtype: Polyline or None
         
-        """
-#        # first union
-#        s=self[0]
-#        try:
-#            pl,remaining_segments=Segments(*self[1:]).union_segment(s)
-#        except TypeError:
-#            return None
+    #     """
         
-        pl=self[0].polyline
-        remaining_segments=Segments(*self[1:])
+    #     pl=self[0].polyline
+    #     remaining_segments=Segments(*self[1:])
         
-        while len(remaining_segments)>0:
-            try:
-                pl,remaining_segments=remaining_segments.union_polyline(pl)
-            except TypeError:
-                return None
+    #     while len(remaining_segments)>0:
+    #         try:
+    #             pl,remaining_segments=remaining_segments.union_polyline(pl)
+    #         except TypeError:
+    #             return None
             
-        return pl
+    #     return pl
     
     
     def remove_segments_in_polygons(self,polygons):
         """Removes any segments that lie on any of the polygons' segments
         """
-        self.segments=[s for s in self if not s in polygons.segments]
-    
-    
-    @property
-    def union(self):    
-        """Returns a Segments sequence 
-        
-        :return result: 
-            - note multiple solutions are possible, only the first is returned
-        :rtype Segments
-        
-        """
-        segments=[s for s in self]
-        n=len(segments)
-        i=0
-        
-        while i<n-1:
-            s=segments[i]
-            j=i+1
-            while j<n:
-                s1=segments[j]
-                u=s.union(s1)
-                if s.is_collinear(s1) and not u is None:
-                    segments[i]=s.__class__(u.points[0],u.points[-1]) # as u is a polyline
-                    segments.pop(j)
-                    break
-                j+=1
-            else:
-                i+=1
-            n=len(segments)
+        segments=[s for s in self if not s in polygons.segments]
         return Segments(*segments)
     
     
-    def union_polyline(self,polyline):
-        """Returns the first union of a segment in the sequence with the polyline
+    # @property
+    # def union(self):    
+    #     """Returns a Segments sequence 
         
-        :return result: (union_result (Polyline),
-                         Segments sequence of remaining segments)
+    #     :return result: 
+    #         - note multiple solutions are possible, only the first is returned
+    #     :rtype Segments
         
-        """
-        segments=[s for s in self]
-        for i in range(len(segments)):
-            u=polyline.union(segments[i].polyline)
-            if u:
-                segments.pop(i)
-                return u,Segments(*segments)
-    
-        return None
-    
-    
-    def union_segment(self,segment):
-        """Returns the first union of a segment in the sequence with the supplied segment
+    #     """
+    #     segments=[s for s in self]
+    #     n=len(segments)
+    #     i=0
         
-        :return result: (union_result (Polyline),
-                         Segments sequence of remaining segments)
-        
-        """
-        segments=[s for s in self]
-        for i in range(len(segments)):
-            u=segments[i].union(segment)
-            if u:
-                segments.pop(i)
-                return u,Segments(*segments)
-    
-        return None
+    #     while i<n-1:
+    #         s=segments[i]
+    #         j=i+1
+    #         while j<n:
+    #             s1=segments[j]
+    #             u=s.union(s1)
+    #             if s.is_collinear(s1) and not u is None:
+    #                 segments[i]=s.__class__(u.points[0],u.points[-1]) # as u is a polyline
+    #                 segments.pop(j)
+    #                 break
+    #             j+=1
+    #         else:
+    #             i+=1
+    #         n=len(segments)
+    #     return Segments(*segments)
     
     
+    # def union_polyline(self,polyline):
+    #     """Returns the first union of a segment in the sequence with the polyline
+        
+    #     :return result: (union_result (Polyline),
+    #                      Segments sequence of remaining segments)
+        
+    #     """
+    #     segments=[s for s in self]
+    #     for i in range(len(segments)):
+    #         u=polyline.union(segments[i].polyline)
+    #         if u:
+    #             segments.pop(i)
+    #             return u,Segments(*segments)
     
-    @property
-    def polylines(self):    
-        """Returns the polylines that exist in the Segments sequence
+    #     return None
+    
+    
+    # def union_segment(self,segment):
+    #     """Returns the first union of a segment in the sequence with the supplied segment
         
-        :return result: - 
-            - each polyline can have one or more than one segments
-        :rtype Polylines:
+    #     :return result: (union_result (Polyline),
+    #                      Segments sequence of remaining segments)
         
-        """
+    #     """
+    #     segments=[s for s in self]
+    #     for i in range(len(segments)):
+    #         u=segments[i].union(segment)
+    #         if u:
+    #             segments.pop(i)
+    #             return u,Segments(*segments)
+    
+    #     return None
+    
+    
+    
+    # @property
+    # def polylines(self):    
+    #     """Returns the polylines that exist in the Segments sequence
         
-        p=Polylines(*[s.polyline for s in self])
-        return p.consolidate
+    #     :return result: - 
+    #         - each polyline can have one or more than one segments
+    #     :rtype Polylines:
+        
+    #     """
+        
+    #     p=Polylines(*[s.polyline for s in self])
+    #     return p.consolidate
     
         
-        
-        
+   
         
         
         
