@@ -16,71 +16,48 @@ from .triangles import Triangles
 
 class SimplePolygon():
     """A n-D simple polygon
-    
-    The polygon does not self intersect and has no holes
-    
-    Adjacent polygon segments are not collinear.
-    
     """
     
-    classname='SimplePolygon'
-    superclassname='SimplePolygon'
+    classname='SimplePolygon'    
     
+    def __init__(self,*points,known_convex=False):
+        ""
+        
+        self._points=Points(*points)
+        self._known_convex=known_convex
+        
+        # # merge any codirectional adjacent segments
+        # pl1=self.polyline
+        # pl2=pl1.merge_codirectional_segments
+        # points=list(pl2.points)
+        # if (points[1]-points[0]).is_codirectional(points[-1]-points[-2]):
+        #     points.pop(0)
+        # self.points=tuple(points[:-1])
+        # #print(self.points)
+        
+        # # triangulate
+        # self.triangles=self.triangulate
     
-    def __init__(self,*points,holes=None,validate=False):
-        """
-        
-        param points: an array of points 
-            - the first point is not repeated at the end of the array
-        
-        """
-        
-        self.points=tuple(points)
-        
-        # merge any codirectional adjacent segments
-        pl1=self.polyline
-        pl2=pl1.merge_codirectional_segments
-        points=list(pl2.points)
-        if (points[1]-points[0]).is_codirectional(points[-1]-points[-2]):
-            points.pop(0)
-        self.points=tuple(points[:-1])
-        #print(self.points)
-        
-        if holes:
-            self.holes=holes
-        else:
-            self.holes=SimplePolygons()
-        
-        if validate:
-            # check for intersection
-            if pl2.is_intersecting:
-                return ValueError('A simple polygon should not self intersect')
-                
-        # triangulate
-        self.triangles=self.triangulate
-        
-        
     def __eq__(self,polygon):
-        """Tests if this polygon and the supplied polygon are equal
+        """Tests if this polygon and the supplied polygon are equal.
         
-        :param line SimplePolygon2D: a 2D polygon
+        :param polygon: A polygon.
+        :type polygonL SimplePolygon2D, SimplePolygon3D
         
-        :return result: 
-            - True if 
-                - it has the same points, and
-                - the points are in the same order (from an arbitrary start point), 
-                    either forward or reversed      
-            - otherwise False
-        :rtype bool:
+        :return: True if the two polygons have the same points and 
+            the points are in the same order (from any start point), 
+            either forward or reversed;       
+            otherwise False.
+        :rtype: bool
             
         """
         if isinstance(polygon,SimplePolygon):
             
-            for i in range(len(self.points)):
-                if self.reorder(i).points==polygon.points:
+            for i in range(len(self._points)):
+                if self.reorder(i)._points==polygon._points:
                     return True
-            for i in range(len(self.points)):
-                if self.reverse.reorder(i).points==polygon.points:
+            for i in range(len(self._points)):
+                if self.reverse.reorder(i)._points==polygon._points:
                     return True
             return False
             
@@ -88,184 +65,190 @@ class SimplePolygon():
             return False
     
     
+    # def difference_simple_polygon_interior(self,simple_polygon_interior):
+    #     """Returns the difference between this polygon and another polygon which is interior to it.
+        
+    #     :param simple_polygon SimpleConvexPolygon: a simple convex polygon which is interior (including on one or more edges)
+        
+    #     :return result:
+    #         - None
+    #         - SimplePolygons
+        
+    #     """
+        
+    #     if self==simple_polygon_interior:
+    #         return None
+
+    #     else:
+    #         #print(self.polyline.segments)
+    #         #print(simple_polygon.polyline.segments)
+            
+    #         pls1=self.polyline.segments.difference_segments(simple_polygon_interior.polyline.segments).polylines 
+    #         #print('pls1',pls1)
+            
+    #         pls2=simple_polygon_interior.polyline.segments.difference_segments(self.polyline.segments).polylines
+    #         #print('pls2',pls2)
+            
+    #         spgs=SimplePolygons()
+            
+    #         for pl1 in pls1:
+    #             for pl2 in pls2:
+    #                 pl3=pl1.union(pl2)
+    #                 if not pl3 is None: 
+    #                     spgs.append(SimplePolygon2D(*pl3.points[:-1]))
+            
+    #         if len(spgs)>0:
+    #             return spgs
+        
+    #         else: # interior intersection
+                
+    #             return NotImplementedError #self.doughnut(simple_polygon_interior) # perhaps return a polygon with a hole??
+    
+    
+    # def doughnut(self,simple_polygon_interior):
+    #     """Returns a 'doughnut' polygon around the interior polygon
+        
+    #     Note that the returned polygon is NOT a simple polygon, so traingulation doesn't work
+        
+    #     """
+        
+    #     pg1=self if self.orientation>0 else self.reverse # ccw
+    #     pg2=simple_polygon_interior.reverse if simple_polygon_interior.orientation>0 else simple_polygon_interior # cw
+            
+    #     combinations=[(i,j) for i in range(len(pg1.points)) for j in range(len(pg2.points))]
+    #     for i,j in combinations:
+    #         pg1b=pg1.reorder(i)
+    #         pg2b=pg2.reorder(j)
+    #         s=Segment2D(pg1b.points[0],pg2b.points[0])
+    #         ipts1,isegments1=pg1b.polyline.segments.intersect_segment(s)
+    #         ipts2,isegments2=pg2b.polyline.intersect_segment(s)
+    #         if len(ipts1)==1 and len(isegments1)==0 and len(ipts2)==1 and len(isegments2)==0:
+    #             break
+                
+    #     points=list(pg1b.polyline.points)+list(pg2b.polyline.points)
+    #     print(points)
+    #     return self.__class__(*points) # error as the triangulation of a doughnut isnt working at present
+       
+
     @property
-    def closed_points(self):
-        """Returns an array of polygon points which are closed
+    def known_convex(self):
+        """The knwon_convex property of the polyline.
         
-        :return points: array of points where the last point is the same as the first point
-        :rtype tuple:
-        """
-        return tuple(list(self.points) + [self.points[0]])
-    
-    
-    def difference_simple_polygon_interior(self,simple_polygon_interior):
-        """Returns the difference between this polygon and another polygon which is interior to it.
-        
-        :param simple_polygon SimpleConvexPolygon: a simple convex polygon which is interior (including on one or more edges)
-        
-        :return result:
-            - None
-            - SimplePolygons
+        :return: True if the polygon is known to be a convex polygon.
+            False if it is not known if the polygon is convex or not, 
+            or if it is known that the polygon is a concave polygon.
+        :rtype: bool
         
         """
+        return self._known_convex
         
-        if self==simple_polygon_interior:
-            return None
 
-        else:
-            #print(self.polyline.segments)
-            #print(simple_polygon.polyline.segments)
-            
-            pls1=self.polyline.segments.difference_segments(simple_polygon_interior.polyline.segments).polylines 
-            #print('pls1',pls1)
-            
-            pls2=simple_polygon_interior.polyline.segments.difference_segments(self.polyline.segments).polylines
-            #print('pls2',pls2)
-            
-            spgs=SimplePolygons()
-            
-            for pl1 in pls1:
-                for pl2 in pls2:
-                    pl3=pl1.union(pl2)
-                    if not pl3 is None: 
-                        spgs.append(SimplePolygon2D(*pl3.points[:-1]))
-            
-            if len(spgs)>0:
-                return spgs
-        
-            else: # interior intersection
-                
-                return NotImplementedError #self.doughnut(simple_polygon_interior) # perhaps return a polygon with a hole??
+    
+    # def intersect_halfline(self,halfline):
+    #     ""
+    #     ipts, isegments = self.triangles.intersect_halfline(halfline)
+    #     ipts.remove_points_in_segments(isegments)
+    #     isegments=isegments.union
+    #     return ipts, isegments
     
     
-    def doughnut(self,simple_polygon_interior):
-        """Returns a 'doughnut' polygon around the interior polygon
-        
-        Note that the returned polygon is NOT a simple polygon, so traingulation doesn't work
-        
-        """
-        
-        pg1=self if self.orientation>0 else self.reverse # ccw
-        pg2=simple_polygon_interior.reverse if simple_polygon_interior.orientation>0 else simple_polygon_interior # cw
-            
-        combinations=[(i,j) for i in range(len(pg1.points)) for j in range(len(pg2.points))]
-        for i,j in combinations:
-            pg1b=pg1.reorder(i)
-            pg2b=pg2.reorder(j)
-            s=Segment2D(pg1b.points[0],pg2b.points[0])
-            ipts1,isegments1=pg1b.polyline.segments.intersect_segment(s)
-            ipts2,isegments2=pg2b.polyline.intersect_segment(s)
-            if len(ipts1)==1 and len(isegments1)==0 and len(ipts2)==1 and len(isegments2)==0:
-                break
-                
-        points=list(pg1b.polyline.points)+list(pg2b.polyline.points)
-        print(points)
-        return self.__class__(*points) # error as the triangulation of a doughnut isnt working at present
-            
-    
-    def intersect_halfline(self,halfline):
-        ""
-        ipts, isegments = self.triangles.intersect_halfline(halfline)
-        ipts.remove_points_in_segments(isegments)
-        isegments=isegments.union
-        return ipts, isegments
+    # def intersect_line(self,line):
+    #     ""
+    #     ipts, isegments = self.triangles.intersect_line(line)
+    #     ipts.remove_points_in_segments(isegments)
+    #     isegments=isegments.union
+    #     return ipts, isegments
     
     
-    def intersect_line(self,line):
-        ""
-        ipts, isegments = self.triangles.intersect_line(line)
-        ipts.remove_points_in_segments(isegments)
-        isegments=isegments.union
-        return ipts, isegments
+    # def intersect_segment(self,segment):
+    #     ""
+    #     ipts, isegments = self.triangles.intersect_segment(segment)
+    #     ipts.remove_points_in_segments(isegments)
+    #     isegments=isegments.union
+    #     return ipts, isegments
     
     
-    def intersect_segment(self,segment):
-        ""
-        ipts, isegments = self.triangles.intersect_segment(segment)
-        ipts.remove_points_in_segments(isegments)
-        isegments=isegments.union
-        return ipts, isegments
-    
-    
-    def intersect_segments(self,segments):
-        ""
-        ipts, isegments = self.triangles.intersect_segments(segments)
-        ipts.remove_points_in_segments(isegments)
-        isegments=isegments.union
-        return ipts, isegments    
+    # def intersect_segments(self,segments):
+    #     ""
+    #     ipts, isegments = self.triangles.intersect_segments(segments)
+    #     ipts.remove_points_in_segments(isegments)
+    #     isegments=isegments.union
+    #     return ipts, isegments    
     
 
-    def intersect_simple_convex_polygon(self,simple_convex_polygon):
-        ""
-        if not simple_convex_polygon.classname in ['Triangle','Quadrilateral','Parallelogram','SimpleConvexPolygon']:
-            raise Exception
+    # def intersect_simple_convex_polygon(self,simple_convex_polygon):
+    #     ""
+    #     if not simple_convex_polygon.classname in ['Triangle','Quadrilateral','Parallelogram','SimpleConvexPolygon']:
+    #         raise Exception
     
-        ipts, isegments, isimplepolygons=self.triangles.intersect_simple_convex_polygon(simple_convex_polygon)
-        #print(ipts, isegments, isimplepolygons)
-        isegments.remove_segments_in_polygons(isimplepolygons)
-        ipts=ipts.remove_points_in_segments(isegments)
-        isimplepolygons=isimplepolygons.union_adjacent
-        #print(ipts, isegments, isimplepolygons)
-        return ipts, isegments, isimplepolygons
-    
-    
-    def intersect_simple_polygon(self,simple_polygon):
-        ""
-        
-        if simple_polygon.classname in ['Triangle','Quadrilateral','Parallelogram','SimpleConvexPolygon']:
-            return self.intersect_simple_convex_polygon(simple_polygon)
-        
-        if not simple_polygon.classname=='SimplePolygon':
-            raise TypeError
-        
-        ipts,isegments,isimplepolygons=self.triangles.intersect_triangles(simple_polygon.triangles)
-        
-        isegments.remove_segments_in_polygons(isimplepolygons)
-        ipts=ipts.remove_points_in_segments(isegments)
-        isimplepolygons=isimplepolygons.union_adjacent
-        
-        return ipts,isegments,isimplepolygons
+    #     ipts, isegments, isimplepolygons=self.triangles.intersect_simple_convex_polygon(simple_convex_polygon)
+    #     #print(ipts, isegments, isimplepolygons)
+    #     isegments.remove_segments_in_polygons(isimplepolygons)
+    #     ipts=ipts.remove_points_in_segments(isegments)
+    #     isimplepolygons=isimplepolygons.union_adjacent
+    #     #print(ipts, isegments, isimplepolygons)
+    #     return ipts, isegments, isimplepolygons
     
     
-    def is_adjacent(self,simple_polygon):
-        """Test to see if this simple polygon is adjacent to another simple polygon
+    # def intersect_simple_polygon(self,simple_polygon):
+    #     ""
         
-        :return result:
-            - returns True if a segment from one polygon contains a segment from another
-        :rtype true:
+    #     if simple_polygon.classname in ['Triangle','Quadrilateral','Parallelogram','SimpleConvexPolygon']:
+    #         return self.intersect_simple_convex_polygon(simple_polygon)
         
-        """
-        for s in self.polyline.segments:
-            for s1 in simple_polygon.polyline.segments:
-                result=s.intersect_segment(s1)
-                if result is None or result.classname=='Point':
-                    continue
-                elif result.classname=='Segment':
-                    return True
-                else:
-                    raise Exception
-        return False
+    #     if not simple_polygon.classname=='SimplePolygon':
+    #         raise TypeError
+        
+    #     ipts,isegments,isimplepolygons=self.triangles.intersect_triangles(simple_polygon.triangles)
+        
+    #     isegments.remove_segments_in_polygons(isimplepolygons)
+    #     ipts=ipts.remove_points_in_segments(isegments)
+    #     isimplepolygons=isimplepolygons.union_adjacent
+        
+    #     return ipts,isegments,isimplepolygons
     
     
-    def union_adjacent_simple_polygon(self,simple_polygon):
-        ""
-        pl1=self.polyline.segments.difference_segments(simple_polygon.polyline.segments).polyline
-        pl2=simple_polygon.polyline.segments.difference_segments(self.polyline.segments).polyline
-        pl3=pl1.union(pl2)
-        if pl3:
-            return SimplePolygon2D(*pl3.points[:-1])
-        else:
-            return None
+    # def is_adjacent(self,simple_polygon):
+    #     """Test to see if this simple polygon is adjacent to another simple polygon
+        
+    #     :return result:
+    #         - returns True if a segment from one polygon contains a segment from another
+    #     :rtype true:
+        
+    #     """
+    #     for s in self.polyline.segments:
+    #         for s1 in simple_polygon.polyline.segments:
+    #             result=s.intersect_segment(s1)
+    #             if result is None or result.classname=='Point':
+    #                 continue
+    #             elif result.classname=='Segment':
+    #                 return True
+    #             else:
+    #                 raise Exception
+    #     return False
+    
+    
+    # def union_adjacent_simple_polygon(self,simple_polygon):
+    #     ""
+    #     pl1=self.polyline.segments.difference_segments(simple_polygon.polyline.segments).polyline
+    #     pl2=simple_polygon.polyline.segments.difference_segments(self.polyline.segments).polyline
+    #     pl3=pl1.union(pl2)
+    #     if pl3:
+    #         return SimplePolygon2D(*pl3.points[:-1])
+    #     else:
+    #         return None
     
     
     def next_index(self,i):
-        """Returns the next point index in the polygon
+        """Returns the next point index in the polygon.
         
-        :param i int: a point index
+        :param i: A point index.
+        :type i: int
         
-        :return index:
-            - if i is the index of the last point, then 0 is returned
-        :rtype int:
+        :return: Returns the index of the next point in the polygon. 
+            If i is the index of the last point, then the index of 
+            the first point (i.e. 0) is returned.
+        :rtype: int
         
         """
         n=len(self.points)
@@ -276,12 +259,11 @@ class SimplePolygon():
     
     
     def plot(self,ax=None,normal=False,**kwargs):
-        """Plots the simple polygon on the supplied axes
+        """Plots the simple polygon on the supplied axes.
         
-        :param ax: an Axes or Axes3D instance
-            - matplotlib.axes.Axes (for 2D)
-            - mpl_toolkits.mplot3d.axes3d.Axes3D (for 3D)
-        :param **kwargs: keyword arguments to be supplied to the matplotlib plot call
+        :param ax: An Axes or Axes3D instance.
+        :type ax: matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
+        :param kwargs: Keyword arguments to be supplied to the matplotlib plot call.
                     
         """
         if not ax:
@@ -307,16 +289,28 @@ class SimplePolygon():
             ax.quiver(*c.coordinates,*N.coordinates, 
                       length=x*0.2,
                       lw=3)
+    
+    
+    @property
+    def points(self):
+        """The points of the polyline.
         
+        :rtype: Points
+        
+        """
+        return self._points
+    
     
     def previous_index(self,i):
-        """Returns the previous point index in the polygon
+        """Returns the previous point index in the polygon.
         
-        :param i int: a point index
+        :param i: A point index.
+        :type i: int
         
-        :return index:
-            - if i is 0 then the index of the last point is returned
-        :rtype int:
+        :return: Returns the index of the previous point in the polygon. 
+            If i is the index of the first point (i.e. 0), then the index of 
+            the last point is returned.
+        :rtype: int
         
         """
         n=len(self.points)
@@ -327,9 +321,14 @@ class SimplePolygon():
         
         
     def reorder(self,i):
-        """Returns a polygon with reordered points
+        """Returns a polygon with reordered points from a new start point.
         
-        :param i: the index of the start point
+        :param i: The index of the new start point.
+        :type i: int
+        
+        :return: A polygon equal to this polygon with points
+            starting at the new start point.
+        :rtype: SimplePolygon2D, SimplePolygon3D
         
         """
         points=[]
@@ -341,10 +340,11 @@ class SimplePolygon():
     
     @property
     def reverse(self):
-        """Return a polygon with the points reversed
+        """Returns a polygon with the points reversed.
         
-        :return polygon:
-        :rtype SimplePolygon:
+        :return: A new polygon with the points in reverse order.
+        :rtype: SimplePolygon2D, SimplePolygon3D
+        
         """
         points=[self.points[i] 
                 for i in range(len(self.points)-1,-1,-1)]
@@ -352,13 +352,10 @@ class SimplePolygon():
     
     
     @property
-    def triangulate(self):
-        """Returns a Triangles sequence of triangles which have the same overall shape as the polygon
+    def _triangulate(self):
+        """Returns a Triangles sequence of triangles which have the same overall shape as the polygon.
         
-        
-        :return result: a list of Triangle2D instances
-        :rtype list:
-        
+        :rtype: Triangles
         
         """
         
@@ -431,52 +428,56 @@ class SimplePolygon():
        
 
 class SimplePolygon2D(SimplePolygon):
-    """A 2D polygon
+    """A two dimensional polygon, situated on an x, y plane.
+    
+    :param points: The vertices of the polygon in order. 
+        This is a simple polygon where the segments of the polygon do
+            not intersect.
+    :type points: Points
+    :param known_convex: True if the polygon is known to be a convex polygon;
+        otherwise False.
+    :type known_convex: bool
+    
+    :Example:
+    
+    .. code-block:: python
+       
+       >>> spg = SimplePolygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+       >>> print(spg)
+       SimplePolygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+    
     """
-    
-    dimension='2D'
-    
-    def __contains__(self,obj):
-        """Tests if the polygon contains the object
         
-        :param obj: a 2D geometric object 
-            - Point2D, Segement2D, SimplePolygon2D etc.
+    def __contains__(self,obj):
+        """Tests if the polygon contains the geometric object.
+        
+        :param obj: A point. 
+        :type obj: Point2D, Point3D.
             
-        :return result:
-            - for point, 
-                - True if the point lies within the polygon 
-                    - Includes a left hand or bottom edge
-                    - Does not include a point on a top or right hand edge
-            - for segment...
-            - for polygon ...
-        :rtype bool:
+        :return: For point, True if the point lies inside the polygon 
+            or on a polygon edge; otherwise False.
+        :rtype: bool
             
         """
         if isinstance(obj,Point2D):
             
-            return self.winding_number(obj) > 0
+            return self._winding_number(obj) > 0 or obj in self.polyline
                     
         else:
             
-            return NotImplementedError
+            return TypeError
         
         
     def __repr__(self):
-        """The string of this line for printing
-        
-        :return result:
-        :rtype str:
-            
-        """
+        ""
         return 'SimplePolygon2D(%s)' % ','.join([str(p) for p in self.points])
     
     
     @property
     def area(self):
-        """Returns the area of the polygon
+        """Returns the area of the polygon.
         
-        :return result:
-        :rtype float:
+        :rtype: float
 
         """
         return abs(self.signed_area)
@@ -484,10 +485,9 @@ class SimplePolygon2D(SimplePolygon):
     
     @property
     def centroid(self):
-        """Returns the centroid of the polygon
+        """Returns the centroid of the polygon.
         
-        :return point:
-        :rtype Point2D:
+        :rtype: Point2D
                 
         """
         x=sum([pt.x for pt in self.points])/len(self.points)
@@ -496,21 +496,27 @@ class SimplePolygon2D(SimplePolygon):
         
     
     @property
-    def class_3D(self):
-        return SimplePolygon3D
+    def dimension(self):
+        """The dimension of the polygon.
+        
+        :return: '2D'
+        :rtype: str
+        
+        """
+        return '2D'
     
     
-    def crossing_number(self,point):
-        """Returns the crossing number for the supplied point
+    def _crossing_number(self,point):
+        """Returns the crossing number for the supplied point.
         
-        :param point Point2D:
+        :param point: A 2D point.
+        :type point: Point2D 
         
-        :return crossing_number:
-            - the number of times a line extending to the right of the point
-                crosses the polygon segments
-            - does not include a point on a top or right hand edge
+        :return: The number of times a line extending to the right of the point
+            crosses the polygon segments. 
+            Note: does not include a point on a top or right hand edge.
             
-        :rtype tuple:
+        :rtype: int
         """
         cp=0
         
@@ -519,7 +525,7 @@ class SimplePolygon2D(SimplePolygon):
             if ((ps.P0.y <= point.y) and (ps.P1.y > point.y) or 
                 (ps.P0.y > point.y) and (ps.P1.y <= point.y)):
                 
-                t=ps.calculate_t_from_y(point.y)
+                t=ps.line.calculate_t_from_y(point.y)
                 ipt=ps.calculate_point(t)
                 
                 if point.x < ipt.x:
@@ -530,13 +536,12 @@ class SimplePolygon2D(SimplePolygon):
     
     @property
     def orientation(self):
-        """Returns the orientation of a 2D polygon
+        """Returns the orientation of a 2D polygon.
         
-        :return result: 
-            - >0 for counterclockwise
-            - =0 for none (degenerate)
-            - <0 for clockwise
-        :rtype float: 
+        :return: Returns a value greater than 0 for counterclockwise.
+            Returns 0 for none (degenerate).
+            Returns a value less than 0 for clockwise.
+        :rtype: float
         """
         i=self.rightmost_lowest_vertex
         P0=self.points[self.previous_index(i)]
@@ -548,29 +553,41 @@ class SimplePolygon2D(SimplePolygon):
     
     @property
     def polyline(self):
-        return SimplePolyline2D(*self.closed_points)
-    
-    
-    def project_3D(self,plane,i):
-        """Returns a projection of the polygon on a 3D plane
+        """Returns a polyline of the polygon points.
         
-        :param plane Plane3D: the plane for the projection
-        :param i int: the index of the coordinate which was ignored to create the 2D projection
+        :return: A polyline of the polygon points which starts and ends at 
+            the first polygon point.
+        :rtype: Polyline2D        
         
-        :return result:
-               
         """
-        points=[pt.project_3D(plane,i) for pt in self.points]
-        return self.class_3D(*points)
+        closed_points=tuple(list(self.points) + [self.points[0]])
+        return Polyline2D(*closed_points)
+    
+    
+    def project_3D(self,plane,coordinate_index):
+        """Projection of 2D polygon on a 3D plane.
+        
+        :param plane: The plane for the projection.
+        :type plane: Plane3D
+        :param coordinate_index: The index of the coordinate which was ignored 
+            to create the 2D projection. For example, coordinate_index=0
+            means that the x-coordinate was ignored and this point
+            was originally projected onto the yz plane.
+        :type coordinate_index: int
+        
+        :return: 3D segment which has been projected from the 2D segment.
+        :rtype: Segment3D
+        
+        """
+        points=[pt.project_3D(plane,coordinate_index) for pt in self.points]
+        return SimplePolygon3D(*points)
         
     
     @property
     def rightmost_lowest_vertex(self):
-        """Returns the index of the rightmost lowest point
+        """Returns the index of the rightmost lowest point of the polygon.
         
-        :return point: the lowest point
-            - if more then one point is joint lowest, then the rightmost is returned
-        :rtype Point2D:
+        :rtype: int
         
         """
         min_i=0
@@ -585,16 +602,15 @@ class SimplePolygon2D(SimplePolygon):
     
     @property
     def signed_area(self):
-        """Returns the signed area of the polygon
+        """Returns the signed area of the polygon.
         
-        :return result:
-            - return value >0 if polygon points are ordered counterclockwise
-            - return value <0 if polygon points are ordered clockwise
-        :rtype float:
+        :return: Returns a value greater than 0 if polygon points are ordered counterclockwise.
+            Returns a value less than 0 if polygon points are ordered clockwise.
+        :rtype: float
                 
         """
         n=len(self.points)
-        points=self.closed_points
+        points=self.polyline.points
         if n<3: return 0  # a degenerate polygon
         a=0
         for i in range(1,n):
@@ -603,15 +619,15 @@ class SimplePolygon2D(SimplePolygon):
         return a / 2.0
     
     
-    def winding_number(self,point):
-        """Returns the winding number of the point for the polygon
+    def _winding_number(self,point):
+        """Returns the winding number of the point for the polygon.
         
-        :param point Point2D:
+        :param point: A 2D point.
+        :type point: Point2D
         
-        :return winding_number:
-            - the number of times the polygon segments wind around the point
-            - does not include a point on a top or right hand edge
-        :rtype int:
+        :return: The number of times the polygon segments wind around the point.
+            Note: does not include a point on a top or right hand edge.
+        :rtype: int
         
         """
         
@@ -621,11 +637,11 @@ class SimplePolygon2D(SimplePolygon):
         for ps in self.polyline.segments: # edge from V[i] to  V[i+1]
             if ps.P0.y <= point.y: # start y <= P.y
                 if ps.P1.y > point.y: # an upward crossing
-                    if ps.vL.perp_product(point-ps.P1)>0: # P left of  edge
+                    if ps.line.vL.perp_product(point-ps.P1)>0: # P left of  edge
                         wn+=1
             else:
                 if ps.P1.y <= point.y: # a downward crossing
-                    if ps.vL.perp_product(point-ps.P1)<0: # P right of  edge
+                    if ps.line.vL.perp_product(point-ps.P1)<0: # P right of  edge
                         wn-=1
         
         return wn
@@ -736,7 +752,8 @@ class SimplePolygon3D(SimplePolygon):
     
     @property
     def polyline(self):
-        return SimplePolyline3D(*self.closed_points)
+        closed_points=tuple(list(self.points) + [self.points[0]])
+        return Polyline3D(*closed_points)
     
     
     @property

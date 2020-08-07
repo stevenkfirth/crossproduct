@@ -51,6 +51,33 @@ class Polyline():
             raise ValueError('To add two polylines, they must have a shared start or end point.')
         
         
+    def __contains__(self,obj):
+        """Tests if the polyline contains the geometric object.
+        
+        :param obj: A point. 
+        :type obj: Point2D, Point3D.
+            
+        :return: For point, True if the point lies on one of the segments of the polyline;
+            otherwise False.
+        :rtype: bool
+            
+        """
+        if obj.classname=='Point':
+            
+            for s in self.segments:
+                
+                if obj in s:
+                    
+                    return True
+                
+            return False
+                    
+        else:
+            
+            return TypeError
+        
+        
+        
     def __eq__(self,polyline):
         """Tests if this polyline and the supplied polyline are equal.
         

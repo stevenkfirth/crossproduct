@@ -28,7 +28,7 @@ class Test_SimplePolygon2D(unittest.TestCase):
         ""
         pg=SimplePolygon2D(*points)
         self.assertIsInstance(pg,SimplePolygon2D)
-        self.assertEqual(pg.points,points)
+        self.assertEqual(pg.points,Points(*points))
         
         #print('--start--')
         pts2=Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1),Point2D(-1,1),Point2D(-1,0)
@@ -40,9 +40,16 @@ class Test_SimplePolygon2D(unittest.TestCase):
         
     def test___contains__(self):
         ""
+        
+        # NEED TO CHANGE SO THAT ALL EDGE POINTS COUNT AS INSIDE THE POLYGON
+        
         pg=SimplePolygon2D(*points)
         
         # Point
+        self.assertTrue(pg.points[0] in pg)
+        self.assertTrue(pg.points[1] in pg)
+        self.assertTrue(pg.points[2] in pg)
+        self.assertTrue(pg.points[3] in pg)        
         self.assertTrue(Point2D(0.5,0.5) in pg)
         
         # Segment
@@ -82,252 +89,245 @@ class Test_SimplePolygon2D(unittest.TestCase):
                          Point2D(0.5,0.5))
         
         
-    def test_closed_points(self):
+    def test__crossing_number(self):
         ""
         pg=SimplePolygon2D(*points)
-        self.assertEqual(pg.closed_points,
-                         tuple(list(points)+[points[0]]))
-        
-        
-    def test_crossing_number(self):
-        ""
-        pg=SimplePolygon2D(*points)
-        self.assertEqual(pg.crossing_number(pg.points[0]),
+        self.assertEqual(pg._crossing_number(pg.points[0]),
                          1)
-        self.assertEqual(pg.crossing_number(pg.points[1]),
+        self.assertEqual(pg._crossing_number(pg.points[1]),
                          0)
-        self.assertEqual(pg.crossing_number(pg.points[2]),
+        self.assertEqual(pg._crossing_number(pg.points[2]),
                          0)
-        self.assertEqual(pg.crossing_number(pg.points[3]),
+        self.assertEqual(pg._crossing_number(pg.points[3]),
                          0) 
-        self.assertEqual(pg.crossing_number(Point2D(-0.5,0.5)),
+        self.assertEqual(pg._crossing_number(Point2D(-0.5,0.5)),
                          2)
-        self.assertEqual(pg.crossing_number(Point2D(0.5,0.5)),
+        self.assertEqual(pg._crossing_number(Point2D(0.5,0.5)),
                          1)
         
         
-    def test_difference_simple_polygon_interior(self):
-        ""
-        pg=SimplePolygon2D(Point2D(0,0),
-                           Point2D(2,0),
-                           Point2D(2,1),
-                           Point2D(0,1))
-        #pg.plot()
+    # def test_difference_simple_polygon_interior(self):
+    #     ""
+    #     pg=SimplePolygon2D(Point2D(0,0),
+    #                        Point2D(2,0),
+    #                        Point2D(2,1),
+    #                        Point2D(0,1))
+    #     #pg.plot()
         
-        # self intersection
-        self.assertEqual(pg.difference_simple_polygon_interior(pg),
-                         None)
+    #     # self intersection
+    #     self.assertEqual(pg.difference_simple_polygon_interior(pg),
+    #                      None)
         
-        # half intersection
-        pg1=SimplePolygon2D(Point2D(1,0),
-                            Point2D(2,0),
-                            Point2D(2,1),
-                            Point2D(1,1))
-        self.assertEqual(pg.difference_simple_polygon_interior(pg1),
-                         SimplePolygons(SimplePolygon2D(Point2D(1,1),
-                                                        Point2D(0,1),
-                                                        Point2D(0,0),
-                                                        Point2D(1,0))))
+    #     # half intersection
+    #     pg1=SimplePolygon2D(Point2D(1,0),
+    #                         Point2D(2,0),
+    #                         Point2D(2,1),
+    #                         Point2D(1,1))
+    #     self.assertEqual(pg.difference_simple_polygon_interior(pg1),
+    #                      SimplePolygons(SimplePolygon2D(Point2D(1,1),
+    #                                                     Point2D(0,1),
+    #                                                     Point2D(0,0),
+    #                                                     Point2D(1,0))))
         
-        # corner intersection
-        pg1=SimplePolygon2D(Point2D(1,0),
-                            Point2D(2,0),
-                            Point2D(2,0.5),
-                            Point2D(1,0.5))
-        self.assertEqual(pg.difference_simple_polygon_interior(pg1),
-                         SimplePolygons(SimplePolygon2D(Point2D(2.0,0.5),
-                                                        Point2D(2,1),
-                                                        Point2D(0,1),
-                                                        Point2D(0,0),
-                                                        Point2D(1.0,0.0),
-                                                        Point2D(1,0.5))))
+    #     # corner intersection
+    #     pg1=SimplePolygon2D(Point2D(1,0),
+    #                         Point2D(2,0),
+    #                         Point2D(2,0.5),
+    #                         Point2D(1,0.5))
+    #     self.assertEqual(pg.difference_simple_polygon_interior(pg1),
+    #                      SimplePolygons(SimplePolygon2D(Point2D(2.0,0.5),
+    #                                                     Point2D(2,1),
+    #                                                     Point2D(0,1),
+    #                                                     Point2D(0,0),
+    #                                                     Point2D(1.0,0.0),
+    #                                                     Point2D(1,0.5))))
         
-        # mid intersection
-        pg1=SimplePolygon2D(Point2D(0.5,0),
-                            Point2D(1.5,0),
-                            Point2D(1.5,1),
-                            Point2D(0.5,1))
-        self.assertEqual(pg.difference_simple_polygon_interior(pg1),
-                         SimplePolygons(SimplePolygon2D(Point2D(0.5,1.0),
-                                                        Point2D(0,1),
-                                                        Point2D(0,0),
-                                                        Point2D(0.5,0.0)), 
-                                        SimplePolygon2D(Point2D(1.5,0.0),
-                                                        Point2D(2,0),
-                                                        Point2D(2,1),
-                                                        Point2D(1.5,1.0))))
+    #     # mid intersection
+    #     pg1=SimplePolygon2D(Point2D(0.5,0),
+    #                         Point2D(1.5,0),
+    #                         Point2D(1.5,1),
+    #                         Point2D(0.5,1))
+    #     self.assertEqual(pg.difference_simple_polygon_interior(pg1),
+    #                      SimplePolygons(SimplePolygon2D(Point2D(0.5,1.0),
+    #                                                     Point2D(0,1),
+    #                                                     Point2D(0,0),
+    #                                                     Point2D(0.5,0.0)), 
+    #                                     SimplePolygon2D(Point2D(1.5,0.0),
+    #                                                     Point2D(2,0),
+    #                                                     Point2D(2,1),
+    #                                                     Point2D(1.5,1.0))))
         
-        # interior intersection
-        pg1=SimplePolygon2D(Point2D(0.25,0.25),
-                            Point2D(1.75,0.25),
-                            Point2D(1.75,0.75),
-                            Point2D(0.25,0.75))
-        # NOT IMPLEMENTED AT PRESENT AS THIS CREATES A POLYGON WITH A HOLE
-        #print(pg.difference_simple_polygon_interior(pg1))
+    #     # interior intersection
+    #     pg1=SimplePolygon2D(Point2D(0.25,0.25),
+    #                         Point2D(1.75,0.25),
+    #                         Point2D(1.75,0.75),
+    #                         Point2D(0.25,0.75))
+    #     # NOT IMPLEMENTED AT PRESENT AS THIS CREATES A POLYGON WITH A HOLE
+    #     #print(pg.difference_simple_polygon_interior(pg1))
           
         
         
-    def test_is_adjacent(self):
-        ""
-        pr=Parallelogram2D(Point2D(0,0),Vector2D(1,0),Vector2D(0,1))
+    # def test_is_adjacent(self):
+    #     ""
+    #     pr=Parallelogram2D(Point2D(0,0),Vector2D(1,0),Vector2D(0,1))
         
-        # no intersection
-        pr1=Parallelogram2D(Point2D(0,10), Vector2D(1,0), Vector2D(0,1))
-        self.assertFalse(pr.is_adjacent(pr1))
+    #     # no intersection
+    #     pr1=Parallelogram2D(Point2D(0,10), Vector2D(1,0), Vector2D(0,1))
+    #     self.assertFalse(pr.is_adjacent(pr1))
         
-        # point intersection
-        pr1=Parallelogram2D(Point2D(1,1), Vector2D(1,0), Vector2D(0,1))
-        self.assertFalse(pr.is_adjacent(pr1))
+    #     # point intersection
+    #     pr1=Parallelogram2D(Point2D(1,1), Vector2D(1,0), Vector2D(0,1))
+    #     self.assertFalse(pr.is_adjacent(pr1))
         
-        # segment intersection
-        pr1=Parallelogram2D(Point2D(0,1), Vector2D(1,0), Vector2D(0,1))
-        self.assertTrue(pr.is_adjacent(pr1))
+    #     # segment intersection
+    #     pr1=Parallelogram2D(Point2D(0,1), Vector2D(1,0), Vector2D(0,1))
+    #     self.assertTrue(pr.is_adjacent(pr1))
                 
         
-    def test_intersect_simple_convex_polygon(self):
-        ""
-        # SQUARE
-        sp=SimplePolygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
+    # def test_intersect_simple_convex_polygon(self):
+    #     ""
+    #     # SQUARE
+    #     sp=SimplePolygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
         
-        # no intersection
-        scp=SimpleConvexPolygon2D(Point2D(2,0),Point2D(3,0),Point2D(3,1),Point2D(2,1))
-        self.assertEqual(sp.intersect_simple_convex_polygon(scp),
-                         (Points(), 
-                          Segments(), 
-                          SimplePolygons()))
+    #     # no intersection
+    #     scp=SimpleConvexPolygon2D(Point2D(2,0),Point2D(3,0),Point2D(3,1),Point2D(2,1))
+    #     self.assertEqual(sp.intersect_simple_convex_polygon(scp),
+    #                      (Points(), 
+    #                       Segments(), 
+    #                       SimplePolygons()))
         
-        # point intersection
-        scp=SimpleConvexPolygon2D(Point2D(1,1),Point2D(2,1),Point2D(2,2),Point2D(1,2))
-        self.assertEqual(sp.intersect_simple_convex_polygon(scp),
-                         (Points(Point2D(1,1)), 
-                          Segments(), 
-                          SimplePolygons()))
+    #     # point intersection
+    #     scp=SimpleConvexPolygon2D(Point2D(1,1),Point2D(2,1),Point2D(2,2),Point2D(1,2))
+    #     self.assertEqual(sp.intersect_simple_convex_polygon(scp),
+    #                      (Points(Point2D(1,1)), 
+    #                       Segments(), 
+    #                       SimplePolygons()))
         
-        # edge intersection
-        scp=SimpleConvexPolygon2D(Point2D(1,0),Point2D(2,0),Point2D(2,1),Point2D(1,1))
-        self.assertEqual(sp.intersect_simple_convex_polygon(scp),
-                         (Points(), 
-                          Segments(Segment2D(Point2D(1.0,1.0), 
-                                             Point2D(1.0,0.0))), 
-                          SimplePolygons()))
+    #     # edge intersection
+    #     scp=SimpleConvexPolygon2D(Point2D(1,0),Point2D(2,0),Point2D(2,1),Point2D(1,1))
+    #     self.assertEqual(sp.intersect_simple_convex_polygon(scp),
+    #                      (Points(), 
+    #                       Segments(Segment2D(Point2D(1.0,1.0), 
+    #                                          Point2D(1.0,0.0))), 
+    #                       SimplePolygons()))
                      
-        # self intersection
-        scp=SimpleConvexPolygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
-        self.assertEqual(sp.intersect_simple_convex_polygon(scp),
-                         (Points(), 
-                          Segments(), 
-                          SimplePolygons(sp)))
+    #     # self intersection
+    #     scp=SimpleConvexPolygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
+    #     self.assertEqual(sp.intersect_simple_convex_polygon(scp),
+    #                      (Points(), 
+    #                       Segments(), 
+    #                       SimplePolygons(sp)))
         
-        # mid intersection
-        scp=SimpleConvexPolygon2D(Point2D(0.5,0),Point2D(1,0),Point2D(1,1),Point2D(0.5,1))
-        self.assertEqual(sp.intersect_simple_convex_polygon(scp),
-                         (Points(), 
-                          Segments(), 
-                          SimplePolygons(SimplePolygon2D(Point2D(0.5,0.0),
-                                                         Point2D(1.0,0.0),
-                                                         Point2D(1.0,1.0),
-                                                         Point2D(0.5,1)))))
+    #     # mid intersection
+    #     scp=SimpleConvexPolygon2D(Point2D(0.5,0),Point2D(1,0),Point2D(1,1),Point2D(0.5,1))
+    #     self.assertEqual(sp.intersect_simple_convex_polygon(scp),
+    #                      (Points(), 
+    #                       Segments(), 
+    #                       SimplePolygons(SimplePolygon2D(Point2D(0.5,0.0),
+    #                                                      Point2D(1.0,0.0),
+    #                                                      Point2D(1.0,1.0),
+    #                                                      Point2D(0.5,1)))))
         
-        # C-SHAPE
-        sp=SimplePolygon2D(Point2D(0,0),
-                           Point2D(2,0),
-                           Point2D(2,1),
-                           Point2D(1,1),
-                           Point2D(1,2),
-                           Point2D(2,2),
-                           Point2D(2,3),
-                           Point2D(0,3))
+    #     # C-SHAPE
+    #     sp=SimplePolygon2D(Point2D(0,0),
+    #                        Point2D(2,0),
+    #                        Point2D(2,1),
+    #                        Point2D(1,1),
+    #                        Point2D(1,2),
+    #                        Point2D(2,2),
+    #                        Point2D(2,3),
+    #                        Point2D(0,3))
         
-        # two polygon intersection
-        scp=SimpleConvexPolygon2D(Point2D(1,0),
-                                  Point2D(2,0),
-                                  Point2D(2,3),
-                                  Point2D(1,3))
-        self.assertEqual(sp.intersect_simple_convex_polygon(scp),
-                         (Points(), 
-                          Segments(Segment2D(Point2D(1.0,2.0), 
-                                             Point2D(1.0,1.0))), 
-                          SimplePolygons(SimplePolygon2D(Point2D(1.0,0.0),
-                                                         Point2D(2.0,0.0),
-                                                         Point2D(2.0,1.0),
-                                                         Point2D(1.0,1.0)), 
-                                         SimplePolygon2D(Point2D(1.0,2.0),
-                                                         Point2D(2.0,2.0),
-                                                         Point2D(2.0,3.0),
-                                                         Point2D(1,3)))))
+    #     # two polygon intersection
+    #     scp=SimpleConvexPolygon2D(Point2D(1,0),
+    #                               Point2D(2,0),
+    #                               Point2D(2,3),
+    #                               Point2D(1,3))
+    #     self.assertEqual(sp.intersect_simple_convex_polygon(scp),
+    #                      (Points(), 
+    #                       Segments(Segment2D(Point2D(1.0,2.0), 
+    #                                          Point2D(1.0,1.0))), 
+    #                       SimplePolygons(SimplePolygon2D(Point2D(1.0,0.0),
+    #                                                      Point2D(2.0,0.0),
+    #                                                      Point2D(2.0,1.0),
+    #                                                      Point2D(1.0,1.0)), 
+    #                                      SimplePolygon2D(Point2D(1.0,2.0),
+    #                                                      Point2D(2.0,2.0),
+    #                                                      Point2D(2.0,3.0),
+    #                                                      Point2D(1,3)))))
         
 
-    def test_intersect_simple_polygon(self):
-        ""
-        # SQUARE
-        sp=SimplePolygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
+    # def test_intersect_simple_polygon(self):
+    #     ""
+    #     # SQUARE
+    #     sp=SimplePolygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
         
-        # no intersection
-        sp1=SimplePolygon2D(Point2D(2,0),Point2D(3,0),Point2D(3,1),Point2D(2,1))
-        self.assertEqual(sp.intersect_simple_polygon(sp1),
-                         (Points(), 
-                          Segments(), 
-                          SimplePolygons()))
+    #     # no intersection
+    #     sp1=SimplePolygon2D(Point2D(2,0),Point2D(3,0),Point2D(3,1),Point2D(2,1))
+    #     self.assertEqual(sp.intersect_simple_polygon(sp1),
+    #                      (Points(), 
+    #                       Segments(), 
+    #                       SimplePolygons()))
         
-        # point intersection
-        sp1=SimplePolygon2D(Point2D(1,1),Point2D(2,1),Point2D(2,2),Point2D(1,2))
-        self.assertEqual(sp.intersect_simple_polygon(sp1),
-                         (Points(Point2D(1,1)), 
-                          Segments(), 
-                          SimplePolygons()))
+    #     # point intersection
+    #     sp1=SimplePolygon2D(Point2D(1,1),Point2D(2,1),Point2D(2,2),Point2D(1,2))
+    #     self.assertEqual(sp.intersect_simple_polygon(sp1),
+    #                      (Points(Point2D(1,1)), 
+    #                       Segments(), 
+    #                       SimplePolygons()))
         
-        # edge intersection
-        sp1=SimplePolygon2D(Point2D(1,0),Point2D(2,0),Point2D(2,1),Point2D(1,1))
-        self.assertEqual(sp.intersect_simple_polygon(sp1),
-                         (Points(), 
-                          Segments(Segment2D(Point2D(1.0,1.0), 
-                                             Point2D(1.0,0.0))), 
-                          SimplePolygons()))
+    #     # edge intersection
+    #     sp1=SimplePolygon2D(Point2D(1,0),Point2D(2,0),Point2D(2,1),Point2D(1,1))
+    #     self.assertEqual(sp.intersect_simple_polygon(sp1),
+    #                      (Points(), 
+    #                       Segments(Segment2D(Point2D(1.0,1.0), 
+    #                                          Point2D(1.0,0.0))), 
+    #                       SimplePolygons()))
                      
-        # self intersection
-        sp1=SimplePolygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
-        self.assertEqual(sp.intersect_simple_polygon(sp1),
-                         (Points(), 
-                          Segments(), 
-                          SimplePolygons(sp)))
+    #     # self intersection
+    #     sp1=SimplePolygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
+    #     self.assertEqual(sp.intersect_simple_polygon(sp1),
+    #                      (Points(), 
+    #                       Segments(), 
+    #                       SimplePolygons(sp)))
         
-        # mid intersection
-        sp1=SimplePolygon2D(Point2D(0.5,0),Point2D(1,0),Point2D(1,1),Point2D(0.5,1))
-        self.assertEqual(sp.intersect_simple_polygon(sp1),
-                         (Points(Point2D(1.0,0.0)), 
-                          Segments(), 
-                          SimplePolygons(SimplePolygon2D(Point2D(0.5,0.0),
-                                                         Point2D(1.0,0.0),
-                                                         Point2D(1.0,1.0),
-                                                         Point2D(0.5,1)))))
+    #     # mid intersection
+    #     sp1=SimplePolygon2D(Point2D(0.5,0),Point2D(1,0),Point2D(1,1),Point2D(0.5,1))
+    #     self.assertEqual(sp.intersect_simple_polygon(sp1),
+    #                      (Points(Point2D(1.0,0.0)), 
+    #                       Segments(), 
+    #                       SimplePolygons(SimplePolygon2D(Point2D(0.5,0.0),
+    #                                                      Point2D(1.0,0.0),
+    #                                                      Point2D(1.0,1.0),
+    #                                                      Point2D(0.5,1)))))
         
-        # C-SHAPE
-        sp=SimplePolygon2D(Point2D(0,0),
-                           Point2D(2,0),
-                           Point2D(2,1),
-                           Point2D(1,1),
-                           Point2D(1,2),
-                           Point2D(2,2),
-                           Point2D(2,3),
-                           Point2D(0,3))
+    #     # C-SHAPE
+    #     sp=SimplePolygon2D(Point2D(0,0),
+    #                        Point2D(2,0),
+    #                        Point2D(2,1),
+    #                        Point2D(1,1),
+    #                        Point2D(1,2),
+    #                        Point2D(2,2),
+    #                        Point2D(2,3),
+    #                        Point2D(0,3))
         
-        # two polygon intersection
-        sp1=SimplePolygon2D(Point2D(1,0),
-                            Point2D(2,0),
-                            Point2D(2,3),
-                            Point2D(1,3))
-        self.assertEqual(sp.intersect_simple_polygon(sp1),
-                         (Points(), 
-                          Segments(Segment2D(Point2D(1.0,2.0), 
-                                             Point2D(1.0,1.0))), 
-                          SimplePolygons(SimplePolygon2D(Point2D(1.0,0.0),
-                                                         Point2D(2.0,0.0),
-                                                         Point2D(2.0,1.0),
-                                                         Point2D(1.0,1.0)), 
-                                         SimplePolygon2D(Point2D(1.0,2.0),
-                                                         Point2D(2.0,2.0),
-                                                         Point2D(2.0,3.0),
-                                                         Point2D(1,3)))))
+    #     # two polygon intersection
+    #     sp1=SimplePolygon2D(Point2D(1,0),
+    #                         Point2D(2,0),
+    #                         Point2D(2,3),
+    #                         Point2D(1,3))
+    #     self.assertEqual(sp.intersect_simple_polygon(sp1),
+    #                      (Points(), 
+    #                       Segments(Segment2D(Point2D(1.0,2.0), 
+    #                                          Point2D(1.0,1.0))), 
+    #                       SimplePolygons(SimplePolygon2D(Point2D(1.0,0.0),
+    #                                                      Point2D(2.0,0.0),
+    #                                                      Point2D(2.0,1.0),
+    #                                                      Point2D(1.0,1.0)), 
+    #                                      SimplePolygon2D(Point2D(1.0,2.0),
+    #                                                      Point2D(2.0,2.0),
+    #                                                      Point2D(2.0,3.0),
+    #                                                      Point2D(1,3)))))
         
         
     
@@ -809,186 +809,188 @@ class Test_SimplePolygon2D(unittest.TestCase):
                          -1)
         
         
-    def test_triangulate(self):
-        ""
-        # convex polygon
-        pg=SimplePolygon2D(*points)
-        self.assertEqual(pg.triangulate,
-                         Triangles(*[Triangle2D(Point2D(0,0), Vector2D(1,0), Vector2D(0,1)), 
-                                     Triangle2D(Point2D(1,0), Vector2D(0,1), Vector2D(-1,1))]))
+    # def test__triangulate(self):
+    #     ""
+    #     # convex polygon
+    #     pg=SimplePolygon2D(*points)
+    #     self.assertEqual(pg._triangulate,
+    #                      Triangles(*[Triangle2D(Point2D(0,0), Vector2D(1,0), Vector2D(0,1)), 
+    #                                  Triangle2D(Point2D(1,0), Vector2D(0,1), Vector2D(-1,1))]))
         
-        # concave polygon
-        pg=SimplePolygon2D(Point2D(0,0),
-                     Point2D(2,0),
-                     Point2D(1,1),
-                     Point2D(2,2),
-                     Point2D(0,2))
-        self.assertEqual(pg.triangulate,
-                         Triangles(*[Triangle2D(Point2D(2,0), Vector2D(-1,1), Vector2D(-2,0)), 
-                                     Triangle2D(Point2D(0,0), Vector2D(1,1), Vector2D(0,2)), 
-                                     Triangle2D(Point2D(1,1), Vector2D(1,1), Vector2D(-1,1))]))
+    #     # concave polygon
+    #     pg=SimplePolygon2D(Point2D(0,0),
+    #                  Point2D(2,0),
+    #                  Point2D(1,1),
+    #                  Point2D(2,2),
+    #                  Point2D(0,2))
+    #     self.assertEqual(pg._triangulate,
+    #                      Triangles(*[Triangle2D(Point2D(2,0), Vector2D(-1,1), Vector2D(-2,0)), 
+    #                                  Triangle2D(Point2D(0,0), Vector2D(1,1), Vector2D(0,2)), 
+    #                                  Triangle2D(Point2D(1,1), Vector2D(1,1), Vector2D(-1,1))]))
     
-        
-    def test_winding_number(self):
+    
+    
+    def test__winding_number(self):
         ""
+        
         pg=SimplePolygon2D(*points)
-        self.assertEqual(pg.winding_number(pg.points[0]),
+        self.assertEqual(pg._winding_number(pg.points[0]),
                          1)
-        self.assertEqual(pg.winding_number(pg.points[1]),
+        self.assertEqual(pg._winding_number(pg.points[1]),
                          0)
-        self.assertEqual(pg.winding_number(pg.points[2]),
+        self.assertEqual(pg._winding_number(pg.points[2]),
                          0)
-        self.assertEqual(pg.winding_number(pg.points[3]),
+        self.assertEqual(pg._winding_number(pg.points[3]),
                          0) 
-        self.assertEqual(pg.winding_number(Point2D(-0.5,0.5)),
+        self.assertEqual(pg._winding_number(Point2D(-0.5,0.5)),
                          0)
-        self.assertEqual(pg.winding_number(Point2D(0.5,0.5)),
+        self.assertEqual(pg._winding_number(Point2D(0.5,0.5)),
                          1)
         
     
         
-class Test_SimplePolygon3D(unittest.TestCase):
-    """
-    points=(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))
-    """
+# class Test_SimplePolygon3D(unittest.TestCase):
+#     """
+#     points=(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))
+#     """
     
-    def test___init__(self):
-        ""
-        pg=SimplePolygon3D(*points)
-        self.assertIsInstance(pg,SimplePolygon3D)
-        self.assertEqual(pg.points,points)
+#     def test___init__(self):
+#         ""
+#         pg=SimplePolygon3D(*points)
+#         self.assertIsInstance(pg,SimplePolygon3D)
+#         self.assertEqual(pg.points,points)
         
         
-    def test___contains__(self):
-        ""
-        pg=SimplePolygon3D(*points)
+#     def test___contains__(self):
+#         ""
+#         pg=SimplePolygon3D(*points)
         
-        # Point
+#         # Point
         
-        # --> TO DO
+#         # --> TO DO
         
-        # Segment
+#         # Segment
         
-        # SimplePolygon
-        
-        
-    def test___eq__(self):
-        ""
-        pg=SimplePolygon3D(*points)
-        self.assertTrue(pg==pg)
-        
-        pg2=SimplePolygon3D(Point3D(0,0,0),Point3D(1,0,0),Point3D(0,1,0))
-        self.assertFalse(pg==pg2)
+#         # SimplePolygon
         
         
-    def test___repr__(self):
-        ""
-        pg=SimplePolygon3D(*points)
-        self.assertEqual(str(pg),
-                         'SimplePolygon3D(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))')
+#     def test___eq__(self):
+#         ""
+#         pg=SimplePolygon3D(*points)
+#         self.assertTrue(pg==pg)
         
-    def test_area(self):
-        ""
-        pg=SimplePolygon3D(*points)
-        self.assertEqual(pg.area, # ccw
-                         1)
-        self.assertEqual(pg.reverse.area, # cw
-                         1)
+#         pg2=SimplePolygon3D(Point3D(0,0,0),Point3D(1,0,0),Point3D(0,1,0))
+#         self.assertFalse(pg==pg2)
         
         
-    def test_centroid(self):
-        ""
-        pg=SimplePolygon3D(*points)
-        self.assertEqual(pg.centroid, 
-                         Point3D(0.5,0.5,0))
+#     def test___repr__(self):
+#         ""
+#         pg=SimplePolygon3D(*points)
+#         self.assertEqual(str(pg),
+#                          'SimplePolygon3D(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))')
+        
+#     def test_area(self):
+#         ""
+#         pg=SimplePolygon3D(*points)
+#         self.assertEqual(pg.area, # ccw
+#                          1)
+#         self.assertEqual(pg.reverse.area, # cw
+#                          1)
         
         
-    def test_next_index(self):
-        ""
-        pg=SimplePolygon3D(*points)
-        self.assertEqual(pg.next_index(0),
-                         1)
-        self.assertEqual(pg.next_index(3),
-                         0)
+#     def test_centroid(self):
+#         ""
+#         pg=SimplePolygon3D(*points)
+#         self.assertEqual(pg.centroid, 
+#                          Point3D(0.5,0.5,0))
+        
+        
+#     def test_next_index(self):
+#         ""
+#         pg=SimplePolygon3D(*points)
+#         self.assertEqual(pg.next_index(0),
+#                          1)
+#         self.assertEqual(pg.next_index(3),
+#                          0)
         
     
-    def test_plane(self):
-        ""
-        pg=SimplePolygon3D(*points)
-        self.assertEqual(pg.plane,
-                         Plane3D(Point3D(0,0,0),Vector3D(0,0,1)))
+#     def test_plane(self):
+#         ""
+#         pg=SimplePolygon3D(*points)
+#         self.assertEqual(pg.plane,
+#                          Plane3D(Point3D(0,0,0),Vector3D(0,0,1)))
         
         
-    def test_plot(self):
-        ""
+#     def test_plot(self):
+#         ""
         
-        if plot:
+#         if plot:
         
-            pg=SimplePolygon3D(*points)
-            fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
-            pg.plot(ax)
+#             pg=SimplePolygon3D(*points)
+#             fig = plt.figure()
+#             ax = fig.add_subplot(111, projection='3d')
+#             pg.plot(ax)
             
-            fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
-            pg.plot(ax,normal=True)
+#             fig = plt.figure()
+#             ax = fig.add_subplot(111, projection='3d')
+#             pg.plot(ax,normal=True)
             
         
         
-    def test_prevous_index(self):
-        ""
-        pg=SimplePolygon3D(*points)
-        self.assertEqual(pg.previous_index(0),
-                         3)
-        self.assertEqual(pg.previous_index(3),
-                         2)
+#     def test_prevous_index(self):
+#         ""
+#         pg=SimplePolygon3D(*points)
+#         self.assertEqual(pg.previous_index(0),
+#                          3)
+#         self.assertEqual(pg.previous_index(3),
+#                          2)
         
         
-    def test_project_2D(self):
-        ""
-        pg=SimplePolygon3D(*points)
-        self.assertEqual(pg.project_2D,
-                         (2,SimplePolygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))))
+#     def test_project_2D(self):
+#         ""
+#         pg=SimplePolygon3D(*points)
+#         self.assertEqual(pg.project_2D,
+#                          (2,SimplePolygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))))
         
         
-    def test_reorder(self):
-        ""
-        pg=SimplePolygon3D(*points)
-        self.assertEqual(pg.reorder(1),
-                         SimplePolygon3D(Point3D(1,0,0),
-                                   Point3D(1,1,0),
-                                   Point3D(0,1,0),
-                                   Point3D(0,0,0)))
+#     def test_reorder(self):
+#         ""
+#         pg=SimplePolygon3D(*points)
+#         self.assertEqual(pg.reorder(1),
+#                          SimplePolygon3D(Point3D(1,0,0),
+#                                    Point3D(1,1,0),
+#                                    Point3D(0,1,0),
+#                                    Point3D(0,0,0)))
         
         
-    def test_reverse(self):
-        ""
-        pg=SimplePolygon3D(*points)
-        self.assertEqual(pg.reverse,
-                         SimplePolygon3D(Point3D(0,1,0),
-                                   Point3D(1,1,0),
-                                   Point3D(1,0,0),
-                                   Point3D(0,0,0)))
+#     def test_reverse(self):
+#         ""
+#         pg=SimplePolygon3D(*points)
+#         self.assertEqual(pg.reverse,
+#                          SimplePolygon3D(Point3D(0,1,0),
+#                                    Point3D(1,1,0),
+#                                    Point3D(1,0,0),
+#                                    Point3D(0,0,0)))
         
         
-    def test_triangulate(self):
-        ""
-        # convex polygon
-        pg=SimplePolygon3D(*points)
-        self.assertEqual(pg.triangulate,
-                         Triangles(*[Triangle3D(Point3D(0,0,0), Vector3D(1,0,0), Vector3D(0,1,0)), 
-                                     Triangle3D(Point3D(1,0,0), Vector3D(0,1,0), Vector3D(-1,1,0))]))
+#     def test_triangulate(self):
+#         ""
+#         # convex polygon
+#         pg=SimplePolygon3D(*points)
+#         self.assertEqual(pg.triangulate,
+#                          Triangles(*[Triangle3D(Point3D(0,0,0), Vector3D(1,0,0), Vector3D(0,1,0)), 
+#                                      Triangle3D(Point3D(1,0,0), Vector3D(0,1,0), Vector3D(-1,1,0))]))
         
-        # concave polygon
-        pg=SimplePolygon3D(Point3D(0,0,2),
-                     Point3D(2,0,2),
-                     Point3D(1,1,2),
-                     Point3D(2,2,2),
-                     Point3D(0,2,2))
-        self.assertEqual(pg.triangulate,
-                         Triangles(*[Triangle3D(Point3D(2,0,2), Vector3D(-1,1,0), Vector3D(-2,0,0)), 
-                                     Triangle3D(Point3D(0,0,2), Vector3D(1,1,0), Vector3D(0,2,0)), 
-                                     Triangle3D(Point3D(1,1,2), Vector3D(1,1,0), Vector3D(-1,1,0))]))
+#         # concave polygon
+#         pg=SimplePolygon3D(Point3D(0,0,2),
+#                      Point3D(2,0,2),
+#                      Point3D(1,1,2),
+#                      Point3D(2,2,2),
+#                      Point3D(0,2,2))
+#         self.assertEqual(pg.triangulate,
+#                          Triangles(*[Triangle3D(Point3D(2,0,2), Vector3D(-1,1,0), Vector3D(-2,0,0)), 
+#                                      Triangle3D(Point3D(0,0,2), Vector3D(1,1,0), Vector3D(0,2,0)), 
+#                                      Triangle3D(Point3D(1,1,2), Vector3D(1,1,0), Vector3D(-1,1,0))]))
         
         
     
@@ -998,7 +1000,7 @@ if __name__=='__main__':
     unittest.main(Test1())
     unittest.main(Test_SimplePolygon2D())
     
-    points=(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))
-    unittest.main(Test_SimplePolygon3D())
+    # points=(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))
+    # unittest.main(Test_SimplePolygon3D())
     
     

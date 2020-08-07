@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from .plane import Plane3D
 from .point import Point2D
+from .points import Points
+from .polyline import Polyline2D, Polyline3D
 from .simple_convex_polygon import SimpleConvexPolygon2D, SimpleConvexPolygon3D
-from .segment import Segment3D
+from .segment import Segment2D, Segment3D
+from .segments import Segments
 
 
 class Triangle():
@@ -12,13 +16,7 @@ class Triangle():
     classname='Triangle'
     
     def __init__(self,P0,v,w):
-        """
-        
-        :param P0 Point2D: a point on the triangle
-        :param v Vector2D: a vector on the triangle from P0 to P1
-        :param w Vector2D: a vector on the triangle from P0 to P2
-        
-        """
+        ""
         if P0.classname=='Point':
             self.P0=P0
         else:
@@ -40,6 +38,16 @@ class Triangle():
                 self.v=w
                 self.w=v
                 
+
+    @property
+    def closed_points(self):
+        """Returns an array of polygon points which are closed
+        
+        :return points: array of points where the last point is the same as the first point
+        :rtype tuple:
+        """
+        return tuple(list(self.points) + [self.points[0]])
+
 
     @property
     def P1(self):
@@ -106,23 +114,29 @@ class Triangle():
 
 
 
-class Triangle2D(Triangle,SimpleConvexPolygon2D):
-    """A 2D Triangle
+class Triangle2D(Triangle):#,SimpleConvexPolygon2D):
+    """A two dimensional triangle, situated on an x, y plane.
+         
+    :param P0: A point on the triangle.
+    :type P0: Point2D
+    :param v: A vector on the triangle from P0 to P1.
+    :type v: Vector2D
+    :param w: A vector on the triangle from P0 to P2.
+    :type w: Vector2D
+        
+    
     """
     
     def __contains__(self,obj):
-        """Tests if the 2D triangle contains the object
+        """Tests if the 2D triangle contains the object.
         
-            - includes points on all edges and inside
-        
-        :param obj: a 2D geometric object 
-            - Point2D, Segment2D, Polygon2D
+        :param obj: A 2D geometric object .
+        :type obj: Point2D
             
-        :return result:
-            - for point, True if the point lies within the triangle (including on an edge)
-            - for segment...
-            - for polygon ...
-        :rtype bool:
+        :return: For point, returns True if the point lies within the triangle 
+            (including on an edge);
+            otherwise False.
+        :rtype: bool
             
         """
         if obj.__class__.__name__=='Point2D':
@@ -148,31 +162,246 @@ class Triangle2D(Triangle,SimpleConvexPolygon2D):
         
         
     def __repr__(self):
-        """The string of this triangle for printing
-        
-        :return result:
-        :rtype str:
-            
-        """
+        ""
         return 'Triangle2D(%s, %s, %s)' % (self.P0,self.v,self.w)
         
         
     @property
     def area(self):
-        """Returns the area of the triangle
+        """Returns the area of the triangle.
         
-        :return result:
-        :rtype float:
+        :return: The triangle area.
+        :rtype: float
 
         """
         return abs(self.signed_area)
     
     
-    @property
-    def class_3D(self):
-        return Triangle3D    
+    # @property
+    # def class_3D(self):
+    #     return Triangle3D    
 
     
+    def intersect_halfline(self,halfline):
+        """Intersection of this triangle with a halfline.
+        
+        :param halfline: A 2D halfline.
+        :type halfline: Halfline2D
+        
+        :return: Returns None for a halfline which does not intersect the polygon.
+            Returns a point for a halfline which intersects the polygon at a single vertex.
+            Return a segment for a halfline which intersects the polygon at 2 edges.
+            Returns a segment for a halfline which starts inside the polygon and intersects one edge.
+        :rtype: None, Point2D, Segment2D
+        
+        """
+        result=self._intersect_line_t_values(halfline.line)
+        #print(result)
+        if result is None:
+            return None 
+        elif result[0]==result[1]:
+            try:
+                return halfline.calculate_point(result[0])
+            except ValueError:
+                return None
+        else:
+            try:
+                P0=halfline.calculate_point(result[0])
+            except ValueError:
+                P0=halfline.calculate_point(0)
+            try:
+                P1=halfline.calculate_point(result[1])
+            except ValueError:
+                return None
+            if P0==P1:
+                return P0
+            else:
+                return Segment2D(P0,P1)
+        
+        
+    def intersect_line(self,line):
+        """Intersection of this triangle with a line.
+        
+        :param line: A 2D line.
+        :type line: Line2D 
+        
+        :return: Returns None for a line which does not intersect the polygon.
+            Returns a point for a lien which intersects the polygon at a single vertex.
+            Returns a segment for a line which intersects the polygon at 2 edges.
+        :rtype: None, Point2D, Segment2D
+        
+        """
+        result=self._intersect_line_t_values(line)
+        if result is None:
+            return None
+        elif result[0]==result[1]:
+            return line.calculate_point(result[0])
+        else:
+            P0=line.calculate_point(result[0])
+            P1=line.calculate_point(result[1])
+            return Segment2D(P0,P1)
+        
+    
+    def _intersect_line_t_values(self,line):
+        """Returns t values of the intersection of this triangle with a line.
+        
+        :param line: A 2D line.
+        :type line: Line2D 
+        
+        :return: Returns None for a line which does not intersect the polygon.
+            Returns tuple with two items for a line which intersects the polygon at a single vertex - items are the same point.
+            Returns tuple with two items for a line which intersects the polygon at 2 edges.
+        :rtype: None, tuple
+                
+        """
+        t_entering=[]
+        t_leaving=[]
+        for ps in self.polyline.segments:
+            #print(ps)
+            
+            ev=ps.vL # edge vector
+            n=ev.perp_vector*-1 #  normal to edge vector facing outwards
+            try:
+                t=(ps.P0-line.P0).dot(n) / line.vL.dot(n) # the t values of the line where the segment and line intersect
+                
+            except ZeroDivisionError: # the line and polygon segment are parallel
+                if (line.P0-ps.P0).dot(n) > 0: # test if the line is outside the edge
+                    #print('line is outside the edge')
+                    return None # line is outside of the edge, there is no intersection with the polygon
+                else:
+                    continue # line is inside of the edge, ignore this segment and continue with others
+            
+            if line.vL.dot(n)<0:
+                t_entering.append(t)
+            else:
+                t_leaving.append(t)
+            
+        t_entering_max=max(t_entering) # the line enters the polygon at the maximum t entering value
+        
+        t_leaving_min=min(t_leaving) # the line leaves the polygon at the minimum t leavign value
+        
+        if t_entering_max > t_leaving_min:
+            
+            return None
+        
+        else:
+            
+            return t_entering_max,t_leaving_min
+        
+                
+    def intersect_segment(self,segment):
+        """Intersection of this triangle with a segment.
+        
+        :param segment: A 2D segment.
+        :type segment: Segment2D
+        
+        :return: Returns None for a segment which does not intersect the polygon.
+            Returns a point for a segment which intersects the polygon at a single vertex.
+            Returns a segment for a segment which intersects the polygon at 2 edges.
+            Returns a segment for a segment which starts or ends inside the polygon and intersects one edge.
+        :rtype: None, Point2D, Segment2D
+        
+        """
+        result=self.intersect_line_t_values(segment.line)
+        #print(result)
+        if result is None:
+            return None 
+        elif result[0]==result[1]:
+            try:
+                return segment.calculate_point(result[0]) 
+            except ValueError:
+                return None 
+        else:
+            t0=result[0]
+            t1=result[1]
+            if t0<0 and t1<0:
+                return None 
+            elif t0>1 and t1>1:
+                return None 
+            else:
+                try:
+                    P0=segment.calculate_point(result[0])
+                except ValueError:
+                    P0=segment.calculate_point(0)
+                try:
+                    P1=segment.calculate_point(result[1])
+                except ValueError:
+                    P1=segment.calculate_point(1)   
+                    
+                if P0==P1:
+                    return P0 
+                else:
+                    return Segment2D(P0,P1)    
+    
+    
+    def intersect_segments(self,segments):
+        """Intersection of this triangle with a Segments sequence.
+        
+        :param segments: A segments sequence.
+        :type segments: Segments
+        
+        :return: A tuple of intersection points and intersection segments 
+            (Points,Segments)
+        :rtype: tuple
+        
+        """
+        ipts=Points()
+        isegments=Segments()
+        for s in segments:
+            result=self.intersect_segment(s)
+            #print(result)
+            if result is None:
+                continue
+            if result.classname=='Point':
+                ipts.append(result,unique=True)
+            elif result.classname=='Segment':
+                isegments.append(result,unique=True)
+            else:
+                raise Exception
+                
+        ipts.remove_points_in_segments(isegments)
+        return ipts,isegments
+    
+    
+    def intersect_simple_convex_polygon(self,simple_convex_polygon):
+        """Intersection of this 2D simple convex polygon with another 2D simple convex polygon
+        
+        :param simple_convex_polygon SimpleConvexPolygon: a simple convex polygon 
+        
+        :return intersection:
+            - return value can be:
+                - None -> no intersection (for a convex polygon whose segements 
+                                           do not intersect the segments of this
+                                           convex polygon)
+                - Point2D -> a point (for a convex polygon whose segments intersect
+                                      this convex polygon at a single vertex)
+                - Segment2D -> a segment (for a convex polygon whose segments
+                                          intersect this convex polygon at an edge segment)
+                - SimpleConvexPolygon2D - > a simple convex polygon (for a convex
+                                            polygon which overlaps this polygon)
+                         
+        """
+        ipts1,isegments1=self.intersect_segments(simple_convex_polygon.polyline.segments)
+        #print(ipts1,isegments1)
+        
+        if len(ipts1)==0 and len(isegments1)==0:
+            return None # returns None - no intersection
+        elif len(ipts1)==1 and len(isegments1)==0:
+            return ipts1[0] # returns a Point2D - point intersection
+        elif len(ipts1)>1:
+            raise Exception
+        elif len(ipts1)==0 and len(isegments1)==1:
+            return isegments1[0] # returns a Segment2D - edge segment intersection
+        else: # a simple complex polygon intersection
+            ipts2,isegments2=simple_convex_polygon.intersect_segments(self.polyline.segments)
+            #print(ipts2,isegments2)
+            for s in isegments2:
+                isegments1.append(s,unique=True)
+            pl=isegments1.polyline
+            #print(pl)
+            pg=SimpleConvexPolygon2D(*pl.points[:-1]) # or a polyline??
+            return pg
+
     
     @property
     def orientation(self):
@@ -185,6 +414,11 @@ class Triangle2D(Triangle,SimpleConvexPolygon2D):
         :rtype float: 
         """
         return self.signed_area
+    
+    
+    @property
+    def polyline(self):
+        return Polyline2D(*self.closed_points)
     
     
     @property
@@ -201,7 +435,7 @@ class Triangle2D(Triangle,SimpleConvexPolygon2D):
     
         
     
-class Triangle3D(Triangle,SimpleConvexPolygon3D):
+class Triangle3D(Triangle):#,SimpleConvexPolygon3D):
     """"A 3D Triangle
     """
         
@@ -245,12 +479,7 @@ class Triangle3D(Triangle,SimpleConvexPolygon3D):
         
         
     def __repr__(self):
-        """The string of this triangle for printing
-        
-        :return result:
-        :rtype str:
-            
-        """
+        ""
         return 'Triangle3D(%s, %s, %s)' % (self.P0,self.v,self.w)
         
         
@@ -265,10 +494,13 @@ class Triangle3D(Triangle,SimpleConvexPolygon3D):
         return 0.5*self.v.cross_product(self.w).length
     
     
-    @property
-    def class_2D(self):
-        return Triangle2D  
+    # @property
+    # def class_2D(self):
+    #     return Triangle2D  
     
+    
+    
+            
     
     def intersect_plane(self,plane):
         """Returns the intersection of this 3D triangle and a plane
@@ -290,7 +522,7 @@ class Triangle3D(Triangle,SimpleConvexPolygon3D):
         if self.plane==plane:
             return self
         
-        elif self.plane.is_parallel(plane):
+        elif self.plane.N.is_collinear(plane.N):
             return None
         
         else:
@@ -375,6 +607,21 @@ class Triangle3D(Triangle,SimpleConvexPolygon3D):
             
             else:
                 raise Exception()     
+    
+    @property
+    def plane(self):
+        """Returns the plane of the 3D polygon
+        
+        :return plane: a 3D plane which contains all the polygon points
+        :rtype Plane3D:
+        
+        """
+        N=(self.P1-self.P0).cross_product(self.P2-self.P1)
+        return Plane3D(self.P0,N)
+    
+    @property
+    def polyline(self):
+        return Polyline3D(*self.closed_points)
     
     @property
     def project_2D(self):
