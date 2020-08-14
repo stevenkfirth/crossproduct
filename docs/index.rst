@@ -42,8 +42,8 @@ Geometry in Python - 2D and 3D
    Polyline3D
    Polylines
    Plane3D
-   SimplePolygon2D
-   SimplePolygon3D
+   Polygon2D
+   Polygon3D
    
 
 

@@ -10,6 +10,7 @@ Polyline3D
    :toctree: _autosummary
 
    ~crossproduct.polyline.Polyline3D.__add__
+   ~crossproduct.polyline.Polyline3D.__contains__
    ~crossproduct.polyline.Polyline3D.__eq__
    ~crossproduct.polyline.Polyline3D.dimension
    ~crossproduct.polyline.Polyline3D.intersect_polyline
