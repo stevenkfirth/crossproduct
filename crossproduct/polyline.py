@@ -11,6 +11,8 @@ class Polyline():
     
     """
     
+    classname='Polyline'
+    
     def __init__(self,*points):
         ""
         self._points=Points(*points)

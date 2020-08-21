@@ -6,7 +6,7 @@ import mpl_toolkits.mplot3d
 
 from crossproduct import Point2D, Point3D,Vector2D, Vector3D, \
     Halfline2D, Halfline3D, Line2D, Line3D, Segment2D, Segment3D, \
-    SimplePolyline2D, Polyline2D, Segments, Points
+    Polyline2D, Segments, Points
 
 plot=False
 
@@ -31,6 +31,9 @@ class Test_Segment2D(unittest.TestCase):
         s1=Segment2D(Point2D(1,1), Point2D(2,2))
         self.assertEqual(s+s1,
                          Segment2D(Point2D(0,0), Point2D(2,2)))
+        
+        self.assertEqual(Segment2D(Point2D(1,1), Point2D(1,2))+Segment2D(Point2D(1,0), Point2D(1,1)),
+                         Segment2D(Point2D(1.0,0.0), Point2D(1.0,2.0)))
         
         
     def test___contains__(self):

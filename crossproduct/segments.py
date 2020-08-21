@@ -3,7 +3,7 @@
 
 from collections.abc import Sequence
 from .points import Points
-from .polylines import Polylines
+#from .polylines import Polylines
 
 
 class Segments(Sequence):
@@ -84,8 +84,8 @@ class Segments(Sequence):
     
         .. code-block:: python
         
-            >>> sgmts1 = Segments(Segment2D((Point2D(0,0), Point2D(1,0)))
-            >>> sgmts2 = Segments(Segment2D((Point2D(0,0), Point2D(1,0)))
+            >>> sgmts1 = Segments(Segment2D(Point2D(0,0), Point2D(1,0)))
+            >>> sgmts2 = Segments(Segment2D(Point2D(0,0), Point2D(1,0)))
             >>> result = sgmts1 == sgmts2
             >>> print(result)
             True
@@ -111,6 +111,122 @@ class Segments(Sequence):
         ""
         return 'Segments(%s)' % ', '.join([str(s) for s in self._segments])
     
+    
+    @property
+    def add_all(self):
+        """Adds together the segments in the sequence where possible
+        
+        :return: Returns a new Segments sequence where the segments have been
+            added together where possible to form new segments.        
+        :rtype: Segments
+        
+        """
+        segments=[s for s in self]
+        n=len(segments)
+        i=0
+        
+        while True:
+            try:
+                s=segments[i]
+            except IndexError:
+                break
+            try:
+                new_s,index=Segments(*segments[i+1:]).add_first(s)
+                #print(new_s,index)
+                segments[i]=new_s
+                segments.pop(i+index+1)
+            except ValueError:
+                pass
+            i+=1
+        
+        return Segments(*segments)
+        
+        
+        while i<n-1:
+            s=segments[i]
+            j=i+1
+            while j<n:
+                s1=segments[j]
+                u=s.union(s1)
+                if s.is_collinear(s1) and not u is None:
+                    segments[i]=s.__class__(u.points[0],u.points[-1]) # as u is a polyline
+                    segments.pop(j)
+                    break
+                j+=1
+            else:
+                i+=1
+            n=len(segments)
+        return Segments(*segments)
+        
+        
+        
+    
+    def add_first(self,segment):
+        """Adds the first available segment to the supplied segment.
+        
+        This iterates through the segments in the Segments sequence. 
+            When the first segment which can be added to the supplied segment is found,
+            the result of this addition is returned along with its index.
+        
+        :raises ValueError: If no valid additions are found.
+        
+        :return: Returns a tuple with the addition result and the index of the segment which was added.
+        :rtype: tuple (Segment,int)
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> sgmts = Segments(Segment2D(Point2D(0,0), Point2D(1,0)))
+            >>> result = sgmts.add_first(Segment2D(Point2D(1,0), Point2D(2,0)))
+            >>> print(result)
+            (Segment2D(Point2D(0,0), Point2D(2,0)),0)
+        
+        """
+        for i,s in enumerate(self):
+            try:
+                result=segment+s
+                return result,i
+            except ValueError:
+                pass
+        
+        raise ValueError
+    
+    
+    
+    # @property
+    # def union(self):    
+    #     """Returns a Segments sequence 
+        
+    #     :return result: 
+    #         - note multiple solutions are possible, only the first is returned
+    #     :rtype Segments
+        
+    #     """
+    #     segments=[s for s in self]
+    #     n=len(segments)
+    #     i=0
+        
+    #     while i<n-1:
+    #         s=segments[i]
+    #         j=i+1
+    #         while j<n:
+    #             s1=segments[j]
+    #             u=s.union(s1)
+    #             if s.is_collinear(s1) and not u is None:
+    #                 segments[i]=s.__class__(u.points[0],u.points[-1]) # as u is a polyline
+    #                 segments.pop(j)
+    #                 break
+    #             j+=1
+    #         else:
+    #             i+=1
+    #         n=len(segments)
+    #     return Segments(*segments)
+    
+    
+    
+    
+        
     
     def append(self,segment,unique=False):
         """Appends supplied segment to this segments sequence.
@@ -166,7 +282,7 @@ class Segments(Sequence):
            False
            
         """
-        for s in self.segments:
+        for s in self._segments:
             if point in s:
                 return True
         return False
@@ -404,34 +520,7 @@ class Segments(Sequence):
         return Segments(*segments)
     
     
-    # @property
-    # def union(self):    
-    #     """Returns a Segments sequence 
-        
-    #     :return result: 
-    #         - note multiple solutions are possible, only the first is returned
-    #     :rtype Segments
-        
-    #     """
-    #     segments=[s for s in self]
-    #     n=len(segments)
-    #     i=0
-        
-    #     while i<n-1:
-    #         s=segments[i]
-    #         j=i+1
-    #         while j<n:
-    #             s1=segments[j]
-    #             u=s.union(s1)
-    #             if s.is_collinear(s1) and not u is None:
-    #                 segments[i]=s.__class__(u.points[0],u.points[-1]) # as u is a polyline
-    #                 segments.pop(j)
-    #                 break
-    #             j+=1
-    #         else:
-    #             i+=1
-    #         n=len(segments)
-    #     return Segments(*segments)
+    
     
     
     # def union_polyline(self,polyline):

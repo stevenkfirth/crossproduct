@@ -5,8 +5,7 @@ import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d
 
 from crossproduct import Point2D, Point3D, Segment2D, Segment3D, Points, Segments, \
-    SimplePolyline2D, Triangle2D, Vector2D, Triangles, Polygons, \
-    SimpleConvexPolygon2D, Polygon2D
+    Vector2D, Polygons, Polygon2D, Polylines, Polyline2D
 
 
 plot=True
@@ -18,74 +17,119 @@ class Test_Polygons(unittest.TestCase):
     
     def test___init__(self):
         ""
-        sp=Polygons(*simple_polygons)
-        self.assertIsInstance(sp,Polygons)
-        self.assertEqual(sp.simple_polygons,
-                         list(simple_polygons))
+        pgs=Polygons(*polygons)
+        self.assertIsInstance(pgs,Polygons)
+        self.assertEqual(pgs._polygons,
+                         list(polygons))
         
         
     def test___eq__(self):
         ""
-        sp=Polygons(*simple_polygons)
-        self.assertTrue(sp==sp)
+        pgs=Polygons(*polygons)
+        self.assertTrue(pgs==pgs)
         
-        sp1=Polygons(simple_polygons[0])
-        self.assertFalse(sp==sp1)
+        pgs1=Polygons(polygons[0])
+        self.assertFalse(pgs==pgs1)
         
         
     def test___repr__(self):
         ""
-        sp=Polygons(*simple_polygons)
-        self.assertEqual(str(sp),
-                         'Polygons(SimpleConvexPolygon2D(Point2D(0.0,0.0),Point2D(1.0,0.0),Point2D(0.0,1.0)), SimpleConvexPolygon2D(Point2D(1.0,0.0),Point2D(1.0,1.0),Point2D(0.0,1.0)))')
+        pgs=Polygons(*polygons)
+        self.assertEqual(str(pgs),
+                         'Polygons(Polygon2D(Point2D(0.0,0.0),Point2D(1.0,0.0),Point2D(0.0,1.0)), Polygon2D(Point2D(1.0,0.0),Point2D(1.0,1.0),Point2D(0.0,1.0)))')
+        
+        
+    def test_append(self):
+        ""
+        pgs=Polygons(*polygons)
+        
+        pgs.append(polygons[0])
+        self.assertEqual(len(pgs),3)
+        
+        pgs.append(polygons[1])
+        self.assertEqual(len(pgs),4)
+        
+        pgs.append(polygons[1],
+                   unique=True)
+        self.assertEqual(len(pgs),4)
         
     
-    def test_segments(self):
+    def test_intersect_segment(self):
         ""
-        sp=Polygons(*simple_polygons)
-        self.assertEqual(sp.segments,
-                         Segments(Segment2D(Point2D(0.0,0.0), Point2D(1.0,0.0)), 
-                                  Segment2D(Point2D(1.0,0.0), Point2D(0.0,1.0)), 
-                                  Segment2D(Point2D(0.0,1.0), Point2D(0.0,0.0)), 
-                                  Segment2D(Point2D(1.0,0.0), Point2D(1.0,1.0)), 
-                                  Segment2D(Point2D(1.0,1.0), Point2D(0.0,1.0))))
-    
-    
-    def test_union_adjacent(self):
-        ""
-        sp=Polygons(*simple_polygons)
-        self.assertEqual(sp.union_adjacent,
-                         Polygons(Polygon2D(Point2D(0.0,1.0),
-                                                        Point2D(0.0,0.0),
-                                                        Point2D(1.0,0.0),
-                                                        Point2D(1.0,1.0))))
-    
-        sp=Polygons(SimpleConvexPolygon2D(Point2D(1.0,0.5),Point2D(1.0,0.0),Point2D(2.0,0.0),Point2D(2.0,1.0)), 
-                          SimpleConvexPolygon2D(Point2D(2.0,1.0),Point2D(1.0,1.0),Point2D(1.0,0.5)), 
-                          SimpleConvexPolygon2D(Point2D(1.0,2.5),Point2D(1.0,2.0),Point2D(2.0,2.0)), 
-                          SimpleConvexPolygon2D(Point2D(2.0,2.0),Point2D(2.0,3.0),Point2D(1,3),Point2D(1.0,2.5)))
+        pg=Polygon2D(Point2D(0,0),
+                      Point2D(2,0),
+                      Point2D(1,1),
+                      Point2D(2,2),
+                      Point2D(0,2))
+        pgs=pg._triangulate
         
-        self.assertEqual(sp.union_adjacent,
-                         Polygons(Polygon2D(Point2D(1.0,0.0),
-                                                        Point2D(2.0,0.0),
-                                                        Point2D(2.0,1.0),
-                                                        Point2D(1.0,1.0)), 
-                                        Polygon2D(Point2D(1.0,2.0),
-                                                        Point2D(2.0,2.0),
-                                                        Point2D(2.0,3.0),
-                                                        Point2D(1,3))))
-        #sp.plot()
-        #sp.union_adjacent.plot()
+        self.assertEqual(pgs.intersect_segment(Segment2D(Point2D(1.5,0),
+                                                         Point2D(1.5,10))),
+                        (Points(), 
+                         Segments(Segment2D(Point2D(1.5,0), 
+                                            Point2D(1.5,0.5)),
+                                  Segment2D(Point2D(1.5,1.5), 
+                                            Point2D(1.5,2)))))
+        
+        
+    def test_plot(self):
+        ""
+    
+    
+    def test_polylines(self):
+        ""
+        pgs=Polygons(*polygons)
+        self.assertEqual(pgs.polylines,
+                         Polylines(Polyline2D(Point2D(0.0,0.0),
+                                              Point2D(1.0,0.0),
+                                              Point2D(0.0,1.0),
+                                              Point2D(0.0,0.0)), 
+                                   Polyline2D(Point2D(1.0,0.0),
+                                              Point2D(1.0,1.0),
+                                              Point2D(0.0,1.0),
+                                              Point2D(1.0,0.0))))
+    
+    
+    def test_project_3D(self):
+        ""
+        
+    
+    
+    # def test_union_adjacent(self):
+    #     ""
+    #     sp=Polygons(*simple_polygons)
+    #     self.assertEqual(sp.union_adjacent,
+    #                      Polygons(Polygon2D(Point2D(0.0,1.0),
+    #                                                     Point2D(0.0,0.0),
+    #                                                     Point2D(1.0,0.0),
+    #                                                     Point2D(1.0,1.0))))
+    
+    #     sp=Polygons(SimpleConvexPolygon2D(Point2D(1.0,0.5),Point2D(1.0,0.0),Point2D(2.0,0.0),Point2D(2.0,1.0)), 
+    #                       SimpleConvexPolygon2D(Point2D(2.0,1.0),Point2D(1.0,1.0),Point2D(1.0,0.5)), 
+    #                       SimpleConvexPolygon2D(Point2D(1.0,2.5),Point2D(1.0,2.0),Point2D(2.0,2.0)), 
+    #                       SimpleConvexPolygon2D(Point2D(2.0,2.0),Point2D(2.0,3.0),Point2D(1,3),Point2D(1.0,2.5)))
+        
+    #     self.assertEqual(sp.union_adjacent,
+    #                      Polygons(Polygon2D(Point2D(1.0,0.0),
+    #                                                     Point2D(2.0,0.0),
+    #                                                     Point2D(2.0,1.0),
+    #                                                     Point2D(1.0,1.0)), 
+    #                                     Polygon2D(Point2D(1.0,2.0),
+    #                                                     Point2D(2.0,2.0),
+    #                                                     Point2D(2.0,3.0),
+    #                                                     Point2D(1,3))))
+    #     #sp.plot()
+    #     #sp.union_adjacent.plot()
     
     
 if __name__=='__main__':
     
-    simple_polygons=(SimpleConvexPolygon2D(Point2D(0.0,0.0),
-                                           Point2D(1.0,0.0),
-                                           Point2D(0.0,1.0)), 
-                     SimpleConvexPolygon2D(Point2D(1.0,0.0),
-                                           Point2D(1.0,1.0),
-                                           Point2D(0.0,1.0)))
+    polygons=(Polygon2D(Point2D(0.0,0.0),
+                        Point2D(1.0,0.0),
+                        Point2D(0.0,1.0)), 
+              Polygon2D(Point2D(1.0,0.0),
+                        Point2D(1.0,1.0),
+                        Point2D(0.0,1.0)))
     unittest.main(Test_Polygons())
     
     

@@ -14,7 +14,9 @@ Polygon3D
    ~crossproduct.polygon.Polygon3D.area
    ~crossproduct.polygon.Polygon3D.centroid
    ~crossproduct.polygon.Polygon3D.class_2D
+   ~crossproduct.polygon.Polygon3D.intersect_segment
    ~crossproduct.polygon.Polygon3D.known_convex
+   ~crossproduct.polygon.Polygon3D.known_simple
    ~crossproduct.polygon.Polygon3D.next_index
    ~crossproduct.polygon.Polygon3D.plane
    ~crossproduct.polygon.Polygon3D.plot

@@ -44,6 +44,7 @@ Geometry in Python - 2D and 3D
    Plane3D
    Polygon2D
    Polygon3D
+   Polygons
    
 
 

@@ -11,3 +11,4 @@ Polylines
 
    ~crossproduct.polylines.Polylines.__eq__
    ~crossproduct.polylines.Polylines.append
+   ~crossproduct.polylines.Polylines.segments

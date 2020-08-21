@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d
 
 from crossproduct import Point2D, Point3D, Segment2D, Segment3D, Points, Segments, \
-    SimplePolyline2D, Polyline2D, Polylines
+    Polyline2D, Polylines
 
 
 plot=True
@@ -22,7 +22,7 @@ class Test_Segments(unittest.TestCase):
         ""
         s=Segments(*segments)
         self.assertIsInstance(s,Segments)
-        self.assertEqual(s.segments,
+        self.assertEqual(s._segments,
                          list(segments))
         
         
@@ -42,6 +42,56 @@ class Test_Segments(unittest.TestCase):
         s=Segments(*segments)
         self.assertEqual(str(s),
                          'Segments(Segment2D(Point2D(0,0), Point2D(1,0)), Segment2D(Point2D(1,0), Point2D(1,1)))')
+        
+        
+    def test_add_all(self):
+        
+        s=Segments(*segments)
+        
+        # no additions
+        self.assertEqual(s.add_all,
+                         s)
+            
+        # an addition
+        s=Segments(Segment2D(Point2D(0,0), Point2D(1,0)), 
+                   Segment2D(Point2D(1,0), Point2D(2,0)))
+        self.assertEqual(s.add_all,
+                         Segments(Segment2D(Point2D(0,0), 
+                                            Point2D(2,0))))
+        
+        # reversed
+        s=Segments(Segment2D(Point2D(1,0), Point2D(2,0)), 
+                   Segment2D(Point2D(0,0), Point2D(1,0)))
+        self.assertEqual(s.add_all,
+                         Segments(Segment2D(Point2D(0,0), 
+                                            Point2D(2,0))))
+        
+        # gap
+        s=Segments(Segment2D(Point2D(0,0), Point2D(1,0)), 
+                   Segment2D(Point2D(2,0), Point2D(3,0)))
+        self.assertEqual(s.add_all,
+                         s)
+        
+        # an gap and an addition
+        s=Segments(Segment2D(Point2D(0,0), Point2D(1,0)), 
+                   Segment2D(Point2D(2,0), Point2D(3,0)),
+                   Segment2D(Point2D(3,0), Point2D(4,0)))
+        self.assertEqual(s.add_all,
+                         Segments(Segment2D(Point2D(0,0), 
+                                            Point2D(1,0)), 
+                                  Segment2D(Point2D(2.0,0.0), 
+                                            Point2D(4.0,0.0))))
+        
+        
+    def test_add_first(self):
+        ""
+        s=Segments(*segments)
+        
+        self.assertEqual(s.add_first(Segment2D(Point2D(-1,0), Point2D(0,0))),
+                         (Segment2D(Point2D(-1.0,0.0), Point2D(1.0,0.0)), 0))
+        
+        self.assertEqual(s.add_first(Segment2D(Point2D(1,1), Point2D(1,2))),
+                         (Segment2D(Point2D(1.0,0.0), Point2D(1.0,2.0)), 1))
         
         
     def test_append(self):

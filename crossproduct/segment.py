@@ -35,6 +35,10 @@ class Segment():
         :param segment: A segment.
         :type segment: Segment2D, Segment3D
         
+        :raises ValueError: If the segments are not collinear,
+            do not share a start or end point,
+            or if they overlap.            
+        
         :return: A new segment which is the sum of the two segments.
         :rtype: Segment2D, Segment3D
         
@@ -64,7 +68,10 @@ class Segment():
         s1=self.order
         s2=segment.order
         
-        if not (s1.P1==s2.P0 or s2.P0==s1.P1):
+        #print(s1)
+        #print(s2)
+        
+        if not (s1.P1==s2.P0 or s1.P0==s2.P1):
             
             raise ValueError('To add two segments, they must have a shared start or end point and not overlap')
             

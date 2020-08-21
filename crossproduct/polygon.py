@@ -20,12 +20,13 @@ class Polygon():
     
     classname='Polygon'    
     
-    def __init__(self,*points,known_convex=False,known_simple=False):
+    def __init__(self,*points,known_convex=False,known_simple=True):
         ""
         
         self._points=Points(*points)
         self._known_convex=known_convex
         self._known_simple=known_simple
+        self._triangles=None
         
         # # merge any codirectional adjacent segments
         # pl1=self.polyline
@@ -162,7 +163,26 @@ class Polygon():
         """
         return self._known_convex
         
-
+    
+    @property
+    def known_simple(self):
+        """The known_simple property of the polyline.
+        
+        :return: True if the polygon is known to be a simple polygon.
+            False if it is not known if the polygon is simple or not, 
+            or if it is known that the polygon is a non-simple polygon.
+        :rtype: bool
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1), known_simple=True)
+           >>> print(pg.known_simple)
+           True        
+        
+        """
+        return self._known_simple
     
     # def intersect_halfline(self,halfline):
     #     ""
@@ -180,12 +200,176 @@ class Polygon():
     #     return ipts, isegments
     
     
-    # def intersect_segment(self,segment):
-    #     ""
-    #     ipts, isegments = self.triangles.intersect_segment(segment)
-    #     ipts.remove_points_in_segments(isegments)
-    #     isegments=isegments.union
-    #     return ipts, isegments
+    def _intersect_line_t_values_simple_convex(self,line):
+        """Returns t values of the intersection of this polygon with a line.
+        
+        Polygon must be simple and convex.
+        
+        :param line: A line.
+        :type line: Line2D, Line3D
+        
+        :return: Returns None for no intersection (i.e. for a line which does not intersect the polygon).
+            Returns a tuple with two items for a line which intersects 
+            the polygon at a single vertex - items are the same point). 
+            Returns a tuple with two items for a line which intersects 
+            the polygon at 2 edges.
+        :rtype: None, tuple
+        
+        """
+        t_entering=[]
+        t_leaving=[]
+        for ps in self.polyline.segments:
+            #print(ps)
+            
+            ev=ps.line.vL # edge vector
+            n=ev.perp_vector*-1 #  normal to edge vector facing outwards
+            try:
+                t=(ps.P0-line.P0).dot(n) / line.vL.dot(n) # the t values of the line where the segment and line intersect
+                
+            except ZeroDivisionError: # the line and polygon segment are parallel
+                if (line.P0-ps.P0).dot(n) > 0: # test if the line is outside the edge
+                    #print('line is outside the edge')
+                    return None # line is outside of the edge, there is no intersection with the polygon
+                else:
+                    continue # line is inside of the edge, ignore this segment and continue with others
+            
+            if line.vL.dot(n)<0:
+                t_entering.append(t)
+            else:
+                t_leaving.append(t)
+            
+        t_entering_max=max(t_entering) # the line enters the polygon at the maximum t entering value
+        
+        t_leaving_min=min(t_leaving) # the line leaves the polygon at the minimum t leavign value
+        
+        if t_entering_max > t_leaving_min:
+            
+            return None
+        
+        else:
+            
+            return t_entering_max,t_leaving_min
+    
+    
+    def _intersect_segment_simple_convex(self,segment):
+        """Intersection of this polygon with a segment.
+        
+        Polygon must be simple and convex.
+        
+        The intersection is the intersection of the segment with the area described by the polygon.
+        
+        :param segment: A segment.
+        :type segment: Segment2D, Segment3D
+        
+        :return: Returns None for no intersection (i.e. for a segment which does not intersect the polygon).
+            Returns a point for a segment which only intersects a polygon edge at single point.
+            Returns a point for a segment which only intersects a polygon point at single point.
+            Returns a segment for a segment which lies on a polygon edge.
+            Returns a segment for a segment which starts and/or ends inside the polygon.
+        :rtype: None, Point2D, Point3D, Segment2D, Segment3D
+        
+        """
+        result=self._intersect_line_t_values_simple_convex(segment.line)
+        #print(result)
+        if result is None:
+            return None 
+        elif result[0]==result[1]:
+            try:
+                return segment.calculate_point(result[0]) 
+            except ValueError:
+                return None 
+        else:
+            t0=result[0]
+            t1=result[1]
+            if t0<0 and t1<0:
+                return None 
+            elif t0>1 and t1>1:
+                return None 
+            else:
+                try:
+                    P0=segment.calculate_point(result[0])
+                except ValueError:
+                    P0=segment.calculate_point(0)
+                try:
+                    P1=segment.calculate_point(result[1])
+                except ValueError:
+                    P1=segment.calculate_point(1)   
+                    
+                if P0==P1:
+                    return P0 
+                else:
+                    return Segment2D(P0,P1)  
+    
+    
+    def _intersect_segment_simple(self,segment):
+        """Intersection of this polygon with a segment.
+        
+        Polygon must be simple.
+        
+        The intersection is the intersection of the segment with the area described by the polygon.
+        
+        :param segment: A segment.
+        :type segment: Segment2D, Segment3D
+        
+        :return: A tuple of intersection points and intersection segments 
+            (Points,Segments). 
+        :rtype: tuple   
+        
+        """
+        if not self._triangles:
+            self._triangles=self._triangulate
+
+        ipts, isegments = self._triangles.intersect_segment(segment)
+        ipts=ipts.remove_points_in_segments(isegments)
+        isegments=isegments.add_all
+        return ipts, isegments
+    
+    
+    def intersect_segment(self,segment):
+        """Returns the intersection of this polygon and the supplied segment.
+        
+        The intersection is the intersection of the segment with the area described by the polygon.
+        
+        :param segment: A segment.
+        :type segment: Segment2D, Segment3D
+        
+        :return: A tuple of intersection points and intersection segments 
+            (Points,Segments). 
+        :rtype: tuple      
+            
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> s = Segment2D(Point2D(0,0), Point2D(1,0))
+           >>> result = pg.intersect_segment(s)
+           >>> print(result)
+           Points(), Segments(Segment2D(Point2D(0,0), Point2D(1,0)))
+            
+        """
+
+        if self._known_simple:
+            
+            if self._known_convex:
+        
+                result=self._intersect_segment_simple_convex(segment)        
+                if result is None:
+                    return Points(), Segments()
+                elif result.classname=='Point':
+                    return Points(result),Segments()
+                elif result.classname=='Segment':
+                    return Points(),Segments(result)
+                else:
+                    raise Exception
+        
+            else:
+        
+                return self._intersect_segment_simple(segment)   
+                
+        else:
+            raise NotImplementedError('This function is not implemented at present for a possible non-simple polygon')
+    
     
     
     # def intersect_segments(self,segments):
@@ -288,10 +472,13 @@ class Polygon():
     
     
     def plot(self,ax=None,normal=False,**kwargs):
-        """Plots the simple polygon on the supplied axes.
+        """Plots the polygon on the supplied axes.
         
         :param ax: An Axes or Axes3D instance.
         :type ax: matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
+        :param normal: If True then a normal vector is plotted for a 3D polygon;
+            default False.
+        :type normal: bool
         :param kwargs: Keyword arguments to be supplied to the matplotlib plot call.
                     
         """
@@ -304,7 +491,7 @@ class Polygon():
         
         self.polyline.plot(ax,**kwargs)
         
-        if normal:
+        if normal and self.dimension=='3D':
             c=self.centroid
             N=self.plane.N
             
@@ -326,6 +513,14 @@ class Polygon():
         
         :rtype: Points
         
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> print(pg.points)
+           Points(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+        
         """
         return self._points
     
@@ -340,6 +535,15 @@ class Polygon():
             If i is the index of the first point (i.e. 0), then the index of 
             the last point is returned.
         :rtype: int
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> result = pg.previous_index(0)
+           >>> print(result)
+           2
         
         """
         n=len(self.points)
@@ -359,6 +563,22 @@ class Polygon():
             starting at the new start point.
         :rtype: Polygon2D, Polygon3D
         
+        :Example:
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> result = pg.reorder(1)
+           >>> print(result)
+           Polygon2D(Point2D(1,0), Point2D(1,1), Point2D(0,0))
+        
+           # 3D example
+           >>> pg = Polygon3D(Point3D(0,0,0), Point3D(1,0,0), Point3D(1,1,0))
+           >>> result = pg.reorder(1)
+           >>> print(result)
+           Polygon3D(Point3D(1,0,0), Point3D(1,1,0), Point3D(0,0,0))
+        
         """
         points=[]
         for _ in range(len(self.points)):
@@ -374,6 +594,20 @@ class Polygon():
         :return: A new polygon with the points in reverse order.
         :rtype: Polygon2D, Polygon3D
         
+        :Example:
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> print(pg.reverse)
+           Polygon2D(Point2D(1,1), Point2D(1,0), Point2D(0,0))
+        
+           # 3D example
+           >>> pg = Polygon3D(Point3D(0,0,0), Point3D(1,0,0), Point3D(1,1,0))
+           >>> print(pg.reverse)
+           Polygon3D(Point3D(1,1,0), Point3D(1,0,0), Point3D(0,0,0))
+        
         """
         points=[self.points[i] 
                 for i in range(len(self.points)-1,-1,-1)]
@@ -382,18 +616,12 @@ class Polygon():
     
     @property
     def _triangulate(self):
-        """Returns a Triangles sequence of triangles which have the same overall shape as the polygon.
+        """Returns a Polygon sequence of triangles which when combined have 
+            the same  shape as the polygon.
         
-        :rtype: Triangles
+        :rtype: Polygons
         
         """
-        
-        if isinstance(self,Polygon2D):
-            from .triangle import Triangle2D as t
-        elif isinstance(self,Polygon3D):
-            from .triangle import Triangle3D as t
-        else:
-            raise Exception
         
         result=[]
         points=[x for x in self.points]
@@ -417,9 +645,14 @@ class Polygon():
                 else:
                     i_prev=i-1
                 
-                test_triangle=t(points[i],
-                                points[i_next]-points[i],
-                                points[i_prev]-points[i])
+                
+                test_triangle=self.__class__(points[i],
+                                             points[i_next],
+                                             points[i_prev],
+                                             known_convex=True)
+                # test_triangle=t(points[i],
+                #                 points[i_next]-points[i],
+                #                 points[i_prev]-points[i])
                 #print('test_triangle',test_triangle)
             
             
@@ -453,11 +686,15 @@ class Polygon():
                 break
                 
     
-        return Triangles(*result)
+        return Polygons(*result)
+    
        
 
 class Polygon2D(Polygon):
-    """A two dimensional polygon, situated on an x, y plane.
+    """A two dimensional polygon, situated on an x, y plane. 
+    
+    The default polygon is one which is known to be a simple polygon,
+    but it is not known if it is convex or not.
     
     :param points: The points of the vertices of the polygon, in order. 
     :type points: Points
@@ -469,7 +706,7 @@ class Polygon2D(Polygon):
         otherwise False.  
         A simple polygon is one whose edges do not intersect and whose
         vertices do not share any common points.
-        Default is False.
+        Default is True.
     :type known_simple: bool
     
     :Example:
@@ -601,30 +838,56 @@ class Polygon2D(Polygon):
         return cp
     
     
-    def is_counterclockwise(self):
-        """
-        
-        
-        """
-        
-        
-    
-    
     @property
-    def orientation(self):
-        """Returns the orientation of a 2D polygon.
+    def is_counterclockwise(self):
+        """Tests if the polygon points are in a counterclockwise direction.
         
-        :return: Returns a value greater than 0 for counterclockwise.
-            Returns 0 for none (degenerate).
-            Returns a value less than 0 for clockwise.
-        :rtype: float
+        :raises ValueError: If the three polygon points being tested
+            all lie on a straight line. 
+        :return: Returns True if the three polygon points centered around the 
+            rightmost lowest point are in a counterclockwise order.
+            Returns False if these polygon points are in a clockwise order.
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1),Point2D(0,1))
+           >>> print(pg.is_counterclockwise)
+           True        
+        
         """
         i=self.rightmost_lowest_vertex
         P0=self.points[self.previous_index(i)]
         P1=self.points[i]
         P2=self.points[self.next_index(i)]
-        return ((P1.x - P0.x) * (P2.y - P0.y)
-                - (P2.x - P0.x) * (P1.y - P0.y) )
+        v0=P1-P0
+        v1=P2-P1
+        result=v0.perp_product(v1)
+        if result>0:
+            return True
+        elif result<0:
+            return False
+        else:
+            raise ValueError
+        
+    
+    
+    # @property
+    # def orientation(self):
+    #     """Returns the orientation of a 2D polygon.
+        
+    #     :return: Returns a value greater than 0 for counterclockwise.
+    #         Returns 0 for none (degenerate).
+    #         Returns a value less than 0 for clockwise.
+    #     :rtype: float
+    #     """
+    #     i=self.rightmost_lowest_vertex
+    #     P0=self.points[self.previous_index(i)]
+    #     P1=self.points[i]
+    #     P2=self.points[self.next_index(i)]
+    #     return ((P1.x - P0.x) * (P2.y - P0.y)
+    #             - (P2.x - P0.x) * (P1.y - P0.y) )
         
     
     @property
@@ -634,6 +897,14 @@ class Polygon2D(Polygon):
         :return: A polyline of the polygon points which starts and ends at 
             the first polygon point.
         :rtype: Polyline2D        
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> print(pg.polyline)
+           Polyline2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
         
         """
         closed_points=tuple(list(self.points) + [self.points[0]])
@@ -651,8 +922,18 @@ class Polygon2D(Polygon):
             was originally projected onto the yz plane.
         :type coordinate_index: int
         
-        :return: 3D segment which has been projected from the 2D segment.
-        :rtype: Segment3D
+        :return: 3D polygon which has been projected from the 2D polygon.
+        :rtype: Polygon3D
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> pl = Plane3D(Point3D(0,0,1), Vector3D(0,0,1))
+           >>> result = pg.project_3D(pl, 2)
+           >>> print(result)
+           Polygon3D(Point3D(0,0,1), Point3D(1,0,1), Point3D(1,1,1))
         
         """
         points=[pt.project_3D(plane,coordinate_index) for pt in self.points]
@@ -664,6 +945,14 @@ class Polygon2D(Polygon):
         """Returns the index of the rightmost lowest point of the polygon.
         
         :rtype: int
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> print(pg.rightmost_lowest_vertex)
+           Point2D(1,0)
         
         """
         min_i=0
@@ -684,6 +973,14 @@ class Polygon2D(Polygon):
             Returns a value less than 0 if polygon points are ordered clockwise.
         :rtype: float
                 
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,1), Point2D(1,0))
+           >>> print(pg.signed_area)
+           -0.5
+        
         """
         n=len(self.points)
         points=self.polyline.points

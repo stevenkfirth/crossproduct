@@ -14,9 +14,11 @@ Polygon2D
    ~crossproduct.polygon.Polygon2D.area
    ~crossproduct.polygon.Polygon2D.centroid
    ~crossproduct.polygon.Polygon2D.dimension
+   ~crossproduct.polygon.Polygon2D.intersect_segment
+   ~crossproduct.polygon.Polygon2D.is_counterclockwise
    ~crossproduct.polygon.Polygon2D.known_convex
+   ~crossproduct.polygon.Polygon2D.known_simple
    ~crossproduct.polygon.Polygon2D.next_index
-   ~crossproduct.polygon.Polygon2D.orientation
    ~crossproduct.polygon.Polygon2D.plot
    ~crossproduct.polygon.Polygon2D.points
    ~crossproduct.polygon.Polygon2D.polyline

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from collections.abc import Sequence
+from .segments import Segments
 
 
 class Polylines(Sequence):
@@ -45,7 +46,7 @@ class Polylines(Sequence):
             True
             
         """
-        if isinstance(polylines,Polylines) and self._polylines==polylines.polylines:
+        if isinstance(polylines,Polylines) and self._polylines==polylines._polylines:
             return True
         else:
             return False
@@ -71,7 +72,7 @@ class Polylines(Sequence):
         
         :param polyline: The polyline to be appended.
         :type polyline: Polyline2D or Polyline3D
-        :param unique: If True, degment is only appended if it does not already
+        :param unique: If True, polyline is only appended if it does not already
             exist in the sequence; defaults to False.
         :type unique: bool
         
@@ -93,10 +94,33 @@ class Polylines(Sequence):
                 if not polyline in self:
                     self._polylines.append(polyline)
             else:
-                self_polylines.append(polyline)
+                self._polylines.append(polyline)
                 
         else:
             raise TypeError
+    
+    
+    @property
+    def segments(self):
+        """Returns a Segments sequence of all the segments of the polygons.
+        
+        :rtype: Segments
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> pls = Polylines(Polyline2D(Point2D(0,0), Point2D(1,0)))
+            >>> print(pls.segments)
+            Segments(Segment2D(Point2D(0,0), Point2D(1,0)))
+        
+        """
+        segments=Segments()
+        for pl in self:
+            for s in pl.segments:
+                segments.append(s,unique=True)
+        return segments
+    
     
     
     # @property

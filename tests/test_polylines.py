@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d
 
 from crossproduct import Point2D, Point3D, Segment2D, Segment3D, Points, Segments, \
-    SimplePolyline2D
+    Polyline2D, Polylines
 
 
 plot=True
@@ -15,49 +15,57 @@ class Test_Polylines(unittest.TestCase):
     
     """
     
-#    def test___init__(self):
-#        ""
-#        s=Segments(*segments)
-#        self.assertIsInstance(s,Segments)
-#        self.assertEqual(s.segments,
-#                         list(segments))
-#        
-#        
-#    def test___eq__(self):
-#        ""
-#        s=Segments(*segments)
-#        self.assertTrue(s==s)
-#        
-#        s1=Segments(*segments)
-#        s1.append(Segment2D(Point2D(1,1),
-#                            Point2D(0,1)))
-#        self.assertFalse(s==s1)
-#        
-#        
-#    def test___repr__(self):
-#        ""
-#        s=Segments(*segments)
-#        self.assertEqual(str(s),
-#                         'Segments(Segment2D(Point2D(0,0), Point2D(1,0)), Segment2D(Point2D(1,0), Point2D(1,1)))')
-#        
-#        
-#    def test_append(self):
-#        ""
-#        s=Segments(*segments)
-#        
-#        s.append(Segment2D(Point2D(1,1),
-#                           Point2D(0,1)))
-#        self.assertEqual(len(s),3)
-#        
-#        s.append(Segment2D(Point2D(1,1),
-#                           Point2D(0,1)))
-#        self.assertEqual(len(s),4)
-#        
-#        s.append(Segment2D(Point2D(0,1),
-#                           Point2D(1,1)),
-#                 unique=True)
-#        self.assertEqual(len(s),4)
-#    
+    def test___init__(self):
+        ""
+        pls=Polylines(*polylines)
+        self.assertIsInstance(pls,Polylines)
+        self.assertEqual(pls._polylines,
+                         list(polylines))
+        
+        
+    def test___eq__(self):
+        ""
+        pls=Polylines(*polylines)
+        self.assertTrue(pls==pls)
+        
+        pls1=Polylines(*polylines)
+        pls1.append(Polyline2D(Point2D(1,1),
+                               Point2D(0,1)))
+        self.assertFalse(pls==pls1)
+        
+        
+    def test___repr__(self):
+        ""
+        pls=Polylines(*polylines)
+        self.assertEqual(str(pls),
+                        'Polylines(Polyline2D(Point2D(0,0),Point2D(1,0)), Polyline2D(Point2D(1,0),Point2D(1,1)))')
+        
+        
+    def test_append(self):
+        ""
+        pls=Polylines(*polylines)
+        
+        pls.append(Polyline2D(Point2D(1,1),
+                              Point2D(0,1)))
+        self.assertEqual(len(pls),3)
+        
+        pls.append(Polyline2D(Point2D(1,1),
+                              Point2D(0,1)))
+        self.assertEqual(len(pls),4)
+        
+        pls.append(Polyline2D(Point2D(0,1),
+                              Point2D(1,1)),
+                 unique=True)
+        self.assertEqual(len(pls),4)
+        
+    
+    def test_segments(self):
+        ""
+        pls=Polylines(*polylines)
+        self.assertEqual(pls.segments,
+                         Segments(Segment2D(Point2D(0,0),Point2D(1,0)),
+                                  Segment2D(Point2D(1,0),Point2D(1,1))))
+    
 #    
 #    def test_intersect_point(self):
 #        ""
@@ -145,10 +153,10 @@ class Test_Polylines(unittest.TestCase):
     
 if __name__=='__main__':
     
-    segments=(Segment2D(Point2D(0,0),
-                        Point2D(1,0)),
-              Segment2D(Point2D(1,0),
-                        Point2D(1,1)))
+    polylines=(Polyline2D(Point2D(0,0),
+                          Point2D(1,0)),
+               Polyline2D(Point2D(1,0),
+                          Point2D(1,1)))
     unittest.main(Test_Polylines())
     
     
