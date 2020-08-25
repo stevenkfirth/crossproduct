@@ -122,7 +122,6 @@ class Segments(Sequence):
         
         """
         segments=[s for s in self]
-        n=len(segments)
         i=0
         
         while True:
@@ -136,29 +135,9 @@ class Segments(Sequence):
                 segments[i]=new_s
                 segments.pop(i+index+1)
             except ValueError:
-                pass
-            i+=1
-        
-        return Segments(*segments)
-        
-        
-        while i<n-1:
-            s=segments[i]
-            j=i+1
-            while j<n:
-                s1=segments[j]
-                u=s.union(s1)
-                if s.is_collinear(s1) and not u is None:
-                    segments[i]=s.__class__(u.points[0],u.points[-1]) # as u is a polyline
-                    segments.pop(j)
-                    break
-                j+=1
-            else:
                 i+=1
-            n=len(segments)
+        
         return Segments(*segments)
-        
-        
         
     
     def add_first(self,segment):
@@ -192,41 +171,6 @@ class Segments(Sequence):
         
         raise ValueError
     
-    
-    
-    # @property
-    # def union(self):    
-    #     """Returns a Segments sequence 
-        
-    #     :return result: 
-    #         - note multiple solutions are possible, only the first is returned
-    #     :rtype Segments
-        
-    #     """
-    #     segments=[s for s in self]
-    #     n=len(segments)
-    #     i=0
-        
-    #     while i<n-1:
-    #         s=segments[i]
-    #         j=i+1
-    #         while j<n:
-    #             s1=segments[j]
-    #             u=s.union(s1)
-    #             if s.is_collinear(s1) and not u is None:
-    #                 segments[i]=s.__class__(u.points[0],u.points[-1]) # as u is a polyline
-    #                 segments.pop(j)
-    #                 break
-    #             j+=1
-    #         else:
-    #             i+=1
-    #         n=len(segments)
-    #     return Segments(*segments)
-    
-    
-    
-    
-        
     
     def append(self,segment,unique=False):
         """Appends supplied segment to this segments sequence.
@@ -573,6 +517,37 @@ class Segments(Sequence):
     
         
    
+    
+    
+    # @property
+    # def union(self):    
+    #     """Returns a Segments sequence 
+        
+    #     :return result: 
+    #         - note multiple solutions are possible, only the first is returned
+    #     :rtype Segments
+        
+    #     """
+    #     segments=[s for s in self]
+    #     n=len(segments)
+    #     i=0
+        
+    #     while i<n-1:
+    #         s=segments[i]
+    #         j=i+1
+    #         while j<n:
+    #             s1=segments[j]
+    #             u=s.union(s1)
+    #             if s.is_collinear(s1) and not u is None:
+    #                 segments[i]=s.__class__(u.points[0],u.points[-1]) # as u is a polyline
+    #                 segments.pop(j)
+    #                 break
+    #             j+=1
+    #         else:
+    #             i+=1
+    #         n=len(segments)
+    #     return Segments(*segments)
+    
         
         
         

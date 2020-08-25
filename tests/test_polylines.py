@@ -41,6 +41,76 @@ class Test_Polylines(unittest.TestCase):
                         'Polylines(Polyline2D(Point2D(0,0),Point2D(1,0)), Polyline2D(Point2D(1,0),Point2D(1,1)))')
         
         
+    def test_add_all(self):
+        
+        pls=Polylines(*polylines)
+        
+        # no additions
+        self.assertEqual(pls.add_all,
+                         Polylines(Polyline2D(Point2D(0,0),
+                                              Point2D(1,0),
+                                              Point2D(1,1))))
+        
+        pls=Polylines(Polyline2D(Point2D(0,0),Point2D(1,0)), 
+                      Polyline2D(Point2D(1,0),Point2D(1,1)),
+                      Polyline2D(Point2D(10,0),Point2D(11,0)),
+                      Polyline2D(Point2D(11,0),Point2D(11,1)))
+        self.assertEqual(pls.add_all,
+                         Polylines(Polyline2D(Point2D(0,0),
+                                              Point2D(1,0),
+                                              Point2D(1,1)), 
+                                   Polyline2D(Point2D(10,0),
+                                              Point2D(11,0),
+                                              Point2D(11,1))))
+        
+        pls=Polylines(Polyline2D(Point2D(0,0),Point2D(1,0)), 
+                      Polyline2D(Point2D(1,0),Point2D(1,1)), 
+                      Polyline2D(Point2D(1,1),Point2D(0,1)), 
+                      Polyline2D(Point2D(0,1),Point2D(0,0)))
+        self.assertEqual(pls.add_all,
+                         Polylines(Polyline2D(Point2D(0,0),
+                                              Point2D(1,0),
+                                              Point2D(1,1),
+                                              Point2D(0,1),
+                                              Point2D(0,0))))
+        
+        
+    def test_add_first(self):
+        ""
+        pls=Polylines(*polylines)
+        
+        self.assertEqual(pls.add_first(Polyline2D(Point2D(-1,0), 
+                                                  Point2D(0,0))),
+                         (Polyline2D(Point2D(-1,0),
+                                     Point2D(0,0),
+                                     Point2D(1,0)), 
+                          0))
+        
+        
+        self.assertEqual(pls.add_first(Polyline2D(Point2D(0,0), 
+                                                  Point2D(-1,0))),
+                         (Polyline2D(Point2D(-1,0),
+                                     Point2D(0,0),
+                                     Point2D(1,0)), 
+                          0))
+        
+        
+        self.assertEqual(pls.add_first(Polyline2D(Point2D(1,1), 
+                                                  Point2D(1,2))),
+                         (Polyline2D(Point2D(1,0),
+                                     Point2D(1,1),
+                                     Point2D(1,2)), 
+                          1))
+        
+        
+        self.assertEqual(pls.add_first(Polyline2D(Point2D(1,2), 
+                                                  Point2D(1,1))),
+                         (Polyline2D(Point2D(1,0),
+                                     Point2D(1,1),
+                                     Point2D(1,2)), 
+                          1))
+        
+        
     def test_append(self):
         ""
         pls=Polylines(*polylines)

@@ -10,6 +10,8 @@ Segments
    :toctree: _autosummary
 
    ~crossproduct.segments.Segments.__eq__
+   ~crossproduct.segments.Segments.add_all
+   ~crossproduct.segments.Segments.add_first
    ~crossproduct.segments.Segments.append
    ~crossproduct.segments.Segments.contains_point
    ~crossproduct.segments.Segments.difference_segments

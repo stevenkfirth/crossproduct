@@ -87,11 +87,17 @@ class Test_Segments(unittest.TestCase):
         ""
         s=Segments(*segments)
         
-        self.assertEqual(s.add_first(Segment2D(Point2D(-1,0), Point2D(0,0))),
-                         (Segment2D(Point2D(-1.0,0.0), Point2D(1.0,0.0)), 0))
+        self.assertEqual(s.add_first(Segment2D(Point2D(-1,0), 
+                                               Point2D(0,0))),
+                         (Segment2D(Point2D(-1.0,0.0), 
+                                    Point2D(1.0,0.0)), 
+                          0))
         
-        self.assertEqual(s.add_first(Segment2D(Point2D(1,1), Point2D(1,2))),
-                         (Segment2D(Point2D(1.0,0.0), Point2D(1.0,2.0)), 1))
+        self.assertEqual(s.add_first(Segment2D(Point2D(1,1), 
+                                               Point2D(1,2))),
+                         (Segment2D(Point2D(1.0,0.0), 
+                                    Point2D(1.0,2.0)), 
+                          1))
         
         
     def test_append(self):

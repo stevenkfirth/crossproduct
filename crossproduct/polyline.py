@@ -19,7 +19,7 @@ class Polyline():
         
         
     def __add__(self,polyline):
-        """Returns the union of this polyline and another polyline.
+        """Returns the addition of this polyline and another polyline.
         
         :param polyline: A polyline.
         :type polyline: Polyline2D, Polyline3D

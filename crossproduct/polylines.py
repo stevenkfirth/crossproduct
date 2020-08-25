@@ -67,6 +67,67 @@ class Polylines(Sequence):
         return 'Polylines(%s)' % ', '.join([str(s) for s in self._polylines])
     
     
+    @property
+    def add_all(self):
+        """Adds together the polylines in the sequence where possible
+        
+        :return: Returns a new Polylines sequence where the polylines have been
+            added together where possible to form new polylines.        
+        :rtype: Polylines
+        
+        """
+        polylines=[pl for pl in self]
+        i=0
+        
+        while True:
+            try:
+                pl=polylines[i]
+            except IndexError:
+                break
+            try:
+                new_pl,index=Polylines(*polylines[i+1:]).add_first(pl)
+                #print(new_s,index)
+                polylines[i]=new_pl
+                polylines.pop(i+index+1)
+            except ValueError:
+                i+=1
+        
+        return Polylines(*polylines)
+        
+    
+    def add_first(self,polyline):
+        """Adds the first available polyline to the supplied polyline.
+        
+        This iterates through the polylines in the Polylines sequence. 
+            When the first polyline which can be added to the supplied polyline is found,
+            the result of this addition is returned along with its index.
+        
+        :raises ValueError: If no valid additions are found.
+        
+        :return: Returns a tuple with the addition result and the index of the polyline which was added.
+        :rtype: tuple (Polyline,int)
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> pls = Polylines(Polyline2D(Point2D(0,0), Point2D(1,0)))
+            >>> result = pls.add_first(Polyline2D(Point2D(1,0), Point2D(2,0)))
+            >>> print(result)
+            (Polyline2D(Point2D(0,0), Point2D(1,0), Point2D(2,0)),0)
+        
+        """
+        for i,pl in enumerate(self):
+            try:
+                result=polyline+pl
+                return result,i
+            except ValueError:
+                pass
+        
+        raise ValueError
+        
+    
+    
     def append(self,polyline,unique=False):
         """Appends supplied polyline to this polylines sequence.
         
