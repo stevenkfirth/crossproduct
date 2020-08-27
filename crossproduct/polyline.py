@@ -3,8 +3,10 @@
 import itertools
 
 from .points import Points
+from .polylines import Polylines
 from .segment import Segment2D, Segment3D
 from .segments import Segments
+
 
 class Polyline():
     """A n-D polyline
@@ -121,32 +123,65 @@ class Polyline():
             return False
     
     
-    # @property
-    # def merge_codirectional_segments(self):
-    #     """Returns a polyline with all codirectional adjacent segments merged
+    @property
+    def add_segments(self):
+        """Returns a polyline with any adjacent segments added together if possible.
         
-    #     :return polyline:
-    #         - looks at the segments of the polyline
-    #         - if any two adjacent segments are codirectional, then these
-    #             are replaced by a single segment
-    #     :rtype Polyline:
+        :return polyline:
+            - looks at the segments of the polyline
+            - if any two adjacent segments are codirectional, then these
+                are replaced by a single segment
+        :rtype Polyline:
             
-    #     """
-    #     points=[pt for pt in self.points]
-    #     n=len(points)
-    #     i=1
-    #     while i<n-1:
-    #         v=points[i]-points[i-1]
-    #         w=points[i+1]-points[i]
-    #         if v.is_codirectional(w):
-    #             points.pop(i)
-    #             n=len(points)
-    #         else:
-    #             i+=1
+        """
+        points=[pt for pt in self.points]
+        n=len(points)
+        i=1
+        while i<n-1:
+            v=points[i]-points[i-1]
+            w=points[i+1]-points[i]
+            if v.is_codirectional(w):
+                points.pop(i)
+                n=len(points)
+            else:
+                i+=1
             
-    #     return self.__class__(*points)
+        return self.__class__(*points)
+    
+    
+    def difference_polyline(self,polyline):
+        """Returns the difference of two polylines.
         
+        :param polyline: A polyline.
+        :type polyline: Polyline2D, Polyline3D
+            
+        :return: 
+            Returns an empty polylines sequence if the supplied polyline is 
+            equal to or contains this polyline.
+            Returns a polylines sequence with this polyline if the 
+            supplied polyline does not intersect this polyline.
+            Returns a polylines sequence with one or more polyline if the 
+            supplied polyline parially intercepts this polyline.
+        :rtype: Polylines
         
+        :Example:
+        
+        .. code-block:: python    
+        
+           # 2D example
+           >>> pl1 = Polyline2D(Point2D(0,0), Point2D(1,0))
+           >>> pl2 = Polyline2D(Point2D(0.5,0), Point2D(1,0))
+           >>> result = pl1.difference_polyline(pl2)
+           >>> print(result)
+           Polylines(Polyline2D(Point2D(0,0), Point2D(0.5,0)))
+           
+        """
+        diff_segments=self.segments.difference_segments(polyline.segments)
+        pls=Polylines(*[self.__class__(*s.points) for s in diff_segments])
+        pls=pls.add_all
+        return pls
+    
+    
     def intersect_polyline(self,polyline):
         """Returns the intersection of this polyline and another polyline.
         
@@ -158,6 +193,9 @@ class Polyline():
         :rtype: tuple
         
         """
+        
+        ## SHOULD THIS RETURN (POINTS,POLYLINES)?? ##
+        
         return self.segments.intersect_segments(polyline.segments)
     
     
@@ -172,6 +210,9 @@ class Polyline():
         :rtype: tuple
             
         """
+        
+        ## SHOULD THIS RETURN (POINTS,POLYLINES)?? ##
+        
         return self.segments.intersect_segment(segment)
     
         

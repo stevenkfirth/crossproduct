@@ -460,7 +460,7 @@ class Segments(Sequence):
     def remove_segments_in_polygons(self,polygons):
         """Removes any segments that lie on any of the polygons' segments
         """
-        segments=[s for s in self if not s in polygons.segments]
+        segments=[s for s in self if not s in polygons.polylines.segments]
         return Segments(*segments)
     
     

@@ -10,6 +10,8 @@ Polygons
    :toctree: _autosummary
 
    ~crossproduct.polygons.Polygons.__eq__
+   ~crossproduct.polygons.Polygons.add_all
+   ~crossproduct.polygons.Polygons.add_first
    ~crossproduct.polygons.Polygons.append
    ~crossproduct.polygons.Polygons.intersect_segment
    ~crossproduct.polygons.Polygons.plot

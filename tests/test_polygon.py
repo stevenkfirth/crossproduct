@@ -3,10 +3,12 @@
 import unittest
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d
+import cProfile
 
 from crossproduct import Point2D, Point3D, \
     Vector2D, Vector3D, Line2D, Polygon2D, Polygon3D, Plane3D, \
-    Segment2D, Segment3D, Halfline2D, Points, Segments, Polygons, Polygon2D
+    Segment2D, Segment3D, Halfline2D, Points, Segments, Polygons, Polygon2D, \
+    Polyline2D, Polylines, Line3D
 
 
 plot=False # Set to true to see the test plots
@@ -23,6 +25,69 @@ class Test_Polygon(unittest.TestCase):
         self.assertIsInstance(pg,Polygon2D)
         self.assertEqual(pg.points,Points(*points2d))
         
+        
+    def test___add__(self):
+        ""
+        pg=Polygon2D(*points2d)
+        
+        # # no intersection
+        # pg1=Polygon2D(Point2D(-2,0),
+        #               Point2D(-1,0),
+        #               Point2D(-1,1),
+        #               Point2D(-2,1))
+        # self.assertEqual(pg+pg1,
+        #                  None)
+        
+        # # point intersection
+        # pg1=Polygon2D(Point2D(-1,-1),
+        #               Point2D(0,-1),
+        #               Point2D(0,0),
+        #               Point2D(-1,0))
+        # self.assertEqual(pg+pg1,
+        #                  None)
+        
+        # edge intersection
+        pg1=Polygon2D(Point2D(-1,0),
+                      Point2D(0,0),
+                      Point2D(0,1),
+                      Point2D(-1,1))
+        self.assertEqual(pg+pg1,
+                         Polygon2D(Point2D(-1,0),
+                                   Point2D(1,0),
+                                   Point2D(1,1),
+                                   Point2D(-1,1)))
+                        
+        # parial edge intersection
+        pg1=Polygon2D(Point2D(1,0.5),
+                      Point2D(2,0.5),
+                      Point2D(2,1.5),
+                      Point2D(1,1.5))
+        self.assertEqual(pg+pg1,
+                         Polygon2D(Point2D(1,1),
+                                   Point2D(0,1),
+                                   Point2D(0,0),
+                                   Point2D(1,0),
+                                   Point2D(1.0,0.5),
+                                   Point2D(2,0.5),
+                                   Point2D(2,1.5),
+                                   Point2D(1,1.5)))
+    
+        # rounding example
+        pg1=Polygon2D(Point2D(1.0,0.0),
+                      Point2D(2.0,0.0),
+                      Point2D(2.0,1.0),
+                      Point2D(1.7142857142857144,0.8571428571428572),
+                      Point2D(1.6666666666666667,1.0),
+                      Point2D(1.0,1.0))
+        pg2=Polygon2D(Point2D(1.6666666666666665,1.0),
+                      Point2D(1.7142857142857144,0.8571428571428572),
+                      Point2D(2.0,1.0))
+    
+        self.assertEqual(pg1+pg2,
+                         Polygon2D(Point2D(1.0,1.0),
+                                   Point2D(1.0,0.0),
+                                   Point2D(2.0,0.0),
+                                   Point2D(2.0,1.0)))
     
     def test___eq__(self):
         ""
@@ -32,6 +97,31 @@ class Test_Polygon(unittest.TestCase):
         pg2=Polygon2D(Point2D(0,0),Point2D(1,0),Point2D(0,1))
         self.assertFalse(pg==pg2)
         
+        
+    def test_add_segments(self):
+        ""
+        pg=Polygon2D(Point2D(0,0),
+                     Point2D(0.5,0),
+                     Point2D(1,0),
+                     Point2D(1,1),
+                     Point2D(0,1))
+        self.assertEqual(pg.add_segments,
+                         Polygon2D(Point2D(0,0),
+                                   Point2D(1,0),
+                                   Point2D(1,1),
+                                   Point2D(0,1)))
+        
+        pg=Polygon2D(Point2D(0.5,0),
+                     Point2D(1,0),
+                     Point2D(1,1),
+                     Point2D(0,1),
+                     Point2D(0,0))
+        self.assertEqual(pg.add_segments,
+                         Polygon2D(Point2D(0,0),
+                                   Point2D(1,0),
+                                   Point2D(1,1),
+                                   Point2D(0,1)))
+
 
     def test_known_convex(self):
         ""
@@ -45,6 +135,29 @@ class Test_Polygon(unittest.TestCase):
         self.assertTrue(pg.known_simple)
         
         
+    def test_intersect_polyline(self):
+        ""
+        
+        # SIMPLE CONVEX POLYGON
+        
+        pg=Polygon2D(*points2d, known_convex=True)
+        
+        # segment is a polygon edge
+        self.assertEqual(pg.intersect_polyline(Polyline2D(Point2D(0,0),
+                                                          Point2D(1,1))),
+                        (Points(), 
+                         Polylines(Polyline2D(Point2D(0.0,0.0), 
+                                              Point2D(1.0,1.0)))))    
+        
+        # as above, with 2 segments
+        self.assertEqual(pg.intersect_polyline(Polyline2D(Point2D(-0.5,-0.5),
+                                                          Point2D(0.5,0.5),
+                                                          Point2D(1.5,1.5))),
+                        (Points(), 
+                         Polylines(Polyline2D(Point2D(0.0,0.0), 
+                                              Point2D(1.0,1.0)))))
+        
+        
     def test__intersect_polygon_simple_convex_and_simple_convex(self):
         ""
         
@@ -54,15 +167,15 @@ class Test_Polygon(unittest.TestCase):
         pg1=Polygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1),
                       known_convex=True)
         self.assertEqual(pg1._intersect_polygon_simple_convex_and_simple_convex(pg1),
-                          (Points(),Segments(),Polygons(pg1)))
+                          (Points(),Polylines(),Polygons(pg1)))
         
         # half overlap
         pg2=Polygon2D(Point2D(0.5,0),Point2D(1.5,0),Point2D(1.5,1),Point2D(0.5,1),
                       known_convex=True)
         self.assertEqual(pg1._intersect_polygon_simple_convex_and_simple_convex(pg2),
                           (Points(), 
-                          Segments(), 
-                          Polygons(Polygon2D(Point2D(1.0,1.0),
+                           Polylines(), 
+                           Polygons(Polygon2D(Point2D(1.0,1.0),
                                               Point2D(0.5,1),
                                               Point2D(0.5,0.0),
                                               Point2D(1.0,0.0)))))
@@ -72,8 +185,8 @@ class Test_Polygon(unittest.TestCase):
                       known_convex=True)
         self.assertEqual(pg1._intersect_polygon_simple_convex_and_simple_convex(pg2),
                           (Points(), 
-                          Segments(), 
-                          Polygons(Polygon2D(Point2D(1.0,0.5),
+                           Polylines(), 
+                           Polygons(Polygon2D(Point2D(1.0,0.5),
                                               Point2D(0.5,0.5),
                                               Point2D(0.5,0.0),
                                               Point2D(1.0,0.0)))))
@@ -83,27 +196,85 @@ class Test_Polygon(unittest.TestCase):
                       known_convex=True)
         self.assertEqual(pg1._intersect_polygon_simple_convex_and_simple_convex(pg2),
                           (Points(), 
-                          Segments(), 
-                          Polygons()))
+                           Polylines(), 
+                           Polygons()))
         
         # point intersection
         pg2=Polygon2D(Point2D(1,1),Point2D(2,1),Point2D(2,2),Point2D(1,2),
                       known_convex=True)
         self.assertEqual(pg1._intersect_polygon_simple_convex_and_simple_convex(pg2),
                           (Points(Point2D(1,1)), 
-                          Segments(), 
-                          Polygons()))
+                           Polylines(), 
+                           Polygons()))
         
         # segment intersection
         pg2=Polygon2D(Point2D(1,0.5),Point2D(2,0.5),Point2D(2,1.5),Point2D(1,1.5),
                       known_convex=True)
         self.assertEqual(pg1._intersect_polygon_simple_convex_and_simple_convex(pg2),
                           (Points(), 
-                          Segments(Segment2D(Point2D(1,0.5),Point2D(1,1))), 
-                          Polygons()))
+                           Polylines(Polyline2D(Point2D(1,0.5),Point2D(1,1))), 
+                           Polygons()))
+        
         
     def test__intersect_polygon_simple_and_simple_convex(self):
         ""
+        
+        # full overlap intersection
+        pg=Polygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
+        pg1=Polygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1),
+                      known_convex=True)
+        
+        self.assertEqual(pg._intersect_polygon_simple_and_simple_convex(pg1),
+                         (Points(), 
+                          Polylines(),
+                          Polygons(pg)))
+        
+        # half overlap
+        pg1=Polygon2D(Point2D(0.5,0),Point2D(1.5,0),Point2D(1.5,1),Point2D(0.5,1),
+                      known_convex=True)
+        self.assertEqual(pg._intersect_polygon_simple_and_simple_convex(pg1),
+                          (Points(), 
+                           Polylines(), 
+                           Polygons(Polygon2D(Point2D(1.0,1.0),
+                                              Point2D(0.5,1),
+                                              Point2D(0.5,0.0),
+                                              Point2D(1.0,0.0)))))
+        
+        # corner overlap
+        pg1=Polygon2D(Point2D(0.5,-0.5),Point2D(1.5,-0.5),Point2D(1.5,0.5),Point2D(0.5,0.5),
+                      known_convex=True)
+        self.assertEqual(pg._intersect_polygon_simple_convex_and_simple_convex(pg1),
+                          (Points(), 
+                           Polylines(), 
+                           Polygons(Polygon2D(Point2D(1.0,0.5),
+                                              Point2D(0.5,0.5),
+                                              Point2D(0.5,0.0),
+                                              Point2D(1.0,0.0)))))
+        
+        # no intersection
+        pg1=Polygon2D(Point2D(2,0),Point2D(3,0),Point2D(3,1),Point2D(2,1),
+                      known_convex=True)
+        self.assertEqual(pg._intersect_polygon_simple_and_simple_convex(pg1),
+                          (Points(), 
+                           Polylines(), 
+                           Polygons()))
+        
+        # point intersection
+        pg1=Polygon2D(Point2D(1,1),Point2D(2,1),Point2D(2,2),Point2D(1,2),
+                      known_convex=True)
+        self.assertEqual(pg._intersect_polygon_simple_and_simple_convex(pg1),
+                          (Points(Point2D(1,1)), 
+                           Polylines(), 
+                           Polygons()))
+        
+        # segment intersection
+        pg1=Polygon2D(Point2D(1,0.5),Point2D(2,0.5),Point2D(2,1.5),Point2D(1,1.5),
+                      known_convex=True)
+        self.assertEqual(pg._intersect_polygon_simple_and_simple_convex(pg1),
+                          (Points(), 
+                           Polylines(Polyline2D(Point2D(1,0.5),Point2D(1,1))), 
+                           Polygons()))
+        
         # C-SHAPE
         pg1=Polygon2D(Point2D(0,0),
                       Point2D(2,0),
@@ -118,121 +289,224 @@ class Test_Polygon(unittest.TestCase):
                       Point2D(2,3),
                       Point2D(1,3),
                       known_convex=True)
-        print('test')
-        print(pg1.intersect_polygon(pg2))
-        return
+        #print('test')
+        #print(pg1.intersect_polygon(pg2))
+        #return
         self.assertEqual(pg1._intersect_polygon_simple_and_simple_convex(pg2),
                           (Points(), 
-                          Segments(Segment2D(Point2D(1.0,2.0), 
-                                              Point2D(1.0,1.0))), 
-                          Polygons(Polygon2D(Point2D(1.0,0.0),
-                                                          Point2D(2.0,0.0),
-                                                          Point2D(2.0,1.0),
-                                                          Point2D(1.0,1.0)), 
-                                          Polygon2D(Point2D(1.0,2.0),
-                                                          Point2D(2.0,2.0),
-                                                          Point2D(2.0,3.0),
-                                                          Point2D(1,3)))))
+                           Polylines(Polyline2D(Point2D(1.0,2.0), 
+                                                Point2D(1.0,1.0))), 
+                           Polygons(Polygon2D(Point2D(1.0,0.0),
+                                              Point2D(2.0,0.0),
+                                              Point2D(2.0,1.0),
+                                              Point2D(1.0,1.0)), 
+                                    Polygon2D(Point2D(1.0,2.0),
+                                              Point2D(2.0,2.0),
+                                              Point2D(2.0,3.0),
+                                              Point2D(1,3)))))
         
         
-    # def test_intersect_polygon(self):
-    #     ""
+    def test__intersect_polygon_simple_and_simple(self):
+        ""
         
-    #     # TWO SIMPLE CONVEX POLYGONS
+        pg=Polygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
         
-    #     # full overlap intersection
-    #     pg1=Polygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1),
-    #                   known_convex=True)
-    #     self.assertEqual(pg1.intersect_polygon(pg1),
-    #                      (Points(),Segments(),Polygons(pg1)))
-        
-    #     # half overlap
-    #     pg2=Polygon2D(Point2D(0.5,0),Point2D(1.5,0),Point2D(1.5,1),Point2D(0.5,1),
-    #                   known_convex=True)
-    #     self.assertEqual(pg1.intersect_polygon(pg2),
-    #                      (Points(), 
-    #                       Segments(), 
-    #                       Polygons(Polygon2D(Point2D(1.0,1.0),
-    #                                          Point2D(0.5,1),
-    #                                          Point2D(0.5,0.0),
-    #                                          Point2D(1.0,0.0)))))
-        
-    #     # corner overlap
-    #     pg2=Polygon2D(Point2D(0.5,-0.5),Point2D(1.5,-0.5),Point2D(1.5,0.5),Point2D(0.5,0.5),
-    #                   known_convex=True)
-    #     self.assertEqual(pg1.intersect_polygon(pg2),
-    #                       (Points(), 
-    #                       Segments(), 
-    #                       Polygons(Polygon2D(Point2D(1.0,0.5),
-    #                                           Point2D(0.5,0.5),
-    #                                           Point2D(0.5,0.0),
-    #                                           Point2D(1.0,0.0)))))
-        
-    #     # no intersection
-    #     pg2=Polygon2D(Point2D(2,0),Point2D(3,0),Point2D(3,1),Point2D(2,1),
-    #                   known_convex=True)
-    #     self.assertEqual(pg1.intersect_polygon(pg2),
-    #                       (Points(), 
-    #                       Segments(), 
-    #                       Polygons()))
-        
-    #     # point intersection
-    #     pg2=Polygon2D(Point2D(1,1),Point2D(2,1),Point2D(2,2),Point2D(1,2),
-    #                   known_convex=True)
-    #     self.assertEqual(pg1.intersect_polygon(pg2),
-    #                       (Points(Point2D(1,1)), 
-    #                       Segments(), 
-    #                       Polygons()))
-        
-    #     # segment intersection
-    #     pg2=Polygon2D(Point2D(1,0.5),Point2D(2,0.5),Point2D(2,1.5),Point2D(1,1.5),
-    #                   known_convex=True)
-    #     self.assertEqual(pg1.intersect_polygon(pg2),
-    #                       (Points(), 
-    #                       Segments(Segment2D(Point2D(1,0.5),Point2D(1,1))), 
-    #                       Polygons()))
-        
-    #     # SIMPEO CONCAVE POLYGON WITH SIMPLE CONVEX POLYGON
-        
-    #     # C-SHAPE
-    #     pg1=Polygon2D(Point2D(0,0),
-    #                   Point2D(2,0),
-    #                   Point2D(2,1),
-    #                   Point2D(1,1),
-    #                   Point2D(1,2),
-    #                   Point2D(2,2),
-    #                   Point2D(2,3),
-    #                   Point2D(0,3))
-    #     pg2=Polygon2D(Point2D(1,0),
-    #                   Point2D(2,0),
-    #                   Point2D(2,3),
-    #                   Point2D(1,3))
-    #     print('test')
-    #     print(pg1.intersect_polygon(pg2))
-    #     return
-    #     self.assertEqual(pg1.intersect_polygon(pg2),
-    #                       (Points(), 
-    #                       Segments(Segment2D(Point2D(1.0,2.0), 
-    #                                           Point2D(1.0,1.0))), 
-    #                       Polygons(Polygon2D(Point2D(1.0,0.0),
-    #                                                       Point2D(2.0,0.0),
-    #                                                       Point2D(2.0,1.0),
-    #                                                       Point2D(1.0,1.0)), 
-    #                                       Polygon2D(Point2D(1.0,2.0),
-    #                                                       Point2D(2.0,2.0),
-    #                                                       Point2D(2.0,3.0),
-    #                                                       Point2D(1,3)))))
+        # full overlap intersection
+        self.assertEqual(pg._intersect_polygon_simple_and_simple(pg),
+                         (Points(), 
+                          Polylines(),
+                          Polygons(pg)))
         
         
+        # half overlap
+        pg1=Polygon2D(Point2D(0.5,0),Point2D(1.5,0),Point2D(1.5,1),Point2D(0.5,1))
+        self.assertEqual(pg._intersect_polygon_simple_and_simple(pg1),
+                          (Points(), 
+                           Polylines(), 
+                           Polygons(Polygon2D(Point2D(1.0,1.0),
+                                              Point2D(0.5,1),
+                                              Point2D(0.5,0.0),
+                                              Point2D(1.0,0.0)))))
+        
+        
+         # corner overlap
+        pg1=Polygon2D(Point2D(0.5,-0.5),Point2D(1.5,-0.5),Point2D(1.5,0.5),Point2D(0.5,0.5))
+        self.assertEqual(pg._intersect_polygon_simple_and_simple(pg1),
+                          (Points(), 
+                           Polylines(), 
+                           Polygons(Polygon2D(Point2D(1.0,0.5),
+                                              Point2D(0.5,0.5),
+                                              Point2D(0.5,0.0),
+                                              Point2D(1.0,0.0)))))
+        
+        # no intersection
+        pg1=Polygon2D(Point2D(2,0),Point2D(3,0),Point2D(3,1),Point2D(2,1))
+        self.assertEqual(pg._intersect_polygon_simple_and_simple(pg1),
+                          (Points(), 
+                           Polylines(), 
+                           Polygons()))
+        
+        # point intersection
+        pg1=Polygon2D(Point2D(1,1),Point2D(2,1),Point2D(2,2),Point2D(1,2))
+        self.assertEqual(pg._intersect_polygon_simple_and_simple(pg1),
+                          (Points(Point2D(1,1)), 
+                           Polylines(), 
+                           Polygons()))
+        
+        # segment intersection
+        pg1=Polygon2D(Point2D(1,0.5),Point2D(2,0.5),Point2D(2,1.5),Point2D(1,1.5))
+        self.assertEqual(pg._intersect_polygon_simple_and_simple(pg1),
+                          (Points(), 
+                           Polylines(Polyline2D(Point2D(1,0.5),Point2D(1,1))), 
+                           Polygons()))
+        
+        
+        # C-SHAPE
+        pg1=Polygon2D(Point2D(0,0),
+                      Point2D(2,0),
+                      Point2D(2,1),
+                      Point2D(1,1),
+                      Point2D(1,2),
+                      Point2D(2,2),
+                      Point2D(2,3),
+                      Point2D(0,3))
+        pg2=Polygon2D(Point2D(1,0),
+                      Point2D(2,0),
+                      Point2D(2,3),
+                      Point2D(1,3))
+        self.assertEqual(pg1._intersect_polygon_simple_and_simple(pg2),
+                          (Points(), 
+                           Polylines(Polyline2D(Point2D(1.0,2.0), 
+                                                Point2D(1.0,1.0))), 
+                           Polygons(Polygon2D(Point2D(1.0,0.0),
+                                              Point2D(2.0,0.0),
+                                              Point2D(2.0,1.0),
+                                              Point2D(1.0,1.0)), 
+                                    Polygon2D(Point2D(1.0,2.0),
+                                              Point2D(2.0,2.0),
+                                              Point2D(2.0,3.0),
+                                              Point2D(1,3)))))
+        
+        
+    def test_intersect_polygon(self):
+        ""
+        
+        # 2D TWO SIMPLE CONVEX POLYGONS
+        # full overlap intersection
+        pg=Polygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1),
+                     known_convex=True)
+        self.assertEqual(pg.intersect_polygon(pg),
+                         (Points(),
+                          Polylines(),
+                          Polygons(pg)))
+        
+        # 2D SIMPLE AND SIMPLE CONVEX POLYGONS
+        # full overlap intersection
+        pg=Polygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1),
+                     known_convex=True)
+        pg1=Polygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
+        self.assertEqual(pg.intersect_polygon(pg1),
+                         (Points(),
+                          Polylines(),
+                          Polygons(pg)))
+        self.assertEqual(pg1.intersect_polygon(pg),
+                         (Points(),
+                          Polylines(),
+                          Polygons(pg)))
+        
+        # 2D SIMPLE AND SIMPLE POLYGONS
+        # full overlap intersection
+        pg=Polygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
+        pg1=Polygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
+        self.assertEqual(pg.intersect_polygon(pg1),
+                         (Points(),
+                          Polylines(),
+                          Polygons(pg)))
+        self.assertEqual(pg1.intersect_polygon(pg),
+                         (Points(),
+                          Polylines(),
+                          Polygons(pg)))        
+        
+        # 3D TWO SIMPLE CONVEX POLYGONS
+        # full overlap intersection
+        pg=Polygon3D(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0),
+                     known_convex=True)
+        self.assertEqual(pg.intersect_polygon(pg),
+                         (Points(),
+                          Polylines(),
+                          Polygons(pg)))
+        
+        # 3D SIMPLE AND SIMPLE CONVEX POLYGONS
+        # full overlap intersection
+        pg=Polygon3D(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0),
+                     known_convex=True)
+        pg1=Polygon3D(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))
+        self.assertEqual(pg.intersect_polygon(pg1),
+                         (Points(),
+                          Polylines(),
+                          Polygons(pg)))
+        self.assertEqual(pg1.intersect_polygon(pg),
+                         (Points(),
+                          Polylines(),
+                          Polygons(pg)))
+    
+        # 3D SIMPLE AND SIMPLE POLYGONS
+        # full overlap intersection
+        pg=Polygon3D(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))
+        pg1=Polygon3D(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))
+        self.assertEqual(pg.intersect_polygon(pg1),
+                         (Points(),
+                          Polylines(),
+                          Polygons(pg)))
+        self.assertEqual(pg1.intersect_polygon(pg),
+                         (Points(),
+                          Polylines(),
+                          Polygons(pg)))   
+    
+        # half overlap
+        pg1=Polygon3D(Point3D(0.5,0,0),Point3D(1.5,0,0),Point3D(1.5,1,0),Point3D(0.5,1,0))
+        self.assertEqual(pg._intersect_polygon_simple_and_simple(pg1),
+                          (Points(), 
+                           Polylines(), 
+                           Polygons(Polygon3D(Point3D(1.0,1.0,0),
+                                              Point3D(0.5,1,0),
+                                              Point3D(0.5,0.0,0),
+                                              Point3D(1.0,0.0,0)))))
+    
+    
+        # example
+        #print('test')
+        pg=Polygon3D(Point3D(5,0,0),Point3D(15,0,0),Point3D(15,0,3),Point3D(5,0,3))
+        pg1=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(10,0,3),Point3D(0,0,3))
+        #print(pg1.intersect_polygon(pg))
         
         
     def test__intersect_line_t_values_simple_convex(self):
         ""
+        
+        # 2D
         pg=Polygon2D(*points2d)
         
         l=Line2D(Point2D(0,0),Vector2D(1,0))
         self.assertEqual(pg._intersect_line_t_values_simple_convex(l),
-                        (0,1))    
+                        (0,1))  
+        
+        
+        # 3D
+        pg=Polygon3D(*points3d)
+        l=Line3D(Point3D(0,0,0),Vector3D(1,0,0))
+        self.assertEqual(pg._intersect_line_t_values_simple_convex(l),
+                         (0,1))  
+        
+        pg=Polygon3D(Point3D(0,0,0),
+                     Point3D(1,0,1),
+                     Point3D(1,1,1),
+                     Point3D(0,1,0))
+        l=Line3D(Point3D(0,0,0),Vector3D(1,1,1))
+        self.assertEqual(pg._intersect_line_t_values_simple_convex(l),
+                         (0,1))  
+        
+        
         
         
     def test__intersect_segment_simple_convex(self):
@@ -311,16 +585,16 @@ class Test_Polygon(unittest.TestCase):
     def test_intersect_segment(self):
         ""
         
-        # SIMPLE CONVEX POLYGON
+        # 2D SIMPLE CONVEX POLYGON
         
         pg=Polygon2D(*points2d, known_convex=True)
         
         # segment is a polygon edge
         self.assertEqual(pg.intersect_segment(Segment2D(Point2D(0,0),
-                                                        Point2D(1,1))),
+                                                        Point2D(1,0))),
                         (Points(), 
                          Segments(Segment2D(Point2D(0.0,0.0), 
-                                            Point2D(1.0,1.0)))))        
+                                            Point2D(1.0,0.0)))))        
         
         # segment starts on a polygon edge
         self.assertEqual(pg.intersect_segment(Segment2D(Point2D(0,0),
@@ -336,7 +610,7 @@ class Test_Polygon(unittest.TestCase):
                                             Point2D(1.0,1.0)))))    
             
         
-        # SIMPLE POLYGON (concave)
+        # 2D SIMPLE POLYGON (concave)
         
         pg=Polygon2D(Point2D(0,0),
                     Point2D(2,0),
@@ -376,6 +650,44 @@ class Test_Polygon(unittest.TestCase):
                          Segments(Segment2D(Point2D(0,0.5), 
                                             Point2D(1.5,0.5))))) 
         
+        # 3D SIMPLE CONVEX POLYGON
+        
+        pg=Polygon3D(*points3d, known_convex=True)
+        
+        # segment is a polygon edge
+        self.assertEqual(pg.intersect_segment(Segment3D(Point3D(0,0,0),
+                                                        Point3D(1,0,0))),
+                        (Points(), 
+                         Segments(Segment3D(Point3D(0.0,0.0,0), 
+                                            Point3D(1.0,0.0,0)))))  
+        
+        
+        # 3D SIMPLE POLYGON (concave)
+        
+        pg=Polygon3D(Point3D(0,0,0),
+                     Point3D(2,0,0),
+                     Point3D(1,1,0),
+                     Point3D(2,2,0),
+                     Point3D(0,2,0))
+        
+        self.assertEqual(pg.intersect_segment(Segment3D(Point3D(1.5,0,0),
+                                                        Point3D(1.5,10,0))),
+                        (Points(),
+                         Segments(Segment3D(Point3D(1.5,0,0), 
+                                            Point3D(1.5,0.5,0)),
+                                  Segment3D(Point3D(1.5,1.5,0), 
+                                            Point3D(1.5,2,0)))))
+                
+        # example
+        
+        pg=Polygon3D(Point3D(5,0,0),
+                     Point3D(15,0,0),
+                     Point3D(15,0,3),
+                     Point3D(5,0,3))
+        #print('test99')
+        #print(pg.intersect_segment(Segment3D(Point3D(5,0,0),Point3D(15,0,0))))
+        
+        
         
     def test_intersect_segments(self):
         ""
@@ -399,6 +711,9 @@ class Test_Polygon(unittest.TestCase):
                         (Points(), 
                          Segments(Segment2D(Point2D(0.0,0.0), 
                                             Point2D(1.0,1.0)))))   
+        
+        
+        
         
     
         
@@ -487,6 +802,10 @@ class Test_Polygon(unittest.TestCase):
                                             Point2D(2,2),
                                             Point2D(0,2))))
     
+    
+    def test_triangles(self):
+        ""
+    
 
 
 class Test_Polygon2D(unittest.TestCase):
@@ -525,6 +844,10 @@ class Test_Polygon2D(unittest.TestCase):
                          1)
         self.assertEqual(pg.reverse.area, # cw
                          1)
+        
+        
+    def test_ccw(self):
+        ""
         
         
     def test_centroid(self):
@@ -1102,59 +1425,7 @@ class Test_Polygon2D(unittest.TestCase):
 #                           Segment2D(Point2D(0,0), Point2D(0.5,0))]))  
 #    
 #    
-#    def test_union_polygon(self):
-#        ""
-#        pg=Polygon2D(*points)
-#        
-#        # no intersection
-#        pg1=Polygon2D(Point2D(-2,0),
-#                      Point2D(-1,0),
-#                      Point2D(-1,1),
-#                      Point2D(-2,1))
-#        self.assertEqual(pg.union_polygon(pg1),
-#                         ((),
-#                          (),
-#                          ()))
-#        
-#        # point intersection
-#        pg1=Polygon2D(Point2D(-1,-1),
-#                       Point2D(0,-1),
-#                        Point2D(0,0),
-#                        Point2D(-1,0))
-#        self.assertEqual(pg.union_polygon(pg1),
-#                         ((Point2D(0,0),),
-#                           (),
-#                           ()))
-#        
-#        # edge intersection
-#        pg1=Polygon2D(Point2D(-1,0),
-#                        Point2D(0,0),
-#                        Point2D(0,1),
-#                        Point2D(-1,1))
-#        self.assertEqual(pg.union_polygon(pg1),
-#                         ((),
-#                          (Segment2D(Point2D(0,0),
-#                                     Point2D(0,1)),),
-#                          ()))
-#                         
-#        
-#        # overlap intersection - same polygon
-#        self.assertEqual(pg.union_polygon(pg),
-#                         pg)
-#
-#        # overlap intersection
-#        pg1=Polygon2D(Point2D(-0.5,-0.5),
-#                            Point2D(0.5,-0.5),
-#                            Point2D(0.5,0.5),
-#                            Point2D(-0.5,0.5))
-#        self.assertEqual(pg.union_polygon(pg1),
-#                         ((), 
-#                          (), 
-#                          (Polygon2D(Point2D(0.0,0.0),
-#                                     Point2D(0.0,0.5),
-#                                     Point2D(0.5,0.5),
-#                                     Point2D(0.5,0.0)),)))
-#    
+
         
     
         
@@ -1309,6 +1580,9 @@ class Test_Polygon2D(unittest.TestCase):
 if __name__=='__main__':
     
     points2d=(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
+    points3d=(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))
+    
+    #cProfile.run('unittest.main(Test_Polygon())')
     
     unittest.main(Test_Polygon())
     

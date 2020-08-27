@@ -6,7 +6,7 @@ import mpl_toolkits.mplot3d
 
 from crossproduct import Point2D, Point3D,Vector2D, Vector3D, \
     Halfline2D, Halfline3D, Line2D, Line3D, Segment2D, Segment3D, \
-    Polyline2D, Polyline3D, Segments, Points
+    Polyline2D, Polyline3D, Segments, Points, Polylines
 
 plot=False
 
@@ -82,27 +82,57 @@ class Test_Polyline2D(unittest.TestCase):
         self.assertEqual(str(pl),'Polyline2D(Point2D(0,0),Point2D(0,1),Point2D(1,1))')
         
     
-    # def test_merge_codirectional_segments(self):
-    #     ""
-    #     pl=Polyline2D(*points)
-    #     self.assertEqual(pl.merge_codirectional_segments,
-    #                      pl)
+    def test_add_segments(self):
+        ""
+        pl=Polyline2D(*points)
+        self.assertEqual(pl.add_segments,
+                          pl)
         
-    #     pl=Polyline2D(Point2D(0,0),
-    #                   Point2D(1,0),
-    #                   Point2D(2,0))
-    #     self.assertEqual(pl.merge_codirectional_segments,
-    #                      Polyline2D(Point2D(0,0),
-    #                                 Point2D(2,0)))
+        pl=Polyline2D(Point2D(0,0),
+                      Point2D(1,0),
+                      Point2D(2,0))
+        self.assertEqual(pl.add_segments,
+                          Polyline2D(Point2D(0,0),
+                                    Point2D(2,0)))
         
-    #     pl=Polyline2D(Point2D(0,0),
-    #                   Point2D(1,0),
-    #                   Point2D(2,0),
-    #                   Point2D(2,1))
-    #     self.assertEqual(pl.merge_codirectional_segments,
-    #                      Polyline2D(Point2D(0,0),
-    #                                 Point2D(2,0),
-    #                                 Point2D(2,1)))
+        pl=Polyline2D(Point2D(0,0),
+                      Point2D(1,0),
+                      Point2D(2,0),
+                      Point2D(2,1))
+        self.assertEqual(pl.add_segments,
+                          Polyline2D(Point2D(0,0),
+                                    Point2D(2,0),
+                                    Point2D(2,1)))
+        
+        
+    def test_difference_polyline(self):
+        ""
+        pl=Polyline2D(*points)
+        
+        # no intersection
+        pl1=Polyline2D(Point2D(10,0),Point2D(10,1))
+        self.assertEqual(pl.difference_polyline(pl1),
+                         Polylines(pl))
+        
+        # full overlap
+        self.assertEqual(pl.difference_polyline(pl),
+                         Polylines())
+        
+        # overlap 1 segment
+        self.assertEqual(pl.difference_polyline(Polyline2D(Point2D(0,1),
+                                                           Point2D(1,1))),
+                         Polylines(Polyline2D(Point2D(0,0),
+                                              Point2D(0,1))))
+        
+        # partial overlap 1 segment
+        self.assertEqual(pl.difference_polyline(Polyline2D(Point2D(0,1),
+                                                           Point2D(0.5,1))),
+                         Polylines(Polyline2D(Point2D(0,0),
+                                              Point2D(0,1)), 
+                                   Polyline2D(Point2D(0.5,1.0),
+                                              Point2D(1,1))))
+        
+        
         
         
     def test_is_intersecting(self):

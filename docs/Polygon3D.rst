@@ -9,11 +9,15 @@ Polygon3D
 .. autosummary::
    :toctree: _autosummary
 
+   ~crossproduct.polygon.Polygon3D.__add__
    ~crossproduct.polygon.Polygon3D.__contains__
    ~crossproduct.polygon.Polygon3D.__eq__
+   ~crossproduct.polygon.Polygon3D.add_segments
    ~crossproduct.polygon.Polygon3D.area
    ~crossproduct.polygon.Polygon3D.centroid
    ~crossproduct.polygon.Polygon3D.class_2D
+   ~crossproduct.polygon.Polygon3D.intersect_polygon
+   ~crossproduct.polygon.Polygon3D.intersect_polyline
    ~crossproduct.polygon.Polygon3D.intersect_segment
    ~crossproduct.polygon.Polygon3D.intersect_segments
    ~crossproduct.polygon.Polygon3D.known_convex
@@ -27,3 +31,4 @@ Polygon3D
    ~crossproduct.polygon.Polygon3D.project_2D
    ~crossproduct.polygon.Polygon3D.reorder
    ~crossproduct.polygon.Polygon3D.reverse
+   ~crossproduct.polygon.Polygon3D.triangles

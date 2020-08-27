@@ -191,7 +191,7 @@ class Segment():
            Point3D(0,0,0)
                 
         """
-        if t>=0 and t<=1:
+        if t>=0-SMALL_NUM and t<=1+SMALL_NUM: ## MADE A CHANGE HERE
             return self.line.calculate_point(t)
         else:
             raise ValueError('For a segment, t must be equal to or between 0 and 1')
@@ -237,6 +237,9 @@ class Segment():
         if self.line==segment.line:
             t0=self.line.calculate_t_from_point(segment.P0)
             t1=self.line.calculate_t_from_point(segment.P1)
+            #print(self)
+            #print(segment)
+            #print(t0,t1)
             if t1<t0:
                 t0,t1=t1,t0
             

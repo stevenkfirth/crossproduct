@@ -12,6 +12,8 @@ Polyline3D
    ~crossproduct.polyline.Polyline3D.__add__
    ~crossproduct.polyline.Polyline3D.__contains__
    ~crossproduct.polyline.Polyline3D.__eq__
+   ~crossproduct.polyline.Polyline3D.add_segments
+   ~crossproduct.polyline.Polyline3D.difference_polyline
    ~crossproduct.polyline.Polyline3D.dimension
    ~crossproduct.polyline.Polyline3D.intersect_polyline
    ~crossproduct.polyline.Polyline3D.intersect_segment

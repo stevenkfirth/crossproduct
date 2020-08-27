@@ -131,7 +131,7 @@ class Halfline():
            Point3D(3,0,0)
         
         """
-        if t>=0:
+        if t>=0-SMALL_NUM:
             return self.P0 + (self.vL * t)
         else:
             raise ValueError('For a halfline, t must be greater than or equal to zero')

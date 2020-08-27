@@ -39,6 +39,32 @@ class Test_Polygons(unittest.TestCase):
                          'Polygons(Polygon2D(Point2D(0.0,0.0),Point2D(1.0,0.0),Point2D(0.0,1.0)), Polygon2D(Point2D(1.0,0.0),Point2D(1.0,1.0),Point2D(0.0,1.0)))')
         
         
+    def test_add_all(self):
+        ""
+        pgs=Polygons(*polygons)
+        
+        self.assertEqual(pgs.add_all,
+                         Polygons(Polygon2D(Point2D(0.0,1.0),
+                                            Point2D(0.0,0.0),
+                                            Point2D(1.0,0.0),
+                                            Point2D(1.0,1.0))))
+        
+        
+    def test_add_first(self):
+        ""
+        pgs=Polygons(*polygons)
+        
+        pg=Polygon2D(Point2D(0,0),
+                     Point2D(1,0),
+                     Point2D(1,-1))
+        self.assertEqual(pgs.add_first(pg),
+                         (Polygon2D(Point2D(1,0),
+                                    Point2D(1,-1),
+                                    Point2D(0,0),
+                                    Point2D(0.0,1.0)), 
+                          0))
+        
+        
     def test_append(self):
         ""
         pgs=Polygons(*polygons)

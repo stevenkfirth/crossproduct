@@ -161,6 +161,9 @@ class Polylines(Sequence):
             raise TypeError
     
     
+    
+    
+    
     @property
     def segments(self):
         """Returns a Segments sequence of all the segments of the polygons.

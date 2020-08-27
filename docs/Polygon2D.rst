@@ -9,11 +9,16 @@ Polygon2D
 .. autosummary::
    :toctree: _autosummary
 
+   ~crossproduct.polygon.Polygon2D.__add__
    ~crossproduct.polygon.Polygon2D.__contains__
    ~crossproduct.polygon.Polygon2D.__eq__
+   ~crossproduct.polygon.Polygon2D.add_segments
    ~crossproduct.polygon.Polygon2D.area
+   ~crossproduct.polygon.Polygon2D.ccw
    ~crossproduct.polygon.Polygon2D.centroid
    ~crossproduct.polygon.Polygon2D.dimension
+   ~crossproduct.polygon.Polygon2D.intersect_polygon
+   ~crossproduct.polygon.Polygon2D.intersect_polyline
    ~crossproduct.polygon.Polygon2D.intersect_segment
    ~crossproduct.polygon.Polygon2D.intersect_segments
    ~crossproduct.polygon.Polygon2D.is_counterclockwise
@@ -29,3 +34,4 @@ Polygon2D
    ~crossproduct.polygon.Polygon2D.reverse
    ~crossproduct.polygon.Polygon2D.rightmost_lowest_vertex
    ~crossproduct.polygon.Polygon2D.signed_area
+   ~crossproduct.polygon.Polygon2D.triangles

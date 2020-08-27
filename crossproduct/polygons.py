@@ -73,6 +73,66 @@ class Polygons(Sequence):
         return 'Polygons(%s)' % ', '.join([str(pg) for pg in self._polygons])
     
     
+    @property
+    def add_all(self):
+        """Adds together the polygons in the sequence where possible
+        
+        :return: Returns a new Polygons sequence where the polygons have been
+            added together where possible to form new polygons.        
+        :rtype: Polygons
+        
+        """
+        polygons=[pg for pg in self]
+        i=0
+        
+        while True:
+            try:
+                pg=polygons[i]
+            except IndexError:
+                break
+            try:
+                new_pg,index=Polygons(*polygons[i+1:]).add_first(pg)
+                #print(new_s,index)
+                polygons[i]=new_pg
+                polygons.pop(i+index+1)
+            except ValueError:
+                i+=1
+        
+        return Polygons(*polygons)
+    
+    
+    def add_first(self,polygon):
+        """Adds the first available polygon to the supplied polygon.
+        
+        This iterates through the polygons in the Polygons sequence. 
+            When the first polygon which can be added to the supplied polygon is found,
+            the result of this addition is returned along with its index.
+        
+        :raises ValueError: If no valid additions are found.
+        
+        :return: Returns a tuple with the addition result and the index of the polygon which was added.
+        :rtype: tuple (Polygon,int)
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> pls = Polylines(Polyline2D(Point2D(0,0), Point2D(1,0)))
+            >>> result = pls.add_first(Polyline2D(Point2D(1,0), Point2D(2,0)))
+            >>> print(result)
+            (Polyline2D(Point2D(0,0), Point2D(1,0), Point2D(2,0)),0)
+        
+        """
+        for i,pg in enumerate(self):
+            try:
+                result=polygon+pg
+                return result,i
+            except ValueError:
+                pass
+        
+        raise ValueError
+    
+    
     def append(self,polygon,unique=False):
         """Appends supplied polygon to this polygons sequence.
         

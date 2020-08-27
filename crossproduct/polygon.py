@@ -43,9 +43,6 @@ class Polygon():
         # self.triangles=self.triangulate
     
     
-    
-    
-    
     def __add__(self,polygon):
         """Returns the addition of this polygon and another polygon.
         
@@ -69,17 +66,27 @@ class Polygon():
            Polygon2D(Point2D(0,0), Point2D(0,1), Point2D(1,1), Point2D(1,0))
         
         """ 
-        pl1=self.polyline.segments.difference_segments(polygon.polyline.segments).polyline
-        pl2=polygon.polyline.segments.difference_segments(self.polyline.segments).polyline
-        pl3=pl1.union(pl2)
-        if pl3:
-            return Polygon2D(*pl3.points[:-1])
-        else:
-            return None
+        pls1=self.polyline.difference_polyline(polygon.polyline)
+        
+        if pls1[0]==self.polyline:
+            raise ValueError
+        
+        #print(pls1)
+        pls2=polygon.polyline.difference_polyline(self.polyline)
+        #print(pls2)
+        
+        pls=pls1
+        for pl in pls2:
+            pls.append(pl)
+                
+        pls=pls.add_all
+        pl=pls[0]
+        pg=self.__class__(*pl.points[:-1])
+        pg=pg.add_segments
+        return pg
         
         
         
-    
     def __eq__(self,polygon):
         """Tests if this polygon and the supplied polygon are equal.
         
@@ -157,31 +164,25 @@ class Polygon():
                 
     #             return NotImplementedError #self.doughnut(simple_polygon_interior) # perhaps return a polygon with a hole??
     
-    
-    # def doughnut(self,simple_polygon_interior):
-    #     """Returns a 'doughnut' polygon around the interior polygon
+
+    @property
+    def add_segments(self):
+        """Returns a polygon with any adjacent segments added together if possible.
         
-    #     Note that the returned polygon is NOT a simple polygon, so traingulation doesn't work
+        :rtype: Polygon2D, Polygon3D
         
-    #     """
-        
-    #     pg1=self if self.orientation>0 else self.reverse # ccw
-    #     pg2=simple_polygon_interior.reverse if simple_polygon_interior.orientation>0 else simple_polygon_interior # cw
-            
-    #     combinations=[(i,j) for i in range(len(pg1.points)) for j in range(len(pg2.points))]
-    #     for i,j in combinations:
-    #         pg1b=pg1.reorder(i)
-    #         pg2b=pg2.reorder(j)
-    #         s=Segment2D(pg1b.points[0],pg2b.points[0])
-    #         ipts1,isegments1=pg1b.polyline.segments.intersect_segment(s)
-    #         ipts2,isegments2=pg2b.polyline.intersect_segment(s)
-    #         if len(ipts1)==1 and len(isegments1)==0 and len(ipts2)==1 and len(isegments2)==0:
-    #             break
-                
-    #     points=list(pg1b.polyline.points)+list(pg2b.polyline.points)
-    #     print(points)
-    #     return self.__class__(*points) # error as the triangulation of a doughnut isnt working at present
-       
+        """
+        pl=self.polyline.add_segments
+        points=pl.points
+        #print(points)
+        v=points[1]-points[0]
+        w=points[-1]-points[-2]
+        if v.is_codirectional(w):
+            #print(points)
+            points=points[1:-1]
+            points.append(points[0])
+        return self.__class__(*points[:-1])
+              
 
     @property
     def known_convex(self):
@@ -240,59 +241,130 @@ class Polygon():
     #     return ipts, isegments
     
     
+    def intersect_polyline(self,polyline):
+        """Returns the intersection of this polygon and the supplied polyline.
+        
+        The intersection is the intersection of the polyline segments within the area described by the polygon.
+        
+        :param polyline: A polyline.
+        :type polyline: Polyline2D, Polyline3D
+        
+        :return: A tuple of intersection points and intersection polylines 
+            (Points,Polylines). 
+        :rtype: tuple      
+            
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> pl = Polyline2D(Point2D(0,0), Point2D(1,0))
+           >>> result = pg.intersect_polyline(pl)
+           >>> print(result)
+           Points(), Polylines(Polyline2D(Point2D(0,0), Point2D(1,0)))
+        
+        """
+        ipts, isegments = self.intersect_segments(polyline.segments)
+        ipolylines=Polylines(*[polyline.__class__(*s.points) for s in isegments])
+        ipolylines=ipolylines.add_all
+        return ipts, ipolylines
+    
+    
     def _intersect_polygon_simple_convex_and_simple_convex(self,polygon):
         ""
-            
-        ipts1,isegments1=self.intersect_segments(polygon.polyline.segments)
-        #print(ipts1,isegments1)
+        ipts1,ipolylines1=self.intersect_polyline(polygon.polyline)
+        #print(ipts1,ipolylines1)
         
-        if len(ipts1)==0 and len(isegments1)==0:
-            return Points(),Segments(),Polygons() # returns None - no intersection
-        elif len(ipts1)==1 and len(isegments1)==0:
-            return Points(ipts1[0]),Segments(),Polygons() # returns a Point2D - point intersection
+        if len(ipts1)==0 and len(ipolylines1)==0:
+            return Points(),Polylines(),Polygons() # returns None - no intersection
+        elif len(ipts1)==1 and len(ipolylines1.segments)==0:
+            return Points(ipts1[0]),Polylines(),Polygons() # returns a Point2D - point intersection
         elif len(ipts1)>1:
             raise Exception
-        elif len(ipts1)==0 and len(isegments1)==1:
-            return Points(),Segments(isegments1[0]),Polygons() # returns a Segment2D - edge segment intersection
+        elif len(ipts1)==0 and len(ipolylines1.segments)==1:
+            return Points(),Polylines(ipolylines1[0]),Polygons() # returns a Segment2D - edge segment intersection
         else: # a simple convex polygon intersection
-            ipts2,isegments2=polygon.intersect_segments(self.polyline.segments)
-            #print(ipts2,isegments2)
-            for s in isegments2:
-                isegments1.append(s,unique=True)
+            ipts2,ipolylines2=polygon.intersect_polyline(self.polyline)
+            #print(ipts2,ipolylines2)
+            
+            pls=Polylines()
             
             if self.dimension=='2D':
-                pls=Polylines(*[Polyline2D(*s.points) for s in isegments1])
+                for s in ipolylines1.segments:
+                    pls.append(Polyline2D(*s.points),unique=True)
+                for s in ipolylines2.segments:
+                    pls.append(Polyline2D(*s.points),unique=True)
                 pls=pls.add_all
                 pg=Polygon2D(*pls[0].points[:-1])
             else:
-                pls=Polylines(*[Polyline3D(*s.points) for s in isegments1])
+                for s in ipolylines1.segments:
+                    pls.append(Polyline3D(*s.points),unique=True)
+                for s in ipolylines2.segments:
+                    pls.append(Polyline3D(*s.points),unique=True)
                 pls=pls.add_all
-                pg=Polygon3D(*pls[0].points[:-1])
+                pg=Polygon3D(*pls[0].points[:-1],known_convex=True)
             
-            return Points(),Segments(),Polygons(pg)
-            
+            return Points(),Polylines(),Polygons(pg)
+        
         
     def _intersect_polygon_simple_and_simple_convex(self,polygon):
         ""
-        if not self._triangles:
-            self._triangles=self._triangulate
-            
         pts=Points()
-        sgmts=Segments()
+        pls=Polylines()
         pgs=Polygons()
             
-        for pg in self._triangles:
+        for pg in self.triangles:
             
-            ipts,isgmts,ipgns=pg._intersect_polygon_simple_convex_and_simple_convex(polygon)
+            ipts,ipls,ipgs=pg._intersect_polygon_simple_convex_and_simple_convex(polygon)
         
             for pt in ipts: pts.append(pt,unique=True)
-            for s in isgmts: sgmts.append(s,unique=True)
-            for pg in ipgns: pgs.append(pg,unique=True)
+            for pl in ipls: pls.append(pl,unique=True)
+            for pg in ipgs: pgs.append(pg,unique=True)
     
-        pts=pts.remove_points_in_segments(sgmts)
+        pts=pts.remove_points_in_segments(pls.segments)
         pts=pts.remove_points_in_segments(pgs.polylines.segments)
+        
+        sgmts=pls.segments.remove_segments_in_polygons(pgs)
+        if self.dimension=='2D':
+            pls=Polylines(*[Polyline2D(*s.points) for s in sgmts])
+        else:
+            pls=Polylines(*[Polyline3D(*s.points) for s in sgmts])
+        pls=pls.add_all
+        
+        pgs=pgs.add_all
     
-        return pts,sgmts,pgs
+        return pts,pls,pgs
+    
+    
+    def _intersect_polygon_simple_and_simple(self,polygon):
+        ""
+        pts=Points()
+        pls=Polylines()
+        pgs=Polygons()
+            
+        for pg1 in self.triangles:
+        
+            for pg2 in polygon.triangles:
+                
+                ipts,ipls,ipgs=pg1._intersect_polygon_simple_convex_and_simple_convex(pg2)
+            
+                for pt in ipts: pts.append(pt,unique=True)
+                for pl in ipls: pls.append(pl,unique=True)
+                for pg in ipgs: pgs.append(pg,unique=True)
+            
+        pts=pts.remove_points_in_segments(pls.segments)
+        pts=pts.remove_points_in_segments(pgs.polylines.segments)
+        
+        sgmts=pls.segments.remove_segments_in_polygons(pgs)
+        if self.dimension=='2D':
+            pls=Polylines(*[Polyline2D(*s.points) for s in sgmts])
+        else:
+            pls=Polylines(*[Polyline3D(*s.points) for s in sgmts])
+        pls=pls.add_all
+        
+        pgs=pgs.add_all
+        
+        return pts,pls,pgs
     
     
     def intersect_polygon(self,polygon):
@@ -344,92 +416,6 @@ class Polygon():
 
         return
 
-        if self._known_simple:
-            
-            ipts1, isegments1=self.intersect_segments(polygon.polyline.segments)
-            ipts2, isegments2=polygon.intersect_segments(self.polyline.segments)
-            
-            print(isegments1)
-            print(isegments2)
-            
-            ipts1=ipts1.remove_points_in_segments(isegments1)
-            ipts2=ipts2.remove_points_in_segments(isegments2)
-            
-            ipts=ipts1
-            for pt in ipts2:
-                ipts.append(pt,unique=True)
-                
-            isegments=isegments1
-            for s in isegments2:
-                isegments.append(s,unique=True)
-            
-            if self.dimension=='2D':
-                pls=Polylines(*[Polyline2D(*s.points) for s in isegments])
-            else:
-                pls=Polylines(*[Polyline3D(*s.points) for s in isegments])
-            #print(pls)
-            pls=pls.add_all
-            #print(pls)
-               
-            sgmts=Segments()
-            pgs=Polygons()
-            
-            for pl in pls:
-                if pl.points[0]==pl.points[-1]:
-                    if self.dimension=='2D':
-                        pg=Polygon2D(*pl.points[:-1])
-                    else:
-                        pg=Polygon3D(*pl.points[:-1])
-                    pgs.append(pg)
-                else:
-                    for s in pl.segments:
-                        sgmts.append(s)
-            
-            return ipts,sgmts,pgs
-                
-        else:
-            
-            raise NotImplementedError('This function is not implemented at present for a possible non-simple polygon')
-    
-    
-    
-    # def _intersect_polygon_simple(self,polygon):
-    #     """Intersection of this polygon with another polygon.
-        
-    #     This polygon (self) must be simple.
-        
-    #     :param polygon: A polygon.
-    #     :type polygon: Polygon
-        
-    #     :return intersection:
-    #         - return value can be:
-    #             - None -> no intersection (for a convex polygon whose segements 
-    #                                         do not intersect the segments of this
-    #                                         convex polygon)
-    #             - Point2D -> a point (for a convex polygon whose segments intersect
-    #                                   this convex polygon at a single vertex)
-    #             - Segment2D -> a segment (for a convex polygon whose segments
-    #                                       intersect this convex polygon at an edge segment)
-    #             - SimpleConvexPolygon2D - > a simple convex polygon (for a convex
-    #                                         polygon which overlaps this polygon)
-                         
-    #     """
-        
-    #     if polygon._known_simple:
-        
-    #         if self._known_convex:
-                
-    #             self._intersect_polygon_simple_convex(polygon)
-                
-    #         else:
-                
-    #             pass # TO DO
-    
-    #     else:
-            
-    #         raise NotImplementedError('This function is not implemented at present for a possible non-simple polygon')
-    
-    
     
     def _intersect_line_t_values_simple_convex(self,line):
         """Returns t values of the intersection of this polygon with a line.
@@ -447,24 +433,32 @@ class Polygon():
         :rtype: None, tuple
         
         """
+        
+        if self.dimension=='2D':
+            polygon=self
+            l=line
+        else:
+            coordinate_index,polygon=self.project_2D
+            l=line.project_2D(coordinate_index)
+        
         t_entering=[]
         t_leaving=[]
-        for ps in self.ccw.polyline.segments:
+        for ps in polygon.ccw.polyline.segments:
             #print(ps)
             
             ev=ps.line.vL # edge vector
             n=ev.perp_vector*-1 #  normal to edge vector facing outwards
             try:
-                t=(ps.P0-line.P0).dot(n) / line.vL.dot(n) # the t values of the line where the segment and line intersect
+                t=(ps.P0-l.P0).dot(n) / l.vL.dot(n) # the t values of the line where the segment and line intersect
                 
             except ZeroDivisionError: # the line and polygon segment are parallel
-                if (line.P0-ps.P0).dot(n) > 0: # test if the line is outside the edge
+                if (l.P0-ps.P0).dot(n) > 0: # test if the line is outside the edge
                     #print('line is outside the edge')
                     return None # line is outside of the edge, there is no intersection with the polygon
                 else:
                     continue # line is inside of the edge, ignore this segment and continue with others
             
-            if line.vL.dot(n)<0:
+            if l.vL.dot(n)<0:
                 t_entering.append(t)
             else:
                 t_leaving.append(t)
@@ -529,7 +523,10 @@ class Polygon():
                 if P0==P1:
                     return P0 
                 else:
-                    return Segment2D(P0,P1)  
+                    if self.dimension=='2D':
+                        return Segment2D(P0,P1)  
+                    else:
+                        return Segment3D(P0,P1)
     
     
     def _intersect_segment_simple(self,segment):
@@ -550,7 +547,9 @@ class Polygon():
         if not self._triangles:
             self._triangles=self._triangulate
 
+        #print(self._triangles)
         ipts, isegments = self._triangles.intersect_segment(segment)
+        #print(ipts,isegments)
         ipts=ipts.remove_points_in_segments(isegments)
         isegments=isegments.add_all
         return ipts, isegments
@@ -584,6 +583,7 @@ class Polygon():
             
             if self._known_convex:
         
+                
                 result=self._intersect_segment_simple_convex(segment)        
                 if result is None:
                     return Points(), Segments()
@@ -596,11 +596,11 @@ class Polygon():
         
             else:
         
+                #print('test_simple')
                 return self._intersect_segment_simple(segment)   
                 
         else:
             raise NotImplementedError('This function is not implemented at present for a possible non-simple polygon')
-    
     
     
     def intersect_segments(self,segments):
@@ -626,7 +626,8 @@ class Polygon():
            Points(), Segments(Segment2D(Point2D(0,0), Point2D(1,0)))
             
         """
-        
+        #print(self)
+        #print(segments)
         ipts=Points()
         isegments=Segments()
         
@@ -637,15 +638,12 @@ class Polygon():
             for sgmt in sgmts:
                 isegments.append(sgmt,unique=True)
         
+        #print(ipts)
+        #print(isegments)
+        
         ipts=ipts.remove_points_in_segments(isegments)
         isegments=isegments.add_all        
         return ipts, isegments
-            
-        
-    #     ipts, isegments = self.triangles.intersect_segments(segments)
-    #     ipts.remove_points_in_segments(isegments)
-    #     isegments=isegments.union
-    #     return ipts, isegments    
     
 
     # def intersect_simple_convex_polygon(self,simple_convex_polygon):
