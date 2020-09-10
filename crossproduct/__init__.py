@@ -6,6 +6,7 @@ from .halfline import Halfline2D, Halfline3D
 from .line import Line2D, Line3D
 #from .parallelogram import Parallelogram2D, Parallelogram3D
 from .plane import Plane3D
+from .plane_volume import PlaneVolume3D
 from .point import Point2D, Point3D
 from .points import Points
 from .polyline import Polyline2D, Polyline3D

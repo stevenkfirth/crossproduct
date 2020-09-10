@@ -15,7 +15,8 @@ Polygon3D
    ~crossproduct.polygon.Polygon3D.add_segments
    ~crossproduct.polygon.Polygon3D.area
    ~crossproduct.polygon.Polygon3D.centroid
-   ~crossproduct.polygon.Polygon3D.class_2D
+   ~crossproduct.polygon.Polygon3D.intersect_plane
+   ~crossproduct.polygon.Polygon3D.intersect_plane_volume
    ~crossproduct.polygon.Polygon3D.intersect_polygon
    ~crossproduct.polygon.Polygon3D.intersect_polyline
    ~crossproduct.polygon.Polygon3D.intersect_segment

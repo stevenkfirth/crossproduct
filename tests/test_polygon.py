@@ -8,7 +8,7 @@ import cProfile
 from crossproduct import Point2D, Point3D, \
     Vector2D, Vector3D, Line2D, Polygon2D, Polygon3D, Plane3D, \
     Segment2D, Segment3D, Halfline2D, Points, Segments, Polygons, Polygon2D, \
-    Polyline2D, Polylines, Line3D
+    Polyline2D, Polylines, Line3D, Polyline3D, PlaneVolume3D
 
 
 plot=False # Set to true to see the test plots
@@ -138,7 +138,7 @@ class Test_Polygon(unittest.TestCase):
     def test_intersect_polyline(self):
         ""
         
-        # SIMPLE CONVEX POLYGON
+        # 2D SIMPLE CONVEX POLYGON
         
         pg=Polygon2D(*points2d, known_convex=True)
         
@@ -156,6 +156,32 @@ class Test_Polygon(unittest.TestCase):
                         (Points(), 
                          Polylines(Polyline2D(Point2D(0.0,0.0), 
                                               Point2D(1.0,1.0)))))
+        
+        
+        # example
+        pg=Polygon3D(Point3D(0,0,3),Point3D(10,0,3),Point3D(10,10,3),Point3D(0,10,3)) 
+        pl=Polyline3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(10,10,0),Point3D(0,10,0))
+        #print(pg.intersect_polyline(pl))
+        #print(pl1.intersect_polyline(pl))
+        
+        # example
+        pg=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(10,0,3),Point3D(0,0,3)) 
+        pg1=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(10,10,0),Point3D(0,10,0))
+        #print(pg.intersect_polyline(pg1.polyline))
+        
+        
+        # 3D SIMPLE CONVEX POLYGON
+        
+        pg=Polygon3D(*points3d, known_convex=True)
+        
+        # polyline is skew and intersects at two points
+        self.assertEqual(pg.intersect_polyline(Polyline3D(Point3D(0,0,1),
+                                                          Point3D(0,0,-1),
+                                                          Point3D(0.5,0.5,-1),
+                                                          Point3D(0.5,0.5,1))),
+                         (Points(Point3D(0.0,0.0,0.0), 
+                                 Point3D(0.5,0.5,0.0)), 
+                          Polylines()))
         
         
     def test__intersect_polygon_simple_convex_and_simple_convex(self):
@@ -214,6 +240,17 @@ class Test_Polygon(unittest.TestCase):
                           (Points(), 
                            Polylines(Polyline2D(Point2D(1,0.5),Point2D(1,1))), 
                            Polygons()))
+        
+        
+        # example
+        pg=Polygon3D(Point3D(0,0,3),Point3D(10,0,3),Point3D(10,10,3),Point3D(0,10,3),known_convex=True) 
+        pg1=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(10,10,0),Point3D(0,10,0),known_convex=True)
+        #print(pg._intersect_polygon_simple_convex_and_simple_convex(pg1))
+        
+        # example
+        pg=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(10,0,3),Point3D(0,0,3)) 
+        pg1=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(10,10,0),Point3D(0,10,0))
+        #print(pg._intersect_polygon_simple_convex_and_simple_convex(pg1))
         
         
     def test__intersect_polygon_simple_and_simple_convex(self):
@@ -387,6 +424,10 @@ class Test_Polygon(unittest.TestCase):
                                               Point2D(2.0,3.0),
                                               Point2D(1,3)))))
         
+        # example
+        pg=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(10,0,3),Point3D(0,0,3)) 
+        pg1=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(10,10,0),Point3D(0,10,0))
+        #print(pg._intersect_polygon_simple_and_simple(pg1))
         
     def test_intersect_polygon(self):
         ""
@@ -481,22 +522,95 @@ class Test_Polygon(unittest.TestCase):
         #print(pg1.intersect_polygon(pg))
         
         
+        # example
+        pg=Polygon3D(Point3D(0,0,3),Point3D(10,0,3),Point3D(10,10,3),Point3D(0,10,3)) 
+        pg1=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(10,10,0),Point3D(0,10,0))
+        #print(pg.intersect_polygon(pg1))
+        
+        # example
+        pg=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(10,0,3),Point3D(0,0,3)) 
+        pg1=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(10,10,0),Point3D(0,10,0))
+        #print('test')
+        #print(pg.intersect_polygon(pg1))
+        
+        
     def test__intersect_line_t_values_simple_convex(self):
         ""
         
         # 2D
         pg=Polygon2D(*points2d)
         
+        # edge
         l=Line2D(Point2D(0,0),Vector2D(1,0))
         self.assertEqual(pg._intersect_line_t_values_simple_convex(l),
                         (0,1))  
         
+        # vertex
+        l=Line2D(Point2D(0,0),Vector2D(-1,1))
+        self.assertEqual(pg._intersect_line_t_values_simple_convex(l),
+                        (0,0))  
+        
+        # diagonal
+        l=Line2D(Point2D(0,0),Vector2D(1,1))
+        self.assertEqual(pg._intersect_line_t_values_simple_convex(l),
+                        (0,1))  
+        
+        # no intersection
+        l=Line2D(Point2D(-1,0),Vector2D(-1,1))
+        self.assertEqual(pg._intersect_line_t_values_simple_convex(l),
+                         None)  
+        
         
         # 3D
         pg=Polygon3D(*points3d)
+        
+        # line in polygon plane
+        # edge
         l=Line3D(Point3D(0,0,0),Vector3D(1,0,0))
         self.assertEqual(pg._intersect_line_t_values_simple_convex(l),
                          (0,1))  
+        # vertex
+        l=Line3D(Point3D(0,0,0),Vector3D(-1,1,0))
+        self.assertEqual(pg._intersect_line_t_values_simple_convex(l),
+                        (0,0))  
+        
+        # diagonal
+        l=Line3D(Point3D(0,0,0),Vector3D(1,1,0))
+        self.assertEqual(pg._intersect_line_t_values_simple_convex(l),
+                        (0,1))  
+        
+        # no intersection
+        l=Line3D(Point3D(-1,0,0),Vector3D(-1,1,0))
+        self.assertEqual(pg._intersect_line_t_values_simple_convex(l),
+                         None)  
+        
+        # skew line
+        # point on edge
+        l=Line3D(Point3D(0,0,0),Vector3D(1,0,1))
+        self.assertEqual(pg._intersect_line_t_values_simple_convex(l),
+                         (0,0))  
+        
+        # point in polygon
+        l=Line3D(Point3D(0.5,0.5,0),Vector3D(1,0,1))
+        self.assertEqual(pg._intersect_line_t_values_simple_convex(l),
+                         (0,0))  
+        
+        # no intersection
+        # point in polygon
+        l=Line3D(Point3D(-1,-1,0),Vector3D(1,0,1))
+        self.assertEqual(pg._intersect_line_t_values_simple_convex(l),
+                         None)  
+        
+        # perpendicular line
+        l=Line3D(Point3D(0,0,0),Vector3D(0,0,1))
+        self.assertEqual(pg._intersect_line_t_values_simple_convex(l),
+                         (0,0))  
+        
+        # parallel line
+        l=Line3D(Point3D(0,0,1),Vector3D(1,0,0))
+        self.assertEqual(pg._intersect_line_t_values_simple_convex(l),
+                         None)  
+        
         
         pg=Polygon3D(Point3D(0,0,0),
                      Point3D(1,0,1),
@@ -661,6 +775,12 @@ class Test_Polygon(unittest.TestCase):
                          Segments(Segment3D(Point3D(0.0,0.0,0), 
                                             Point3D(1.0,0.0,0)))))  
         
+        # segment is skew and intersects polygon
+        self.assertEqual(pg.intersect_segment(Segment3D(Point3D(0.5,0.5,-1),
+                                                        Point3D(0.5,0.5,1))),
+                        (Points(Point3D(0.5,0.5,0)), 
+                         Segments()))  
+        
         
         # 3D SIMPLE POLYGON (concave)
         
@@ -687,6 +807,10 @@ class Test_Polygon(unittest.TestCase):
         #print('test99')
         #print(pg.intersect_segment(Segment3D(Point3D(5,0,0),Point3D(15,0,0))))
         
+        pg=Polygon3D(Point3D(0,0,3),Point3D(10,0,3),Point3D(10,10,3),Point3D(0,10,3)) 
+        s=Segment3D(Point3D(0,0,0),Point3D(10,0,0))
+        #print(pg.intersect_segment(s))
+        #print(pg._intersect_segment_simple_convex(s))
         
         
     def test_intersect_segments(self):
@@ -713,7 +837,11 @@ class Test_Polygon(unittest.TestCase):
                                             Point2D(1.0,1.0)))))   
         
         
-        
+        # example
+        pg=Polygon3D(Point3D(0,0,3),Point3D(10,0,3),Point3D(10,10,3),Point3D(0,10,3)) 
+        sgmts=Segments(Segment3D(Point3D(0,0,0),Point3D(10,0,0)))
+        #print(pg.intersect_segments(sgmts))
+        #print(pl1.intersect_polyline(pl))
         
     
         
@@ -1139,25 +1267,7 @@ class Test_Polygon2D(unittest.TestCase):
     #                                                      Point2D(2.0,3.0),
     #                                                      Point2D(1,3)))))
         
-        
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-        
-    def test_union_adjacent_simple_polygon(self):
-        ""
-        
-        
+
         
 #    def test_intersect_simple_polygon__triangle(self):
 #        ""
@@ -1432,76 +1542,352 @@ class Test_Polygon2D(unittest.TestCase):
     
     
         
-# class Test_Polygon3D(unittest.TestCase):
-#     """
-#     points=(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))
-#     """
+class Test_Polygon3D(unittest.TestCase):
+    """
+    points3d=(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))
+    """
     
-#     def test___init__(self):
-#         ""
-#         pg=Polygon3D(*points)
-#         self.assertIsInstance(pg,Polygon3D)
-#         self.assertEqual(pg.points,points)
+    def test___init__(self):
+        ""
+        pg=Polygon3D(*points3d)
+        self.assertIsInstance(pg,Polygon3D)
+        self.assertEqual(pg.points,Points(*points3d))
         
         
-#     def test___contains__(self):
-#         ""
-#         pg=Polygon3D(*points)
-        
-#         # Point
-        
-#         # --> TO DO
-        
-#         # Segment
-        
-#         # Polygon
+    def test___contains__(self):
+        ""
+        pg=Polygon3D(*points3d)
         
         
-#     def test___eq__(self):
-#         ""
-#         pg=Polygon3D(*points)
-#         self.assertTrue(pg==pg)
-        
-#         pg2=Polygon3D(Point3D(0,0,0),Point3D(1,0,0),Point3D(0,1,0))
-#         self.assertFalse(pg==pg2)
+    def test___repr__(self):
+        ""
+        pg=Polygon3D(*points3d)
+        self.assertEqual(str(pg),
+                          'Polygon3D(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))')
         
         
-#     def test___repr__(self):
-#         ""
-#         pg=Polygon3D(*points)
-#         self.assertEqual(str(pg),
-#                          'Polygon3D(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))')
-        
-#     def test_area(self):
-#         ""
-#         pg=Polygon3D(*points)
-#         self.assertEqual(pg.area, # ccw
-#                          1)
-#         self.assertEqual(pg.reverse.area, # cw
-#                          1)
+    def test_area(self):
+        ""
+        pg=Polygon3D(*points3d)
+        self.assertEqual(pg.area, # ccw
+                          1)
+        self.assertEqual(pg.reverse.area, # cw
+                          1)
         
         
-#     def test_centroid(self):
-#         ""
-#         pg=Polygon3D(*points)
-#         self.assertEqual(pg.centroid, 
-#                          Point3D(0.5,0.5,0))
+    def test_centroid(self):
+        ""
+        pg=Polygon3D(*points3d)
+        self.assertEqual(pg.centroid, 
+                          Point3D(0.5,0.5,0))
         
         
-#     def test_next_index(self):
-#         ""
-#         pg=Polygon3D(*points)
-#         self.assertEqual(pg.next_index(0),
-#                          1)
-#         self.assertEqual(pg.next_index(3),
-#                          0)
+    def test__intersect_plane_volume_simple_convex(self):
+        ""
+        pg=Polygon3D(*points3d,known_convex=True)
+        
+        # no intersection
+        pv=PlaneVolume3D(Point3D(-1,0,0),
+                         Vector3D(1,0,0))
+        self.assertEqual(pg._intersect_plane_volume_simple_convex(pv),
+                         None)
+        
+        # point intersection
+        pv=PlaneVolume3D(Point3D(0,0,0),
+                         Vector3D(1,1,0))
+        self.assertEqual(pg._intersect_plane_volume_simple_convex(pv),
+                         Point3D(0.0,0.0,0.0))
+        
+        # segment intersection
+        pv=PlaneVolume3D(Point3D(0,0,0),
+                         Vector3D(1,0,0))
+        self.assertEqual(pg._intersect_plane_volume_simple_convex(pv),
+                         Segment3D(Point3D(0,1,0), 
+                                   Point3D(0,0,0)))
+        
+        # partial polygon intersection
+        pv=PlaneVolume3D(Point3D(0.5,0,0),
+                         Vector3D(1,0,0))
+        self.assertEqual(pg._intersect_plane_volume_simple_convex(pv),
+                         Polygon3D(Point3D(0.5,1.0,0.0),
+                                   Point3D(0,1,0),
+                                   Point3D(0,0,0),
+                                   Point3D(0.5,0.0,0.0)))
+        
+        # full polygon intersection
+        pv=PlaneVolume3D(Point3D(0,0,0),
+                         Vector3D(-1,0,0))
+        self.assertEqual(pg._intersect_plane_volume_simple_convex(pv),
+                         pg)
+        
+        
+    def test__intersect_plane_volume_simple(self):
+        ""
+        pg=Polygon3D(*points3d)
+        
+        # no intersection
+        pv=PlaneVolume3D(Point3D(-1,0,0),
+                         Vector3D(1,0,0))
+        self.assertEqual(pg._intersect_plane_volume_simple(pv),
+                         (Points(),
+                          Segments(),
+                          Polygons()))
+        
+       # point intersection
+        pv=PlaneVolume3D(Point3D(0,0,0),
+                         Vector3D(1,1,0))
+        self.assertEqual(pg._intersect_plane_volume_simple(pv),
+                         (Points(Point3D(0.0,0.0,0.0)),
+                          Segments(),
+                          Polygons()))
+                         
+        # segment intersection
+        pv=PlaneVolume3D(Point3D(0,0,0),
+                         Vector3D(1,0,0))
+        self.assertEqual(pg._intersect_plane_volume_simple(pv),
+                         (Points(),
+                          Segments(Segment3D(Point3D(0,1,0), 
+                                             Point3D(0,0,0))),
+                          Polygons()))
+                         
+        # partial polygon intersection
+        pv=PlaneVolume3D(Point3D(0.5,0,0),
+                         Vector3D(1,0,0))
+        self.assertEqual(pg._intersect_plane_volume_simple(pv),
+                         (Points(),
+                          Segments(),
+                          Polygons(Polygon3D(Point3D(0.5,1.0,0.0),
+                                   Point3D(0,1,0),
+                                   Point3D(0,0,0),
+                                   Point3D(0.5,0.0,0.0)))))
+                         
+        # full polygon intersection
+        pv=PlaneVolume3D(Point3D(0,0,0),
+                         Vector3D(-1,0,0))
+        self.assertEqual(pg._intersect_plane_volume_simple(pv),
+                         (Points(),
+                          Segments(),
+                          Polygons(pg)))
+                        
+        
+    def test_intersect_plane_volume(self):
+        ""
+        pg=Polygon3D(*points3d,known_convex=True)
+        
+        # no intersection
+        pv=PlaneVolume3D(Point3D(-1,0,0),
+                         Vector3D(1,0,0))
+        self.assertEqual(pg.intersect_plane_volume(pv),
+                         (Points(),
+                          Segments(),
+                          Polygons()))
+        
+       # point intersection
+        pv=PlaneVolume3D(Point3D(0,0,0),
+                         Vector3D(1,1,0))
+        self.assertEqual(pg.intersect_plane_volume(pv),
+                         (Points(Point3D(0.0,0.0,0.0)),
+                          Segments(),
+                          Polygons()))
+                         
+        # segment intersection
+        pv=PlaneVolume3D(Point3D(0,0,0),
+                         Vector3D(1,0,0))
+        self.assertEqual(pg.intersect_plane_volume(pv),
+                         (Points(),
+                          Segments(Segment3D(Point3D(0,1,0), 
+                                             Point3D(0,0,0))),
+                          Polygons()))
+                         
+        # partial polygon intersection
+        pv=PlaneVolume3D(Point3D(0.5,0,0),
+                         Vector3D(1,0,0))
+        self.assertEqual(pg.intersect_plane_volume(pv),
+                         (Points(),
+                          Segments(),
+                          Polygons(Polygon3D(Point3D(0.5,1.0,0.0),
+                                   Point3D(0,1,0),
+                                   Point3D(0,0,0),
+                                   Point3D(0.5,0.0,0.0)))))
+                         
+        # full polygon intersection
+        pv=PlaneVolume3D(Point3D(0,0,0),
+                         Vector3D(-1,0,0))
+        self.assertEqual(pg.intersect_plane_volume(pv),
+                         (Points(),
+                          Segments(),
+                          Polygons(pg)))
+        
+        
+    def test__intersect_plane_simple_convex_skew(self):
+        ""
+        pg=Polygon3D(*points3d,known_convex=True)
+        
+        
+        # no intersection - skew plane
+        self.assertEqual(pg._intersect_plane_simple_convex_skew(Plane3D(Point3D(-1,0,0),
+                                                                        Vector3D(1,0,0))),
+                         None)
+        
+        # intersection - point
+        self.assertEqual(pg._intersect_plane_simple_convex_skew(Plane3D(Point3D(0,0,0),
+                                                                        Vector3D(1,1,0))),
+                         Point3D(0.0,0.0,0.0))
+        
+        # intersection - edge segment
+        self.assertEqual(pg._intersect_plane_simple_convex_skew(Plane3D(Point3D(0,0,0),
+                                                                        Vector3D(1,0,0))),
+                         Segment3D(Point3D(0.0,0.0,0.0), 
+                                   Point3D(0.0,1.0,0.0)))
+        
+        # intersection - internal segment
+        self.assertEqual(pg._intersect_plane_simple_convex_skew(Plane3D(Point3D(0,0,0),
+                                                                        Vector3D(1,-1,0))),
+                         Segment3D(Point3D(0.0,0.0,0.0), 
+                                   Point3D(1.0,1.0,0.0)))
         
     
-#     def test_plane(self):
-#         ""
-#         pg=Polygon3D(*points)
-#         self.assertEqual(pg.plane,
-#                          Plane3D(Point3D(0,0,0),Vector3D(0,0,1)))
+    def test__intersect_plane_simple_skew(self):
+        ""
+        pg=Polygon3D(*points3d)
+        
+        
+        # no intersection - skew plane
+        self.assertEqual(pg._intersect_plane_simple_skew(Plane3D(Point3D(-1,0,0),
+                                                                 Vector3D(1,0,0))),
+                         (Points(),
+                          Segments()))
+        
+        # intersection - point
+        self.assertEqual(pg._intersect_plane_simple_skew(Plane3D(Point3D(0,0,0),
+                                                                 Vector3D(1,1,0))),
+                         (Points(Point3D(0.0,0.0,0.0)),
+                          Segments()))
+        
+        # intersection - edge segment
+        self.assertEqual(pg._intersect_plane_simple_skew(Plane3D(Point3D(0,0,0),
+                                                                 Vector3D(1,0,0))),
+                         (Points(),
+                          Segments(Segment3D(Point3D(0.0,0.0,0.0), 
+                                             Point3D(0.0,1.0,0.0)))))
+        
+        # intersection - internal segment
+        self.assertEqual(pg._intersect_plane_simple_skew(Plane3D(Point3D(0,0,0),
+                                                                 Vector3D(1,-1,0))),
+                         (Points(),
+                          Segments(Segment3D(Point3D(0.0,0.0,0.0), 
+                                             Point3D(1.0,1.0,0.0)))))
+        
+        
+    def test_intersect_plane(self):
+        ""
+        
+        pg=Polygon3D(*points3d)
+        
+        # polygon in plane
+        self.assertEqual(pg.intersect_plane(Plane3D(Point3D(0,0,0),
+                                                    Vector3D(0,0,1))),
+                         (Points(),
+                          Segments(),
+                          Polygons(pg)))
+        
+        # polygon parallel to plane
+        self.assertEqual(pg.intersect_plane(Plane3D(Point3D(0,0,1),
+                                                    Vector3D(0,0,1))),
+                         (Points(),
+                          Segments(),
+                          Polygons()))
+ 
+        # SIMPLE CONVEX POLYGON
+        pg=Polygon3D(*points3d, known_convex=True)
+        
+        # no intersection - skew plane
+        self.assertEqual(pg.intersect_plane(Plane3D(Point3D(-1,0,0),
+                                                    Vector3D(1,0,0))),
+                         (Points(),
+                          Segments(),
+                          Polygons()))
+        
+        # intersection - point
+        self.assertEqual(pg.intersect_plane(Plane3D(Point3D(0,0,0),
+                                                    Vector3D(1,1,0))),
+                         (Points(Point3D(0.0,0.0,0.0)),
+                          Segments(),
+                          Polygons()))
+        
+        # intersection - edge segment
+        self.assertEqual(pg.intersect_plane(Plane3D(Point3D(0,0,0),
+                                                    Vector3D(1,0,0))),
+                         (Points(),
+                          Segments(Segment3D(Point3D(0.0,0.0,0.0), 
+                                             Point3D(0.0,1.0,0.0))),
+                          Polygons()))
+        
+        # intersection - internal segment
+        self.assertEqual(pg.intersect_plane(Plane3D(Point3D(0,0,0),
+                                                    Vector3D(1,-1,0))),
+                         (Points(),
+                          Segments(Segment3D(Point3D(0.0,0.0,0.0), 
+                                             Point3D(1.0,1.0,0.0))),
+                          Polygons()))
+        
+        # SIMPLE POLYGON
+        pg=Polygon3D(*points3d)
+        
+        # no intersection - skew plane
+        self.assertEqual(pg.intersect_plane(Plane3D(Point3D(-1,0,0),
+                                                    Vector3D(1,0,0))),
+                         (Points(),
+                          Segments(),
+                          Polygons()))
+        
+        # intersection - point
+        self.assertEqual(pg.intersect_plane(Plane3D(Point3D(0,0,0),
+                                                    Vector3D(1,1,0))),
+                         (Points(Point3D(0.0,0.0,0.0)),
+                          Segments(),
+                          Polygons()))
+        
+        # intersection - edge segment
+        self.assertEqual(pg.intersect_plane(Plane3D(Point3D(0,0,0),
+                                                    Vector3D(1,0,0))),
+                         (Points(),
+                          Segments(Segment3D(Point3D(0.0,0.0,0.0), 
+                                             Point3D(0.0,1.0,0.0))),
+                          Polygons()))
+        
+        # intersection - internal segment
+        self.assertEqual(pg.intersect_plane(Plane3D(Point3D(0,0,0),
+                                                    Vector3D(1,-1,0))),
+                         (Points(),
+                          Segments(Segment3D(Point3D(0.0,0.0,0.0), 
+                                             Point3D(1.0,1.0,0.0))),
+                          Polygons()))
+    
+    
+    def test_plane(self):
+        ""
+        pg=Polygon3D(*points3d)
+        self.assertEqual(pg.plane,
+                         Plane3D(Point3D(0,0,0),Vector3D(0,0,1)))
+        
+        
+    def test_polyline(self):
+        ""
+        pg=Polygon3D(*points3d)
+        self.assertEqual(pg.polyline,
+                         Polyline3D(Point3D(0,0,0),
+                                    Point3D(1,0,0),
+                                    Point3D(1,1,0),
+                                    Point3D(0,1,0),
+                                    Point3D(0,0,0)))
+        
+        
+    def test_project_2D(self):
+        ""
+        pg=Polygon3D(*points3d)
+        self.assertEqual(pg.project_2D,
+                          (2,Polygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))))
         
         
 #     def test_plot(self):
@@ -1520,62 +1906,25 @@ class Test_Polygon2D(unittest.TestCase):
             
         
         
-#     def test_prevous_index(self):
-#         ""
-#         pg=Polygon3D(*points)
-#         self.assertEqual(pg.previous_index(0),
-#                          3)
-#         self.assertEqual(pg.previous_index(3),
-#                          2)
+class Test_Example(unittest.TestCase):
         
+    def test1(self):
+        ""
         
-#     def test_project_2D(self):
-#         ""
-#         pg=Polygon3D(*points)
-#         self.assertEqual(pg.project_2D,
-#                          (2,Polygon2D(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))))
+        pg=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(0,0,3)) 
+        pg1=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(0,10,0))
+        print(pg._intersect_polygon_simple_convex_and_simple_convex(pg1))
         
+        return
         
-#     def test_reorder(self):
-#         ""
-#         pg=Polygon3D(*points)
-#         self.assertEqual(pg.reorder(1),
-#                          Polygon3D(Point3D(1,0,0),
-#                                    Point3D(1,1,0),
-#                                    Point3D(0,1,0),
-#                                    Point3D(0,0,0)))
+        pg=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(10,0,3),Point3D(0,0,3)) 
+        pg1=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(10,10,0),Point3D(0,10,0))
+        print(pg._intersect_polygon_simple_and_simple(pg1))
         
+        # pg=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(0,0,3))
+        # line=Line3D(Point3D(0,10,0), Vector3D(0,-10,0))
         
-#     def test_reverse(self):
-#         ""
-#         pg=Polygon3D(*points)
-#         self.assertEqual(pg.reverse,
-#                          Polygon3D(Point3D(0,1,0),
-#                                    Point3D(1,1,0),
-#                                    Point3D(1,0,0),
-#                                    Point3D(0,0,0)))
-        
-        
-#     def test_triangulate(self):
-#         ""
-#         # convex polygon
-#         pg=Polygon3D(*points)
-#         self.assertEqual(pg.triangulate,
-#                          Triangles(*[Triangle3D(Point3D(0,0,0), Vector3D(1,0,0), Vector3D(0,1,0)), 
-#                                      Triangle3D(Point3D(1,0,0), Vector3D(0,1,0), Vector3D(-1,1,0))]))
-        
-#         # concave polygon
-#         pg=Polygon3D(Point3D(0,0,2),
-#                      Point3D(2,0,2),
-#                      Point3D(1,1,2),
-#                      Point3D(2,2,2),
-#                      Point3D(0,2,2))
-#         self.assertEqual(pg.triangulate,
-#                          Triangles(*[Triangle3D(Point3D(2,0,2), Vector3D(-1,1,0), Vector3D(-2,0,0)), 
-#                                      Triangle3D(Point3D(0,0,2), Vector3D(1,1,0), Vector3D(0,2,0)), 
-#                                      Triangle3D(Point3D(1,1,2), Vector3D(1,1,0), Vector3D(-1,1,0))]))
-        
-        
+        # print(pg._intersect_line_t_values_simple_convex(line))
     
 if __name__=='__main__':
     
@@ -1588,7 +1937,12 @@ if __name__=='__main__':
     
     unittest.main(Test_Polygon2D())
     
+    unittest.main(Test_Polygon3D())
+    
+    #unittest.main(Test_Example())
+    
+    
     # points=(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))
-    # unittest.main(Test_Polygon3D())
+    # 
     
     

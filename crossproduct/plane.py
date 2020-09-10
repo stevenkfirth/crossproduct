@@ -27,9 +27,9 @@ class Plane3D():
     
     .. code-block:: python
        
-       >>> pl = Polyline2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
-       >>> print(pl)
-       Polyline2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+       >>> pn = Plane3D(Point3D(0,0,0), Vector3D(0,0,1))
+       >>> print(pn)
+       Plane3D(Point3D(0,0,0), Vector3D(0,0,1))
 
     """    
     
@@ -195,7 +195,7 @@ class Plane3D():
             
             
     def intersect_segments(self,segments):
-        """Returns the intersection of this plane and a Segment sequence.
+        """Returns the intersection of this plane and a Segments sequence.
         
         :param segments: A sequence of 3D segments. 
         :type segments: Segments 
@@ -217,7 +217,7 @@ class Plane3D():
                 isegments.append(result,unique=True)
             else:
                 raise Exception
-        ipts.remove_points_in_segments(isegments)
+        ipts=ipts.remove_points_in_segments(isegments)
         return ipts,isegments
         
             

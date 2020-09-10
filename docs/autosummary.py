@@ -73,6 +73,12 @@ def create_pages(klass):
     create_stub_pages(klass)
     create_class_page(klass)
 
+
+def delete_all_files_in_directory(mydir):
+    for f in os.listdir(mydir):
+        os.remove(os.path.join(mydir, f))
+
+delete_all_files_in_directory(stub_dir)
 create_pages(crossproduct.Point2D)
 create_pages(crossproduct.Point3D)
 create_pages(crossproduct.Points)
@@ -89,6 +95,7 @@ create_pages(crossproduct.Polyline2D)
 create_pages(crossproduct.Polyline3D)
 create_pages(crossproduct.Polylines)
 create_pages(crossproduct.Plane3D)
+create_pages(crossproduct.PlaneVolume3D)
 create_pages(crossproduct.Polygon2D)
 create_pages(crossproduct.Polygon3D)
 create_pages(crossproduct.Polygons)
