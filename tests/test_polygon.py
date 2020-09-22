@@ -4,6 +4,7 @@ import unittest
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d
 import cProfile
+from pprint import pprint
 
 from crossproduct import Point2D, Point3D, \
     Vector2D, Vector3D, Line2D, Polygon2D, Polygon3D, Plane3D, \
@@ -12,6 +13,7 @@ from crossproduct import Point2D, Point3D, \
 
 
 plot=False # Set to true to see the test plots
+
 
 
 class Test_Polygon(unittest.TestCase):
@@ -533,6 +535,48 @@ class Test_Polygon(unittest.TestCase):
         #print('test')
         #print(pg.intersect_polygon(pg1))
         
+        # example
+        pg=Polygon3D(Point3D(-0.0,5.63,2.5),
+                     Point3D(-0.0,1.2,2.5),
+                     Point3D(2.06,1.2,2.5),
+                     Point3D(2.06,4.43,2.5),
+                     Point3D(2.93,4.43,2.5),
+                     Point3D(2.93,5.63,2.5))
+        pg1=Polygon3D(Point3D(-0.0,3.57,2.5),
+                      Point3D(1.0,3.57,2.5),
+                      Point3D(1.0,4.43,2.5),
+                      Point3D(2.93,4.43,2.5),
+                      Point3D(2.93,1.2,2.5),
+                      Point3D(-0.0,1.2,2.5))
+        #print(pg.intersect_polygon(pg1))
+        
+        ax=pg.plot()
+        pg1.plot(ax)
+        pg.intersect_polygon(pg1)[2][0].plot(ax)
+        
+        # example
+        pg=Polygon3D(Point3D(-8.881784197001252e-16,5.63,2.5),
+                     Point3D(-8.881784197001252e-16,1.2000000000000002,2.5),
+                     Point3D(2.059999999999999,1.2000000000000002,2.5),
+                     Point3D(2.0599999999999996,4.43,2.5),
+                     Point3D(2.9299999999999993,4.43,2.5),
+                     Point3D(2.9299999999999993,5.63,2.5))
+        pg1=Polygon3D(Point3D(-8.881784197001252e-16,3.57,2.5),
+                      Point3D(0.9999999999999991,3.57,2.5),
+                      Point3D(0.9999999999999991,4.43,2.5),
+                      Point3D(2.9299999999999993,4.43,2.5),
+                      Point3D(2.9299999999999993,1.1999999999999997,2.5),
+                      Point3D(-8.881784197001252e-16,1.1999999999999997,2.5))
+        
+        #print(pg.intersect_polygon(pg1))
+        
+        ax=pg.plot()
+        pg1.plot(ax)
+        pg.intersect_polygon(pg1)[2][0].plot(ax)
+        
+        
+        
+        
         
     def test__intersect_line_t_values_simple_convex(self):
         ""
@@ -907,8 +951,8 @@ class Test_Polygon(unittest.TestCase):
         self.assertEqual(pg._triangulate,
                          Polygons(Polygon2D(Point2D(0,0),
                                             Point2D(1,0),
-                                            Point2D(0,1)), 
-                                  Polygon2D(Point2D(1,0),
+                                            Point2D(1,1)), 
+                                  Polygon2D(Point2D(0,0),
                                             Point2D(1,1),
                                             Point2D(0,1))))
         
@@ -920,13 +964,10 @@ class Test_Polygon(unittest.TestCase):
                       Point2D(2,2),
                       Point2D(0,2))
         self.assertEqual(pg._triangulate,
-                         Polygons(Polygon2D(Point2D(2,0),
-                                            Point2D(1,1),
-                                            Point2D(0,0)), 
-                                  Polygon2D(Point2D(0,0),
-                                            Point2D(1,1),
-                                            Point2D(0,2)), 
-                                  Polygon2D(Point2D(1,1),
+                         Polygons(Polygon2D(Point2D(0,0),
+                                            Point2D(2,0),
+                                            Point2D(1,1)), 
+                                  Polygon2D(Point2D(0.0,0.0),
                                             Point2D(2,2),
                                             Point2D(0,2))))
     
@@ -1910,21 +1951,54 @@ class Test_Example(unittest.TestCase):
         
     def test1(self):
         ""
+        pg=Polygon3D(Point3D(-8.881784197001252e-16,5.63,2.5),
+                     Point3D(-8.881784197001252e-16,1.2000000000000002,2.5),
+                     Point3D(2.059999999999999,1.2000000000000002,2.5),
+                     Point3D(2.0599999999999996,4.43,2.5),
+                     Point3D(2.9299999999999993,4.43,2.5),
+                     Point3D(2.9299999999999993,5.63,2.5))
+        pg1=Polygon3D(Point3D(-8.881784197001252e-16,3.57,2.5),
+                      Point3D(0.9999999999999991,3.57,2.5),
+                      Point3D(0.9999999999999991,4.43,2.5),
+                      Point3D(2.9299999999999993,4.43,2.5),
+                      Point3D(2.9299999999999993,1.1999999999999997,2.5),
+                      Point3D(-8.881784197001252e-16,1.1999999999999997,2.5))
         
-        pg=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(0,0,3)) 
-        pg1=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(0,10,0))
-        print(pg._intersect_polygon_simple_convex_and_simple_convex(pg1))
+        result=pg.intersect_polygon(pg1,debug=True)
         
-        return
+        #ax=pg.plot()
+        #pg1.plot(ax)
+        #pg.intersect_polygon(pg1)[2][0].plot(ax)
         
-        pg=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(10,0,3),Point3D(0,0,3)) 
-        pg1=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(10,10,0),Point3D(0,10,0))
-        print(pg._intersect_polygon_simple_and_simple(pg1))
         
-        # pg=Polygon3D(Point3D(0,0,0),Point3D(10,0,0),Point3D(0,0,3))
-        # line=Line3D(Point3D(0,10,0), Vector3D(0,-10,0))
+class Test_Example1(unittest.TestCase):
         
-        # print(pg._intersect_line_t_values_simple_convex(line))
+    # def test1(self):
+    #     ""
+    #     pg1=Polygon3D(Point3D(-0.0,5.63,2.5),
+    #                   Point3D(-0.0,1.2,2.5),
+    #                   Point3D(2.06,1.2,2.5)) 
+    #     pg2=Polygon3D(Point3D(-0.0,1.2,2.5),
+    #                   Point3D(2.93,1.2,2.5),
+    #                   Point3D(2.93,4.43,2.5))
+
+    #     print(pg1.intersect_polygon(pg2))
+        
+        
+    def test2(self):
+        ""
+        pg1=Polygon3D(Point3D(-8.881784197001252e-16,5.63,2.5),
+                      Point3D(-8.881784197001252e-16,1.2000000000000002,2.5),
+                      Point3D(2.059999999999999,1.2000000000000002,2.5),
+                      known_convex=True) 
+        pg2=Polygon3D(Point3D(-8.881784197001252e-16,1.1999999999999997,2.5),
+                      Point3D(2.9299999999999993,1.1999999999999997,2.5),
+                      Point3D(2.9299999999999993,4.43,2.5),
+                      known_convex=True)
+        
+        result=pg1.intersect_polygon(pg2, debug=True)
+        
+        print(result)
     
 if __name__=='__main__':
     
@@ -1935,12 +2009,13 @@ if __name__=='__main__':
     
     unittest.main(Test_Polygon())
     
-    unittest.main(Test_Polygon2D())
+    #unittest.main(Test_Polygon2D())
     
-    unittest.main(Test_Polygon3D())
+    #unittest.main(Test_Polygon3D())
     
     #unittest.main(Test_Example())
     
+    unittest.main(Test_Example1())
     
     # points=(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))
     # 

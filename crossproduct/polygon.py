@@ -263,16 +263,23 @@ class Polygon():
            Points(), Polylines(Polyline2D(Point2D(0,0), Point2D(1,0)))
         
         """
+        #print('polyline',polyline)
         ipts, isegments = self.intersect_segments(polyline.segments)
+        #print('ipts',ipts)
+        #print('isegments',isegments)
         ipolylines=Polylines(*[polyline.__class__(*s.points) for s in isegments])
         ipolylines=ipolylines.add_all
         return ipts, ipolylines
     
     
-    def _intersect_polygon_simple_convex_and_simple_convex(self,polygon):
+    def _intersect_polygon_simple_convex_and_simple_convex(self,polygon,debug=False):
         ""
+        
+        if debug: print('_intersect_polygon_simple_convex_and_simple_convex')
+        
         ipts1,ipolylines1=self.intersect_polyline(polygon.polyline)
         #print(ipts1,ipolylines1)
+        
         
         if len(ipts1)==0 and len(ipolylines1)==0:
             return Points(),Polylines(),Polygons() # returns None - no intersection
@@ -280,33 +287,44 @@ class Polygon():
             return Points(ipts1[0]),Polylines(),Polygons() # returns a Point2D - point intersection
         elif len(ipts1)>1:
             raise Exception
-        elif len(ipts1)==0 and len(ipolylines1.segments)==1:
-            return Points(),Polylines(ipolylines1[0]),Polygons() # returns a Segment2D - edge segment intersection
-        else: # a simple convex polygon intersection
+        #elif len(ipts1)==0 and len(ipolylines1.segments)==1:
+        #    return Points(),Polylines(ipolylines1[0]),Polygons() # returns a Segment2D - edge segment intersection
+        else: 
             ipts2,ipolylines2=polygon.intersect_polyline(self.polyline)
             #print(ipts2,ipolylines2)
             
-            pls=Polylines()
+            if len(ipolylines1.segments)==1 and len(ipolylines2.segments)==1:
+                return Points(),Polylines(ipolylines1[0]),Polygons() # returns a Segment2D - edge segment intersection
             
-            if self.dimension=='2D':
-                for s in ipolylines1.segments:
-                    pls.append(Polyline2D(*s.points),unique=True)
-                for s in ipolylines2.segments:
-                    pls.append(Polyline2D(*s.points),unique=True)
-                pls=pls.add_all
-                pg=Polygon2D(*pls[0].points[:-1])
-            else:
-                for s in ipolylines1.segments:
-                    pls.append(Polyline3D(*s.points),unique=True)
-                for s in ipolylines2.segments:
-                    pls.append(Polyline3D(*s.points),unique=True)
-                pls=pls.add_all
-                pg=Polygon3D(*pls[0].points[:-1],known_convex=True)
-            
-            return Points(),Polylines(),Polygons(pg)
+            else: # a simple convex polygon intersection
+                
+                pls=Polylines()
+                
+                if self.dimension=='2D':
+                    for s in ipolylines1.segments:
+                        pls.append(Polyline2D(*s.points),unique=True)
+                    for s in ipolylines2.segments:
+                        pls.append(Polyline2D(*s.points),unique=True)
+                    pls=pls.add_all
+                    pg=Polygon2D(*pls[0].points[:-1])
+                else:
+                    for s in ipolylines1.segments:
+                        pls.append(Polyline3D(*s.points),unique=True)
+                    for s in ipolylines2.segments:
+                        pls.append(Polyline3D(*s.points),unique=True)
+                    pls=pls.add_all
+                    pg=Polygon3D(*pls[0].points[:-1],known_convex=True)
+                
+                if debug:
+                    ax=self.plot(linestyle='--')
+                    polygon.plot(ax=ax,linestyle='--')
+                    pg.plot(ax=ax,color='red')
+                    ax.set_title('The intersection result')
+                
+                return Points(),Polylines(),Polygons(pg)
         
         
-    def _intersect_polygon_simple_and_simple_convex(self,polygon):
+    def _intersect_polygon_simple_and_simple_convex(self,polygon,debug=False):
         ""
         pts=Points()
         pls=Polylines()
@@ -335,19 +353,43 @@ class Polygon():
         return pts,pls,pgs
     
     
-    def _intersect_polygon_simple_and_simple(self,polygon):
+    def _intersect_polygon_simple_and_simple(self,polygon,debug=False):
         ""
+        
+        if debug: print('_intersect_polygon_simple_and_simple')
+        
         pts=Points()
         pls=Polylines()
         pgs=Polygons()
             
+        if debug:
+            ax=None
+            for pg in self.triangles:
+                ax=pg.plot(ax)
+            ax.set_title('First polygon triangles')
+        
+            ax=None
+            for pg in polygon.triangles:
+                ax=pg.plot(ax)
+            ax.set_title('Second polygon triangles')
+            
+        
         for pg1 in self.triangles:
         
             for pg2 in polygon.triangles:
                 
                 ipts,ipls,ipgs=pg1._intersect_polygon_simple_convex_and_simple_convex(pg2)
             
+                if debug:
+                    ax=pg1.plot(linestyle='--')
+                    pg2.plot(ax,linestyle='--')
+                    ipgs.plot(ax,color='red')
+                    ax.set_title('Intersecting triangle pair')
+            
+            
                 #print(pg1,pg2)
+                #print(pg1.known_convex, pg2.known_convex)
+                #raise Exception
                 #print(ipts,ipls,ipgs)
             
                 for pt in ipts: pts.append(pt,unique=True)
@@ -372,10 +414,17 @@ class Polygon():
         
         #print(pgs)
         
+        if debug:
+            ax=self.plot(linestyle='--')
+            polygon.plot(ax=ax,linestyle='--')
+            pgs.plot(ax=ax,color='red')
+            ax.set_title('The intersection result')
+        
+        
         return pts,pls,pgs
     
     
-    def intersect_polygon(self,polygon):
+    def intersect_polygon(self,polygon,debug=False):
         """Returns the intersection of this polygon and the supplied polygon.
         
         :param segment: A polygon.
@@ -396,23 +445,28 @@ class Polygon():
             
         """
 
+        if debug:
+            ax=self.plot()
+            polygon.plot(ax)
+            ax.set_title('The two intersecting polygons')
+            
         if self._known_simple and polygon._known_simple:
             
             if self._known_convex and polygon._known_convex:
                 
-                return self._intersect_polygon_simple_convex_and_simple_convex(polygon)
+                return self._intersect_polygon_simple_convex_and_simple_convex(polygon, debug=debug)
             
             elif not self._known_convex and polygon._known_convex:
                 
-                return self._intersect_polygon_simple_and_simple_convex(polygon)
+                return self._intersect_polygon_simple_and_simple_convex(polygon, debug=debug)
             
             elif self._known_convex and not polygon._known_convex:
 
-                return polygon._intersect_polygon_simple_and_simple_convex(self)
+                return polygon._intersect_polygon_simple_and_simple_convex(self, debug=debug)
             
             elif not self._known_convex and not polygon._known_convex:
                 
-                return self._intersect_polygon_simple_and_simple(polygon)
+                return self._intersect_polygon_simple_and_simple(polygon,debug=debug)
 
             else:
                 
@@ -750,9 +804,15 @@ class Polygon():
                         
             x=abs(N.dot(ax_vector)/N.length)
            
-            ax.quiver(*c.coordinates,*N.coordinates, 
-                      length=x*0.2,
+            #print('c',c.coordinates)
+            #print('N',N.normalise.coordinates)
+            
+            ax.quiver(*c.coordinates,
+                      *N.normalise.coordinates, 
+                      #length=x*0.2,
                       lw=3)
+    
+        return ax
     
     
     @property
@@ -863,6 +923,50 @@ class Polygon():
     
     
     @property
+    def _first_triangle(self):
+        """Finds the first triangle in the polygon
+        
+        :param polygon: A 2D polygon which is counterclockwise.
+        
+        :rtype: tuple (triangle,remaining_polygon)
+        
+        """
+        
+        for i in range(len(self.points)):
+            #print(i)
+            
+            pg=self.reorder(i)
+                        
+            triangle=Polygon2D(*pg.points[0:3],known_convex=True)
+            
+            if triangle.is_counterclockwise:
+                
+                inside_point=False
+                remaining_points=pg.points[3:]
+                for pt in remaining_points:
+                    if pt in triangle:
+                        inside_point=True
+                
+                if not inside_point:
+                
+                    points=list(pg.points)
+                    points.pop(1)
+                    
+                    # merge any codirectional segments
+                    pl=Polyline2D(*points)
+                    #print(pl)
+                    sgmts=pl.segments
+                    #print(sgmts)
+                    sgmts=sgmts.add_all
+                    
+                    pts=[s.P0 for s in sgmts]+[sgmts[-1].P1]
+                    
+                    return triangle, Polygon2D(*pts)
+            
+        raise Exception
+    
+    
+    @property
     def _triangulate(self):
         """Returns a Polygon sequence of triangles which when combined have 
             the same  shape as the polygon.
@@ -871,70 +975,109 @@ class Polygon():
         
         """
         
-        result=[]
-        points=[x for x in self.points]
+        debug=False
         
-        while len(points)>2:
+        triangles=Polygons()
+        
+        # project to 2D if needed
+        if self.dimension=='2D':
+            pg=self
+        elif self.dimension=='3D':
+            coordinate_index,pg=self.project_2D
+        
+        # orientate the 2D polygon counterclockwise
+        pg=pg.ccw
+        
+        if debug: ax=pg.plot()
+        
+        n=len(pg.points)
+        while n>2: # keep looping if pghas more than two points
+        
+            t,pg=pg._first_triangle
+            #print(t)
+            triangles.append(t)
+            n=len(pg.points)
             
-            n=len(points)
-            
-            for i in range(n-2):
-                #print('i',i)
-                #print('n',n)
-                #print('len(points)',len(points))
-                
-                if i==n-1:
-                    i_next=0
-                else:
-                    i_next=i+1
-                
-                if i==0:
-                    i_prev=n-1
-                else:
-                    i_prev=i-1
-                
-                
-                test_triangle=self.__class__(points[i],
-                                             points[i_next],
-                                             points[i_prev],
-                                             known_convex=True)
-                # test_triangle=t(points[i],
-                #                 points[i_next]-points[i],
-                #                 points[i_prev]-points[i])
-                #print('test_triangle',test_triangle)
+            if debug: ax=t.plot(ax)
             
             
-                point_inside=False
-                i2=i+2
-                for j in range(n-3):
+        # project to 3D if needed
+        if self.dimension=='2D':
+            return triangles
+        elif self.dimension=='3D':
+            return triangles.project_3D(self.plane, coordinate_index)
+            
+            
+        
+        #print(t)
+        
+        #ax=t.plot()
+        #pg1.plot(ax)
+        
+        return
+        
+        
+        # result=[]
+        # points=[x for x in self.points]
+        
+        # while len(points)>2:
+            
+        #     n=len(points)
+            
+        #     for i in range(n-2):
+        #         print('i',i)
+        #         print('n',n)
+        #         print('len(points)',len(points))
+                
+        #         if i==n-1:
+        #             i_next=0
+        #         else:
+        #             i_next=i+1
+                
+        #         if i==0:
+        #             i_prev=n-1
+        #         else:
+        #             i_prev=i-1
+                
+                
+        #         test_triangle=self.__class__(points[i],
+        #                                      points[i_next],
+        #                                      points[i_prev],
+        #                                      known_convex=True)
+        #         print('test_triangle',test_triangle)
+            
+            
+        #         point_inside=False
+        #         i2=i+2
+        #         for j in range(n-3):
                     
-                    #print('i2',i2)
-                    #print('points[i2]',points[i2])
-                    #print(points[i2] in test_triangle)
-                    if points[i2] in test_triangle:
-                        point_inside=True
-                        break
+        #             #print('i2',i2)
+        #             #print('points[i2]',points[i2])
+        #             #print(points[i2] in test_triangle)
+        #             if points[i2] in test_triangle:
+        #                 point_inside=True
+        #                 break
                                                 
-                    if i2==n-1:
-                        i2=0
-                    else:
-                        i2=i2+1
+        #             if i2==n-1:
+        #                 i2=0
+        #             else:
+        #                 i2=i2+1
     
-                #print('point_inside',point_inside)
-                if point_inside:
-                    continue
+        #         print('point_inside',point_inside)
+        #         if point_inside:
+        #             continue
     
-                # the test_triangle is an ear
+        #         # the test_triangle is an ear
                 
-                result.append(test_triangle)
-                #print('result',result)
+        #         result.append(test_triangle)
+        #         #print('result',result)
                 
-                points.pop(i)
-                #print('len(points)',len(points))
-                break
+        #         points.pop(i)
+        #         #print('len(points)',len(points))
+        #         break
                 
     
-        return Polygons(*result)
+        # return Polygons(*result)
     
     
     @property
@@ -1217,7 +1360,7 @@ class Polygon2D(Polygon):
         
         """
         points=[pt.project_3D(plane,coordinate_index) for pt in self.points]
-        return Polygon3D(*points)
+        return Polygon3D(*points,known_convex=self.known_convex)
         
     
     @property

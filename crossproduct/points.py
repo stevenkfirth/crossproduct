@@ -101,6 +101,18 @@ class Points(Sequence):
             raise TypeError
     
     
+    @property
+    def coordinates(self):
+        """Returns the coordiantes of the Points sequence.
+        
+        :return: i.e. ((0,0,0),(1,0,0))
+        :rtype: tuple
+        
+        """
+        return tuple([pt.coordinates for pt in self])
+    
+    
+    
     def project_2D(self,coordinate_index):
         """Projection of 3D points on a 2D plane
         

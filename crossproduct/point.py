@@ -148,7 +148,7 @@ class Point2D(Point):
     
     def __repr__(self):
         ""
-        return 'Point2D(%s)' % ','.join([str(c) for c in self.coordinates])
+        return 'Point2D(%s)' % ','.join([str(round(c,4)) for c in self.coordinates])
     
     
     def __sub__(self,point_or_vector):
@@ -398,6 +398,7 @@ class Point3D(Point):
             
         """
         return 'Point3D(%s)' % ','.join([str(c) for c in self.coordinates])
+        #return 'Point3D(%s)' % ','.join([str(round(c,4)) for c in self.coordinates])
     
     
     def __sub__(self,point_or_vector):

@@ -90,9 +90,9 @@ class Test_Polygons(unittest.TestCase):
         pgs=pg._triangulate
         
         self.assertEqual(pgs.intersect_segment(Segment2D(Point2D(1.5,0),
-                                                         Point2D(1.5,10))),
+                                                          Point2D(1.5,10))),
                         (Points(), 
-                         Segments(Segment2D(Point2D(1.5,0), 
+                          Segments(Segment2D(Point2D(1.5,0), 
                                             Point2D(1.5,0.5)),
                                   Segment2D(Point2D(1.5,1.5), 
                                             Point2D(1.5,2)))))
