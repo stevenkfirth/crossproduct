@@ -30,47 +30,7 @@ class Segments(Sequence):
     
         self._segments=list(segments)
         
-        
-# DONT USE AS A SEQUENCE ALREADY IMPLICITLY HAS A __CONTAINS__ METHOD
-    # def __contains__(self,obj):
-    #     """Tests if the segment sequence contains the object.
-        
-    #     :param obj: A point or segment. 
-    #     :type obj: Point2D, Point3D, Segment2D, Segment3D
-            
-    #     :return: For point, True if the point lies on one of the segments; otherwise False. 
-    #         For segment, True if the segment start and endpoints are on one of the the segments; otherwise False. 
-    #     :rtype: bool
-        
-    #     :Example:
     
-    #     .. code-block:: python
-           
-    #        # 2D example
-    #        >>> s = Segment2D(Point2D(0,0), Point2D(1,0))
-    #        >>> result = Point2D(2,0) in l
-    #        >>> print(result)
-    #        False
-           
-    #        # 3D example
-    #        >>> s1 = Segment3D(Point2D(0,0,0), Point3D(1,0,0))
-    #        >>> s2 = Segment3D(Point3D(0,0,0), Point3D(0.5,0,0))
-    #        >>> result = s2 in s1
-    #        >>> print(result)
-    #        True        
-        
-    #     """
-    #     if obj.classname in ['Point','Segment']:
-            
-    #         for s in self.segments:
-    #             if obj in s:
-    #                 return True
-    #         return False
-            
-    #     else:
-    #         return TypeError()
-        
-        
     def __eq__(self,segments):
         """Tests if this segments sequence and the supplied segments sequence are equal.
         
@@ -436,27 +396,6 @@ class Segments(Sequence):
         return Segments(*segments)
     
     
-    # @property
-    # def polyline(self):
-    #     """Returns a polyline of the segments
-        
-    #     :return result:
-    #     :rtype: Polyline or None
-        
-    #     """
-        
-    #     pl=self[0].polyline
-    #     remaining_segments=Segments(*self[1:])
-        
-    #     while len(remaining_segments)>0:
-    #         try:
-    #             pl,remaining_segments=remaining_segments.union_polyline(pl)
-    #         except TypeError:
-    #             return None
-            
-    #     return pl
-    
-    
     def remove_segments_in_polygons(self,polygons):
         """Removes any segments that lie on any of the polygons' segments
         """
@@ -464,91 +403,5 @@ class Segments(Sequence):
         return Segments(*segments)
     
     
-    
-    
-    
-    # def union_polyline(self,polyline):
-    #     """Returns the first union of a segment in the sequence with the polyline
-        
-    #     :return result: (union_result (Polyline),
-    #                      Segments sequence of remaining segments)
-        
-    #     """
-    #     segments=[s for s in self]
-    #     for i in range(len(segments)):
-    #         u=polyline.union(segments[i].polyline)
-    #         if u:
-    #             segments.pop(i)
-    #             return u,Segments(*segments)
-    
-    #     return None
-    
-    
-    # def union_segment(self,segment):
-    #     """Returns the first union of a segment in the sequence with the supplied segment
-        
-    #     :return result: (union_result (Polyline),
-    #                      Segments sequence of remaining segments)
-        
-    #     """
-    #     segments=[s for s in self]
-    #     for i in range(len(segments)):
-    #         u=segments[i].union(segment)
-    #         if u:
-    #             segments.pop(i)
-    #             return u,Segments(*segments)
-    
-    #     return None
-    
-    
-    
-    # @property
-    # def polylines(self):    
-    #     """Returns the polylines that exist in the Segments sequence
-        
-    #     :return result: - 
-    #         - each polyline can have one or more than one segments
-    #     :rtype Polylines:
-        
-    #     """
-        
-    #     p=Polylines(*[s.polyline for s in self])
-    #     return p.consolidate
-    
-        
-   
-    
-    
-    # @property
-    # def union(self):    
-    #     """Returns a Segments sequence 
-        
-    #     :return result: 
-    #         - note multiple solutions are possible, only the first is returned
-    #     :rtype Segments
-        
-    #     """
-    #     segments=[s for s in self]
-    #     n=len(segments)
-    #     i=0
-        
-    #     while i<n-1:
-    #         s=segments[i]
-    #         j=i+1
-    #         while j<n:
-    #             s1=segments[j]
-    #             u=s.union(s1)
-    #             if s.is_collinear(s1) and not u is None:
-    #                 segments[i]=s.__class__(u.points[0],u.points[-1]) # as u is a polyline
-    #                 segments.pop(j)
-    #                 break
-    #             j+=1
-    #         else:
-    #             i+=1
-    #         n=len(segments)
-    #     return Segments(*segments)
-    
-        
-        
-        
+
         

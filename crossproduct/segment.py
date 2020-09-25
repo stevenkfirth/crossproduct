@@ -346,6 +346,8 @@ class Segment():
            >>> print(result)
            9
             
+        .. seealso:: `<https://geomalgorithms.com/a02-_lines.html>`_
+            
         """
         v=self.line.vL
         w=point-self.P0
@@ -389,7 +391,9 @@ class Segment():
            >>> result = s.intersect_line(l)
            >>> print(result)
            None
-            
+        
+        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
+        
         """
         if line==self.line: 
             return self
@@ -508,52 +512,6 @@ class Segment():
         """
         return self.__class__(self.P1,self.P0)
     
-    
-    # def union(self,segment):
-    #     """Returns the union of this segment and the supplied segment.
-        
-    #     :return:
-    #         Returns a polyline for two segments if they have 
-    #             a same start point or end point;
-    #         otherwise returns None.      
-    #     :rtype: None, Polyline
-        
-    #     """
-    #     result=self.polyline.union(segment.polyline)
-    #     if result is None:
-    #         return None
-    #     else:
-    #         return result
-        
-        
-        
-#        if self.is_collinear(segment):
-#            
-#            if (self.P0 in segment
-#                or self.P1 in segment): # if they overlap
-#                
-#                line=self.line
-#                t_values=[line.calculate_t_from_point(self.P0),
-#                          line.calculate_t_from_point(self.P1),
-#                          line.calculate_t_from_point(segment.P0),
-#                          line.calculate_t_from_point(segment.P1)]
-#                return self.__class__(line.calculate_point(min(t_values)),
-#                                      line.calculate_point(max(t_values)))
-#                
-#            else:
-#                
-#                return None
-#            
-#        else: # not collinear - look for a polyline union
-#            
-#            result=self.polyline.union(segment.polyline)
-#            if result is None:
-#                return None
-#            else:
-#                return result
-            
-    
-    
 
 class Segment2D(Segment):
     """A two dimensional segment, situated on an x, y plane.
@@ -615,6 +573,8 @@ class Segment2D(Segment):
            >>> print(result)
            Point2D(0,0)
         
+        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
+        
         """
         if halfline in self.line: 
             if self.P0 in halfline and self.P1 in halfline:
@@ -663,7 +623,9 @@ class Segment2D(Segment):
            >>> result = s1.intersect_segment(s2)
            >>> print(result)
            Point2D(0,0)
-            
+        
+        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
+        
         """
         if segment in self.line:
             
@@ -835,6 +797,8 @@ class Segment3D(Segment):
             >>> print(result)
             1     
         
+        .. seealso:: `<https://geomalgorithms.com/a07-_distance.html>`_
+        
         """
         u=self.line.vL
         v=segment.line.vL
@@ -930,6 +894,8 @@ class Segment3D(Segment):
            >>> print(result)
            None
         
+        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
+        
         """
         if halfline in self.line: 
             if self.P0 in halfline and self.P1 in halfline:
@@ -978,7 +944,9 @@ class Segment3D(Segment):
            >>> result = s1.intersect_segment(s2)
            >>> print(result)
            Point3D(0,0,0)
-            
+        
+        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
+        
         """
         if segment in self.line:
             
@@ -1056,18 +1024,6 @@ class Segment3D(Segment):
         y=[p.y for p in self.points]
         z=[p.z for p in self.points]
         ax.plot(x,y,z,**kwargs)
-    
-    
-    # @property
-    # def polyline(self):
-    #     """Returns a simple polyline of the segment
-        
-    #     :return polyline:
-    #     :rtype SimplePolyline3D:        
-        
-    #     """
-    #     from .simple_polyline import SimplePolyline3D
-    #     return SimplePolyline3D(self.P0,self.P1)
     
     
     def project_2D(self,coordinate_index):

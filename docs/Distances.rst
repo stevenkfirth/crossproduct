@@ -25,6 +25,18 @@ The following distance methods are available:
 | :py:class:`~crossproduct.line.Line2D`                                      | :py:meth:`~crossproduct.line.Line2D.distance_to_point`              |
 |                                                                            | :py:meth:`~crossproduct.line.Line2D.distance_to_line`               |
 +----------------------------------------------------------------------------+---------------------------------------------------------------------+
-| :py:class:`~crossproduct.line.Line3D`                                      | :py:meth:`~crossproduct.point.Point3D.distance_to_point`            |
-|                                                                            | :py:meth:`~crossproduct.point.Point3D.distance_to_line`             |
+| :py:class:`~crossproduct.line.Line3D`                                      | :py:meth:`~crossproduct.line.Line3D.distance_to_point`              |
+|                                                                            | :py:meth:`~crossproduct.line.Line3D.distance_to_line`               |
++----------------------------------------------------------------------------+---------------------------------------------------------------------+
+| :py:class:`~crossproduct.halfline.Halfline2D`                              | :py:meth:`~crossproduct.halfline.Halfline2D.distance_to_point`      |
++----------------------------------------------------------------------------+---------------------------------------------------------------------+
+| :py:class:`~crossproduct.halfline.Halfline3D`                              | :py:meth:`~crossproduct.halfline.Halfline3D.distance_to_point`      |
++----------------------------------------------------------------------------+---------------------------------------------------------------------+
+| :py:class:`~crossproduct.segment.Segment2D`                                | :py:meth:`~crossproduct.segment.Segment2D.distance_to_point`        |
++----------------------------------------------------------------------------+---------------------------------------------------------------------+
+| :py:class:`~crossproduct.segment.Segment3D`                                | :py:meth:`~crossproduct.segment.Segment3D.distance_to_point`        |
+|                                                                            | :py:meth:`~crossproduct.segment.Segment3D.distance_to_segment`      |
++----------------------------------------------------------------------------+---------------------------------------------------------------------+
+| :py:class:`~crossproduct.plane.Plane3D`                                    | :py:meth:`~crossproduct.plane.Plane3D.distance_to_point`            |
+|                                                                            | :py:meth:`~crossproduct.plane.Plane3D.signed_distance_to_point`     |
 +----------------------------------------------------------------------------+---------------------------------------------------------------------+

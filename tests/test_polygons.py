@@ -121,32 +121,6 @@ class Test_Polygons(unittest.TestCase):
         
     
     
-    # def test_union_adjacent(self):
-    #     ""
-    #     sp=Polygons(*simple_polygons)
-    #     self.assertEqual(sp.union_adjacent,
-    #                      Polygons(Polygon2D(Point2D(0.0,1.0),
-    #                                                     Point2D(0.0,0.0),
-    #                                                     Point2D(1.0,0.0),
-    #                                                     Point2D(1.0,1.0))))
-    
-    #     sp=Polygons(SimpleConvexPolygon2D(Point2D(1.0,0.5),Point2D(1.0,0.0),Point2D(2.0,0.0),Point2D(2.0,1.0)), 
-    #                       SimpleConvexPolygon2D(Point2D(2.0,1.0),Point2D(1.0,1.0),Point2D(1.0,0.5)), 
-    #                       SimpleConvexPolygon2D(Point2D(1.0,2.5),Point2D(1.0,2.0),Point2D(2.0,2.0)), 
-    #                       SimpleConvexPolygon2D(Point2D(2.0,2.0),Point2D(2.0,3.0),Point2D(1,3),Point2D(1.0,2.5)))
-        
-    #     self.assertEqual(sp.union_adjacent,
-    #                      Polygons(Polygon2D(Point2D(1.0,0.0),
-    #                                                     Point2D(2.0,0.0),
-    #                                                     Point2D(2.0,1.0),
-    #                                                     Point2D(1.0,1.0)), 
-    #                                     Polygon2D(Point2D(1.0,2.0),
-    #                                                     Point2D(2.0,2.0),
-    #                                                     Point2D(2.0,3.0),
-    #                                                     Point2D(1,3))))
-    #     #sp.plot()
-    #     #sp.union_adjacent.plot()
-    
     
 if __name__=='__main__':
     

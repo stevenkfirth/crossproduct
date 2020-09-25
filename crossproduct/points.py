@@ -114,7 +114,7 @@ class Points(Sequence):
     
     
     def project_2D(self,coordinate_index):
-        """Projection of 3D points on a 2D plane
+        """Projection of 3D points on a 2D plane.
         
         :param coordinate_index: The index of the coordinate to ignore.
             Use coordinate_index=0 to ignore the x-coordinate, coordinate_index=1 
@@ -139,7 +139,7 @@ class Points(Sequence):
     
     
     def project_3D(self,plane,coordinate_index):
-        """Projection of 2D points on a 3D plane
+        """Projection of 2D points on a 3D plane.
         
         :param plane: The plane for the projection
         :type plane: Plane3D

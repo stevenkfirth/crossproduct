@@ -55,12 +55,12 @@ class Test_Plane3D(unittest.TestCase):
                          'Plane3D(Point3D(0,0,0), Vector3D(0,0,1))')
         
         
-    def test_distance_point(self):
+    def test_distance_to_point(self):
         ""
         pl=Plane3D(P0,N)
-        self.assertEqual(pl.distance_point(Point3D(0,0,1)),
+        self.assertEqual(pl.distance_to_point(Point3D(0,0,1)),
                          1)
-        self.assertEqual(pl.distance_point(Point3D(0,0,-1)),
+        self.assertEqual(pl.distance_to_point(Point3D(0,0,-1)),
                          1)
         
         
@@ -210,50 +210,6 @@ class Test_Plane3D(unittest.TestCase):
                          Line3D(Point3D(1,0,0), Vector3D(0,1,0)))
         
         
-    # def test_is_parallel(self):
-    #     ""
-    #     pl=Plane3D(P0,N)
-        
-    #     # line
-    #     self.assertTrue(pl.is_parallel(Line3D(P0,
-    #                                           Vector3D(1,0,0))))
-    #     self.assertFalse(pl.is_parallel(Line3D(P0,
-    #                                            N)))
-    #     self.assertTrue(pl.is_parallel(Line3D(P0+N,
-    #                                           Vector3D(1,0,0))))
-        
-    #     # plane
-    #     self.assertTrue(pl.is_parallel(pl))
-    #     self.assertTrue(pl.is_parallel(Plane3D(P0+N,
-    #                                            N)))
-    #     self.assertFalse(pl.is_parallel(Plane3D(P0,
-    #                                             Vector3D(1,0,0))))
-        
-    #     # polygon
-        
-        
-    # def test_is_perpendicular(self):
-    #     ""
-    #     pl=Plane3D(P0,N)
-        
-    #     # line
-    #     self.assertFalse(pl.is_perpendicular(Line3D(P0,
-    #                                          Vector3D(1,0,0))))
-    #     self.assertTrue(pl.is_perpendicular(Line3D(P0,
-    #                                                N)))
-    #     self.assertFalse(pl.is_perpendicular(Line3D(P0+N,
-    #                                                 Vector3D(1,0,0))))
-        
-    #     # plane
-    #     self.assertFalse(pl.is_perpendicular(pl))
-    #     self.assertFalse(pl.is_perpendicular(Plane3D(P0+N,
-    #                                                  N)))
-    #     self.assertTrue(pl.is_perpendicular(Plane3D(P0,
-    #                                                 Vector3D(1,0,0))))
-        
-    #     # polygon
-        
-        
         
     def test_point_xy(self):
         ""
@@ -265,12 +221,12 @@ class Test_Plane3D(unittest.TestCase):
                          Point3D(1,1,10))
         
         
-    def test_signed_distance_point(self):
+    def test_signed_distance_to_point(self):
         ""
         pl=Plane3D(P0,N)
-        self.assertEqual(pl.signed_distance_point(Point3D(0,0,1)),
+        self.assertEqual(pl.signed_distance_to_point(Point3D(0,0,1)),
                          1)
-        self.assertEqual(pl.signed_distance_point(Point3D(0,0,-1)),
+        self.assertEqual(pl.signed_distance_to_point(Point3D(0,0,-1)),
                          -1)
         
     
@@ -280,8 +236,5 @@ if __name__=='__main__':
     N=Vector3D(0,0,1)
     unittest.main(Test_Plane3D())
     
-    
-    
-    #unittest.main(Test_Line3D())
     
     

@@ -1,26 +1,27 @@
 # -*- coding: utf-8 -*-
 
+# Many of the algorithms in crossproduct are Python implementations of
+# the algorithms provided at this website https://geomalgorithms.com/index.html 
+# which requires this notice to be included.
+#
+# // Copyright 2000 softSurfer, 2012 Dan Sunday
+# // This code may be freely used and modified for any purpose
+# // providing that this copyright notice is included with it.
+# // iSurfer.org makes no warranty for this code, and cannot be held
+# // liable for any real or imagined damage resulting from its use.
+# // Users of this code must verify correctness for their application.
 
 
 from .halfline import Halfline2D, Halfline3D
 from .line import Line2D, Line3D
-#from .parallelogram import Parallelogram2D, Parallelogram3D
 from .plane import Plane3D
 from .plane_volume import PlaneVolume3D
 from .point import Point2D, Point3D
 from .points import Points
 from .polyline import Polyline2D, Polyline3D
 from .polylines import Polylines
-#from .simple_convex_polygon import SimpleConvexPolygon2D, SimpleConvexPolygon3D
-#from .simple_convex_polygons import SimpleConvexPolygons
-#from .simple_extruded_polyhedron import SimpleExtrudedPolyhedron3D
-#from .simple_polyline import SimplePolyline2D, SimplePolyline3D
 from .polygon import Polygon2D, Polygon3D
 from .polygons import Polygons
-#from .simple_polyhedron import SimplePolyhedron3D
-#from .quadrilateral import Quadrilateral2D, Quadrilateral3D
 from .segment import Segment2D, Segment3D
 from .segments import Segments
-#from .triangle import Triangle2D, Triangle3D
-#from .triangles import Triangles
 from .vector import Vector2D, Vector3D

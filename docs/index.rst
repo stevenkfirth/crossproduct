@@ -20,7 +20,6 @@ Geometry in Python - 2D and 3D
    Distances
    Intersections
    Differences
-   Unions
    
 .. toctree::
    :maxdepth: 1

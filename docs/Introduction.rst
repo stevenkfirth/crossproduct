@@ -22,3 +22,15 @@ The methods of each class are used to perform geometric calculations. For exampl
    >>> print(result)
    Vector3D(0,0,1))
 
+GitHub
+------
+
+To view the source code, raise issues and suggest improvements - visit the projects GitHub page: `<https://github.com/stevenkfirth/crossproduct>`_
+
+References
+----------
+
+`<https://geomalgorithms.com/index.html>`_
+`<https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf>`_
+
+

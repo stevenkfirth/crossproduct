@@ -187,50 +187,7 @@ class Polylines(Sequence):
     
     
     
-    # @property
-    # def consolidate(self):    
-    #     """Returns a Polylines sequence with the same segments but a minimum number of polylines
-        
-    #     :return result: 
-    #         - each polyline can have one or more segments
-    #         - note there may be multiple solutions, only the first solution is returned
-        
-    #     :rtype Polylines
-        
-    #     """
-    #     polylines=[pl for pl in self]
-    #     n=len(polylines)
-    #     i=0
-        
-    #     while i<n-1:
-            
-    #         pl=polylines[i]
-    #         j=i+1
-            
-    #         while j<n:
-                
-    #             u=pl.union(polylines[j])
-                
-    #             if not u is None:
-    #                 polylines[i]=u
-    #                 polylines.pop(j)
-    #                 break
-                
-    #             j+=1
-
-    #         else:
-    #             i+=1
-                    
-    #         n=len(polylines)
            
-    #     return Polylines(*polylines)
-        
-    
-    
-        
-        
-        
-        
         
         
         

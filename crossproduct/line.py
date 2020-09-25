@@ -222,6 +222,8 @@ class Line():
            >>> print(result)
            0
             
+        .. seealso:: `<https://geomalgorithms.com/a02-_lines.html>`_
+            
         """
         w=point-self.P0
         b=w.dot(self.vL) / self.vL.dot(self.vL)
@@ -258,6 +260,8 @@ class Line():
            >>> result = l1.intersect_line(l2)
            >>> print(result)
            None
+        
+        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
         
         """
         if self==line: # test for collinear lines
@@ -344,6 +348,8 @@ class Line2D(Line):
        >>> print(l)
        Line2D(Point2D(0,0), Vector2D(1,0))
     
+    .. seealso:: `<https://geomalgorithms.com/a02-_lines.html>`_
+    
     """
     
     def __repr__(self):
@@ -414,7 +420,9 @@ class Line2D(Line):
            >>> result = l1.distance_to_line(l2)
            >>> print(result)
            1
-            
+        
+        .. seealso:: `<https://geomalgorithms.com/a07-_distance.html>`_
+        
         """
         if self.is_parallel(line):
             return self.distance_to_point(line.P0)
@@ -456,6 +464,8 @@ class Line3D(Line):
        >>> l = Line3D(Point3D(0,0,0), Vector3D(1,0,0))
        >>> print(l)
        Line3D(Point3D(0,0,0), Vector3D(1,0,0))
+    
+    .. seealso:: `<https://geomalgorithms.com/a02-_lines.html>`_
     
     """     
     
@@ -555,7 +565,9 @@ class Line3D(Line):
            >>> result = l1.distance_to_line(l2)
            >>> print(result)
            1
-            
+        
+        .. seealso:: `<https://geomalgorithms.com/a07-_distance.html>`_
+        
         """
         if self.is_parallel(line):
                 
@@ -664,32 +676,3 @@ class Line3D(Line):
         
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#    def is_vector_ccw(self,vector):
-#        """
-#        """
-#        return self.vL.perp_product(vector)>0
-
-
-    
-    
-    
-        
-        
-        

@@ -162,6 +162,8 @@ class Halfline():
            >>> print(result)
            0
         
+        .. seealso:: `<https://geomalgorithms.com/a02-_lines.html>`_
+        
         """
         v=self.vL
         w=point-self.P0 
@@ -201,7 +203,9 @@ class Halfline():
            >>> result = hl.intersect_line(l)
            >>> print(result)
            None
-            
+        
+        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
+        
         """
         if self.line==line:
             return self
@@ -235,6 +239,7 @@ class Halfline():
         """
         return self._vL
         
+    
 
 class Halfline2D(Halfline):
     """A two dimensional halfline, situated on an x, y plane.

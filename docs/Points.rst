@@ -11,6 +11,7 @@ Points
 
    ~crossproduct.points.Points.__eq__
    ~crossproduct.points.Points.append
+   ~crossproduct.points.Points.coordinates
    ~crossproduct.points.Points.project_2D
    ~crossproduct.points.Points.project_3D
    ~crossproduct.points.Points.remove_points_in_segments

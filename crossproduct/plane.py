@@ -31,6 +31,8 @@ class Plane3D():
        >>> print(pn)
        Plane3D(Point3D(0,0,0), Vector3D(0,0,1))
 
+    .. seealso: `<https://geomalgorithms.com/a04-_planes.html>`_
+
     """    
     
     
@@ -91,7 +93,7 @@ class Plane3D():
         return 'Plane3D(%s, %s)' % (self._P0,self._N)
     
     
-    def distance_point(self,point):
+    def distance_to_point(self,point):
         """Returns the distance to the supplied point.
         
         :param point: A 3D point.
@@ -100,8 +102,10 @@ class Plane3D():
         :return: The distance between the plane and the point
         :rtype: float
         
+        .. seealso: `<https://geomalgorithms.com/a04-_planes.html>`_
+        
         """
-        return abs(self.signed_distance_point(point))
+        return abs(self.signed_distance_to_point(point))
     
     
     def intersect_halfline(self,halfline):
@@ -115,6 +119,8 @@ class Plane3D():
             Returns halfline for a halfline on the plane.
             Return point for a skew halfline which intersects the plane.
         :rtype: None, Point3D, Halfline3D
+        
+        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
             
         """
         if halfline in self: # plane and halfline are collinear
@@ -138,7 +144,9 @@ class Plane3D():
         :return: Returns None for parallel, non-collinear plane and line.
             Returns a line for a line on the plane.
             Returns a point for a skew line which intersects the plane.
-        :rtype: None, Point3D, Line3D            
+        :rtype: None, Point3D, Line3D        
+        
+        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
         
         """
         if line in self: # plane and line are collinear
@@ -180,6 +188,8 @@ class Plane3D():
             Returns a segment for a segment on the plane.
             Returns a point for a skew segment which intersects the plane.
         :rtype: None, Point3D, Segment3D
+        
+        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
             
         """
         if segment in self: # segment lies on the plane
@@ -231,7 +241,9 @@ class Plane3D():
         :return: Returns None for parallel, non-coplanar planes.
             Returns a plane for two coplanar planes.
             Returns a line for non-parallel planes.
-        :rtype: None, Line3D, Plane3D            
+        :rtype: None, Line3D, Plane3D   
+
+        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_         
         
         """
         if plane==self:
@@ -248,48 +260,6 @@ class Plane3D():
             u=n3
             return Line3D(P0,u)
             
-            
-    # def is_parallel(self,obj):
-    #     """Tests if this plane and the supplied object are parallel
-        
-    #     :param linelike_obj: a Line3D, Halfline3D, Segment3D, Plane3D or Polygon3D
-        
-    #     :return result: the result of the test
-    #         - returns True if the object is collinear with the plane
-    #         - otherwise False
-    #     :rtype bool:
-            
-    #     """
-    #     if obj.__class__.__name__ in ['Line3D','Halfline3D','Segment3D']:
-    #         return self.N.is_perpendicular(obj.vL)
-        
-    #     elif isinstance(obj,Plane3D):
-    #         return self.N.is_collinear(obj.N)
-        
-    #     else:
-    #         raise Exception('Not implemented yet')
-            
-            
-    # def is_perpendicular(self,obj):
-    #     """Tests if this plane and the supplied object are perpendicular
-        
-    #     :param linelike_obj: a Line3D, Halfline3D, Segment3D, Plane3D or Polygon3D
-        
-    #     :return result: the result of the test
-    #         - returns True if the object is perpendicular with the plane
-    #         - otherwise False
-    #     :rtype bool:
-            
-    #     """
-    #     if obj.__class__.__name__ in ['Line3D','Halfline3D','Segment3D']:
-    #         return self.N.is_collinear(obj.vL)
-        
-    #     elif isinstance(obj,Plane3D):
-    #         return self.N.is_perpendicular(obj.N)
-        
-    #     else:
-    #         raise Exception('Not implemented yet')
-        
         
     @property
     def P0(self):
@@ -356,7 +326,7 @@ class Plane3D():
         return self._N
     
     
-    def signed_distance_point(self,point):
+    def signed_distance_to_point(self,point):
         """Returns the signed distance to the supplied point.
         
         :param point: A 3D point.

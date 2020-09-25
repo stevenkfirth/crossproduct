@@ -58,6 +58,8 @@ class Point2D(Point):
        >>> print(p)
        Point2D(1,2)
     
+    .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Basic-Definitions>`_
+    
     """
     
     def __init__(self,x,y):
@@ -83,10 +85,11 @@ class Point2D(Point):
             >>> print(result)
             Point2D(2,3)
         
+        .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Vector-Addition>`_
+        
         """
         return Point2D(self.x+vector.x,
                        self.y+vector.y)
-        
         
         
     def __eq__(self,point):
@@ -143,8 +146,6 @@ class Point2D(Point):
             else:
                 return False
         
-        
-        
     
     def __repr__(self):
         ""
@@ -183,7 +184,7 @@ class Point2D(Point):
     
     @property
     def coordinates(self):
-        """The coordinates of the point
+        """The coordinates of the point.
         
         :return: The x and y coordinates as a tuple (x,y)
         :rtype: tuple
@@ -221,7 +222,7 @@ class Point2D(Point):
     
     
     def project_3D(self,plane,coordinate_index):
-        """Projection of the point on a 3D plane
+        """Projection of the point on a 3D plane.
         
         :param plane: The plane for the projection
         :type plane: Plane3D
@@ -276,6 +277,7 @@ class Point2D(Point):
         """
         return self._y
     
+    
 
 class Point3D(Point):
     """A three dimensional point, situated on an x, y, z plane.
@@ -294,6 +296,8 @@ class Point3D(Point):
        >>> p = Point3D(1,2,3)
        >>> print(p)
        Point3D(1,2,3)
+    
+    .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Basic-Definitions>`_
     
     """
     
@@ -320,6 +324,8 @@ class Point3D(Point):
             >>> result = p + Vector3D(1,1,1)
             >>> print(result)
             Point3D(2,3,4)
+        
+        .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Vector-Addition>`_
         
         """
         return Point3D(self.x+vector.x,
@@ -391,7 +397,7 @@ class Point3D(Point):
         
     
     def __repr__(self):
-        """The string of this point for printing
+        """The string of this point for printing.
         
         :return result:
         :rtype str:
@@ -435,7 +441,7 @@ class Point3D(Point):
     
     @property
     def coordinates(self):
-        """The coordinates of the point
+        """The coordinates of the point.
         
         :return: The x, y and z coordinates as a tuple (x,y,z).
         :rtype: tuple

@@ -167,7 +167,16 @@ class Polygons(Sequence):
     
     
     def intersect_segment(self,segment):
-        ""
+        """Intersection of this Polygons sequence with the supplied segment.
+        
+        :param segment: A 2D or 3D segment.
+        :type segment: Segment2D, Segment3D
+        
+        :return: A tuple of intersection points and intersection segments 
+            (Points,Segments). 
+        :rtype: tuple     
+        
+        """
         ipts=Points()
         isegments=Segments()
         
@@ -258,67 +267,7 @@ class Polygons(Sequence):
         
     
     
-    # @property
-    # def adjacent_polygons(self):
-    #     """Returns a list of Polygon sequences containing polygons that are adjacent to each other
-        
-        
-    #     """
-        
-        
-        
     
-    
-    # @property
-    # def union_adjacent(self):
-    #     """Returns the adjacent unions of the simple polygons
-        
-    #     :rtype: Polygons
-    #     """
-    #     if len(self)==0:
-    #         return self        
-        
-    #     result=Polygons()
-    #     pg=self[0]
-    #     remaining_polygons=Polygons(*self[1:])
-    #     while True:
-    #         #print('---')
-    #         #print('i',i)
-    #         #print('pg',pg)
-    #         #print('remaining_polygons',remaining_polygons)
-    #         #print('result',result)
-    #         try:
-    #             pg,remaining_polygons=remaining_polygons.union_adjacent_simple_polygon(pg)
-                
-    #         except TypeError:
-    #             result.append(pg)
-    #             try:
-    #                 pg=remaining_polygons[0]
-    #             except IndexError:
-    #                 break
-    #             remaining_polygons=Polygons(*remaining_polygons[1:])
-    #     return result
-    
-    
-    # def union_adjacent_simple_polygon(self,polygon):
-    #     """Returns the first adjacent union of a polygon in the sequence with the polyline
-        
-    #     :return result: (union_result (Polygon),
-    #                      Polygons sequence of remaining polygons)
-        
-    #     """
-    #     pgs=[pg for pg in self]
-    #     for i in range(len(pgs)):
-    #         u=polygon.union_adjacent_simple_polygon(pgs[i])
-    #         if u:
-    #             pgs.pop(i)
-    #             return u,Polygons(*pgs)
-    
-    #     return None
-        
-        
-        
-        
         
         
         

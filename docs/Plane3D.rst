@@ -13,7 +13,7 @@ Plane3D
    ~crossproduct.plane.Plane3D.P0
    ~crossproduct.plane.Plane3D.__contains__
    ~crossproduct.plane.Plane3D.__eq__
-   ~crossproduct.plane.Plane3D.distance_point
+   ~crossproduct.plane.Plane3D.distance_to_point
    ~crossproduct.plane.Plane3D.intersect_halfline
    ~crossproduct.plane.Plane3D.intersect_line
    ~crossproduct.plane.Plane3D.intersect_plane
@@ -22,4 +22,4 @@ Plane3D
    ~crossproduct.plane.Plane3D.point_xy
    ~crossproduct.plane.Plane3D.point_yz
    ~crossproduct.plane.Plane3D.point_zx
-   ~crossproduct.plane.Plane3D.signed_distance_point
+   ~crossproduct.plane.Plane3D.signed_distance_to_point

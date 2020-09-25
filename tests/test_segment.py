@@ -333,61 +333,6 @@ class Test_Segment2D(unittest.TestCase):
                          Segment2D(P1,P0))
         
         
-    # def test_union(self):
-    #     ""
-    #     s=Segment2D(P0,P1)
-        
-    #     # two adjacent collinear segments
-    #     self.assertEqual(s.union(Segment2D(Point2D(1,1),
-    #                                        Point2D(2,2))),
-    #                      Polyline2D(Point2D(0,0),
-    #                                 Point2D(1,1),
-    #                                 Point2D(2,2)))
-            
-    #     self.assertEqual(s.union(Segment2D(Point2D(2,2),
-    #                                        Point2D(1,1))),
-    #                      Polyline2D(Point2D(0,0),
-    #                                 Point2D(1,1),
-    #                                 Point2D(2,2)))
-            
-    #     # two non-collinear segment - 
-    #     self.assertEqual(s.union(Segment2D(Point2D(1,1),
-    #                                        Point2D(2,1))),
-    #                      Polyline2D(Point2D(0,0),
-    #                                 Point2D(1,1),
-    #                                 Point2D(2,1)))
-            
-    #     self.assertEqual(s.union(Segment2D(Point2D(2,1),
-    #                                        Point2D(1,1))),
-    #                      Polyline2D(Point2D(0,0),
-    #                                 Point2D(1,1),
-    #                                 Point2D(2,1)))
-            
-    #     self.assertEqual(s.union(Segment2D(Point2D(-1,0),
-    #                                        Point2D(0,0))),
-    #                      Polyline2D(Point2D(-1,0),
-    #                                 Point2D(0,0),
-    #                                 Point2D(1,1)))
-            
-    #     self.assertEqual(s.union(Segment2D(Point2D(0,0),
-    #                                        Point2D(-1,0))),
-    #                      Polyline2D(Point2D(-1,0),
-    #                                 Point2D(0,0),
-    #                                 Point2D(1,1)))
-            
-    #     # two collinear non-adjacent segments
-    #     self.assertEqual(s.union(Segment2D(Point2D(2,2),
-    #                                        Point2D(3,3))),
-    #                      None)
-            
-    #     # two collinear overlapping segments
-    #     self.assertEqual(s.union(Segment2D(Point2D(0.5,0.5),
-    #                                        Point2D(2,2))),
-    #                      None)
-            
-        
-    
-        
         
 class Test_Segment3D(unittest.TestCase):
     """

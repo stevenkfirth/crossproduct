@@ -2,7 +2,7 @@
 Geometric_Objects
 =================
 
-`crossproduct` defines a series of python classes to represent the major geometric objects.
+`crossproduct` defines a series of Python classes to represent the major geometric objects.
 
 An instance of a geometric class is instanciated by providing the underlying information needed to form the object, 
 such as the x and y coordinates of a 2D point:
@@ -11,7 +11,7 @@ such as the x and y coordinates of a 2D point:
 
    >>> from crossproduct import Point2D 
    >>> pt = Point2D(1,0)
-   >>> print(py)
+   >>> print(pt)
    Point2D(1,0)
    
 Once a geometric object instance is formed, it is considered immutable and cannot be changed. 
@@ -50,47 +50,30 @@ The geometric object classes available are:
 | Vector                                                                     | :py:class:`~crossproduct.vector.Vector2D`                                                |
 |                                                                            | :py:class:`~crossproduct.vector.Vector3D`                                                |
 +----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
-| Line-like                                                                  | :py:class:`~crossproduct.line.Line2D`                                                    |
+| Line                                                                       | :py:class:`~crossproduct.line.Line2D`                                                    |
 |                                                                            | :py:class:`~crossproduct.line.Line3D`                                                    |
-|                                                                            +------------------------------------------------------------------------------------------+
-|                                                                            | :py:class:`~crossproduct.halfline.Halfline2D`                                            |
++----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
+| Halfline                                                                   | :py:class:`~crossproduct.halfline.Halfline2D`                                            |
 |                                                                            | :py:class:`~crossproduct.halfline.Halfline3D`                                            |
-|                                                                            +------------------------------------------------------------------------------------------+
-|                                                                            | :py:class:`~crossproduct.segment.Segment2D`                                              |
++----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
+| Segment                                                                    | :py:class:`~crossproduct.segment.Segment2D`                                              |
 |                                                                            | :py:class:`~crossproduct.segment.Segment3D`                                              |
 |                                                                            | :py:class:`~crossproduct.segments.Segments`                                              |
-|                                                                            +------------------------------------------------------------------------------------------+
-|                                                                            | :py:class:`~crossproduct.simple_polyline.SimplePolyline2D`                               |
-|                                                                            | :py:class:`~crossproduct.simple_polyline.SimplePolyline3D`                               |
-|                                                                            +------------------------------------------------------------------------------------------+
-|                                                                            | :py:class:`~crossproduct.polyline.Polyline2D`                                            |
++----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
+| Polyline                                                                   | :py:class:`~crossproduct.polyline.Polyline2D`                                            |
 |                                                                            | :py:class:`~crossproduct.polyline.Polyline3D`                                            |
 |                                                                            | :py:class:`~crossproduct.polylines.Polylines`                                            |
 +----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
 | Plane                                                                      | :py:class:`~crossproduct.plane.Plane3D`                                                  |
 +----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
-| Simple Polygon                                                             | :py:class:`~crossproduct.triangle.Triangle2D`                                            |
-|                                                                            | :py:class:`~crossproduct.triangle.Triangle3D`                                            |
-|                                                                            | :py:class:`~crossproduct.triangles.Triangles`                                            |
-|                                                                            +------------------------------------------------------------------------------------------+
-|                                                                            | :py:class:`~crossproduct.parallelogram.Parallelogram2D`                                  |
-|                                                                            | :py:class:`~crossproduct.parallelogram.Parallelogram3D`                                  |
-|                                                                            +------------------------------------------------------------------------------------------+
-|                                                                            | :py:class:`~crossproduct.quadrilateral.Quadrilateral2D`                                  |
-|                                                                            | :py:class:`~crossproduct.quadrilateral.Quadrilateral3D`                                  |
-|                                                                            +------------------------------------------------------------------------------------------+
-|                                                                            | :py:class:`~crossproduct.simple_convex_polygon.SimpleConvexPolygon2D`                    |
-|                                                                            | :py:class:`~crossproduct.simple_convex_polygon.SimpleConvexPolygon3D`                    |
-|                                                                            +------------------------------------------------------------------------------------------+
-|                                                                            | :py:class:`~crossproduct.simple_polygon.SimplePolygon2D`                                 |
-|                                                                            | :py:class:`~crossproduct.simple_polygon.SimplePolygon3D`                                 |
-|                                                                            | :py:class:`~crossproduct.simple_polygons.SimplePolygons`                                 |
+| PlaneVolume                                                                | :py:class:`~crossproduct.plane_volume.PlaneVolume3D`                                     |
 +----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
-| Simple Polyhedron                                                          | :py:class:`~crossproduct.tetrahedron.Tetrahedron3D`                                      |
-|                                                                            +------------------------------------------------------------------------------------------+
-|                                                                            | :py:class:`~crossproduct.simple_extruded_polyhedron.SimpleExtrudedPolyhedron3D`          |
-|                                                                            +------------------------------------------------------------------------------------------+
-|                                                                            | :py:class:`~crossproduct.simple_polyhedron.SimplePolyhedron3D`                           |
+| Polygon                                                                    | :py:class:`~crossproduct.polygon.Polygon2D`                                              |
+|                                                                            | :py:class:`~crossproduct.polygon.Polygon3D`                                              |
+|                                                                            | :py:class:`~crossproduct.polygons.Polygons`                                              |
++----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
+| Polyhedron                                                                 | :py:class:`~crossproduct.polyhedron.Polyhedron3D`                                        |
+|                                                                            | :py:class:`~crossproduct.polyhedrons.Polyhedrons`                                        |
 +----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
 
 

@@ -180,6 +180,8 @@ class Vector2D(Vector):
        >>> print(v)
        Vector2D(1,2)
     
+    .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Basic-Definitions>`_
+    
     """
 
     def __init__(self,x,y):
@@ -204,6 +206,8 @@ class Vector2D(Vector):
            >>> result = v + Vector2D(1,1)
            >>> print(result)
            Vector2D(2,3)
+            
+        .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Vector-Addition>`_
             
         """
         return Vector2D(self.x+vector.x,
@@ -255,6 +259,8 @@ class Vector2D(Vector):
            >>> result = v1 * 2
            >>> print(result)
            Vector2D(2,4)
+        
+        .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Scalar-Multiplication>`_
         
         """
         return Vector2D(self.x*scalar,
@@ -344,6 +350,8 @@ class Vector2D(Vector):
            >>> print(result)
            0
         
+        .. seealso:: `<https://geomalgorithms.com/vector_products.html#Dot-Product>`_
+        
         """
         return self.x*vector.x+self.y*vector.y
             
@@ -387,6 +395,8 @@ class Vector2D(Vector):
            >>> print(result)
            1
         
+        .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Vector-Length>`_
+        
         """
         return (self.x**2+self.y**2)**0.5
     
@@ -406,6 +416,8 @@ class Vector2D(Vector):
            >>> result = v.normalise
            >>> print(result)
            Vector2D(1,0)
+        
+        .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Vector-Length>`_
         
         """
         l=self.length
@@ -437,6 +449,8 @@ class Vector2D(Vector):
            >>> print(result)
            0
         
+        .. seealso:: `<https://geomalgorithms.com/vector_products.html#2D-Perp-Product>`_
+        
         """
         return self.perp_vector.dot(vector)
                 
@@ -457,6 +471,8 @@ class Vector2D(Vector):
            >>> result = v.perp_vector
            >>> print(result)
            Vector2D(0,1)
+        
+        .. seealso:: `<https://geomalgorithms.com/vector_products.html#2D-Perp-Operator>`_
         
         """
         return Vector2D(-self.y,self.x)
@@ -499,6 +515,8 @@ class Vector3D(Vector):
        >>> v = Vector3D(1,2,3)
        >>> print(v)
        Vector3D(1,2,3)
+    
+    .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Basic-Definitions>`_
     
     """
 
@@ -582,6 +600,8 @@ class Vector3D(Vector):
            >>> print(result)
            Vector2D(2,4,6)
         
+        .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Scalar-Multiplication>`_
+        
         """
         if isinstance(scalar,int) or isinstance(scalar,float):
             return Vector3D(self.x*scalar,
@@ -639,6 +659,8 @@ class Vector3D(Vector):
            >>> result = v1.cross_product(v2)
            >>> print(result)
            Vector3D(0,0,1)
+        
+        .. seealso:: `<https://geomalgorithms.com/vector_products.html#3D-Cross-Product>`_
         
         """
         (v1,v2,v3),(w1,w2,w3)=self.coordinates,vector.coordinates
@@ -709,6 +731,8 @@ class Vector3D(Vector):
            >>> print(result)
            0
         
+        .. seealso:: `<https://geomalgorithms.com/vector_products.html#Dot-Product>`_
+        
         """
         return self.x*vector.x + self.y*vector.y + self.z*vector.z
         
@@ -752,6 +776,8 @@ class Vector3D(Vector):
            >>> print(result)
            1
         
+        .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Vector-Length>`_
+        
         """
         return (self.x**2 + self.y**2 + self.z**2)**0.5
     
@@ -771,6 +797,8 @@ class Vector3D(Vector):
            >>> result = v.normalise
            >>> print(result)
            Vector3D(1,0)
+        
+        .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Vector-Length>`_
         
         """
         l=self.length
@@ -803,6 +831,8 @@ class Vector3D(Vector):
            >>> result = v1.triple_product(v2,v3)
            >>> print(result)
            1
+        
+        .. seealso:: `<https://geomalgorithms.com/vector_products.html#3D-Triple-Product>`_        
         
         """
         return self.dot(vector1.cross_product(vector2))
