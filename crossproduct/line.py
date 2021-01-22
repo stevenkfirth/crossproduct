@@ -1,14 +1,333 @@
 # -*- coding: utf-8 -*-
 
+import math
 
-from .point import Point2D
-from .vector import Vector2D
+from .point import Point
+from .vector import Vector
 
 
-SMALL_NUM=0.00000001
+ABS_TOL = 1e-7 # default value for math.isclose
 
 
 class Line():
+    """A line, as described by a Point and a Vector
+    
+    Equation of the line is P(t) = P0 + vL*t where:
+    
+        - P(t) is a point on the line; 
+        - P0 is the start point of the line; 
+        - vL is the line vector; 
+        - t is any real number.
+    
+    :param P0: The start point of the line.
+    :type P0: Point
+    :param vL: The line vector.
+    :type vL: Vector
+    
+    :raises ValueError: If the length of vL is zero.
+    
+    .. rubric:: Code Example
+    
+    .. code-block:: python
+       
+       >>> l = Line(Point(0,0), Vector(1,0))
+       >>> print(l)
+       Line(Point(0,0), Vector(1,0))
+       
+       >>> l = Line(Point(0,0,0), Vector(1,0,0))
+       >>> print(l)
+       Line(Point(0,0,0), Vector(1,0,0))
+    
+    
+    .. seealso:: `<https://geomalgorithms.com/a02-_lines.html>`_
+    
+    
+    """
+    
+    def __eq__(self,line):
+        """Tests if this line and the supplied line are equal.
+        
+        :param line: A line.
+        :type line: Line
+        
+        :return: True if the start point of supplied line lies on line (self),
+            and the vL of supplied line is collinear to the vL of line (self); 
+            otherwise False.
+        :rtype: bool
+            
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> l = Line(Point(0,0), Vector(1,0))
+           >>> result = l == l
+           >>> print(result)
+           True
+           
+           # 3D example
+           >>> l1 = Line(Point(0,0,0), Vector(1,0,0))
+           >>> l2 = Line(Point(0,0,0), Vector(-1,0,0))
+           >>> result = l1 == l2
+           >>> print(result)
+           True
+           
+        """
+        return self.contains(line.P0) and self.vL.is_collinear(line.vL)
+        
+        # if isinstance(line,Line):
+        #     return line.P0 in self and line.vL.is_collinear(self.vL)
+        # else:
+        #     return False
+
+    
+    def __init__(self,P0,vL):
+        ""
+        if math.isclose(vL.length, 0, abs_tol=ABS_TOL):
+            raise ValueError('length of vL must be greater than zero')
+                
+        self._P0=P0
+        self._vL=vL
+    
+    
+    def calculate_point(self,t):
+        """Returns a point on the line for a given t value. 
+        
+        :param t: The t value of the equation of the line.
+        :type t: float
+        
+        :return: A point on the line calcualted using the t value. 
+        :rtype: Point
+        
+        .. rubric:: Code Example
+        
+        .. code-block:: python    
+        
+           # 2D example
+           >>> l = Line(Point(0,0), Vector(1,0))
+           >>> result = l.calcuate_point(3)
+           >>> print(result)
+           Point(3,0)
+           
+           # 3D example
+           >>> l = Line(Point(0,0,0), Vector(1,0,0))
+           >>> result = l.calcuate_point(-3)
+           >>> print(result)
+           Point(-3,0,0)
+        
+        """
+        return self.P0 + (self.vL * t)
+
+
+    def calculate_t_from_point(self,point):
+        """Returns t for a given point.
+        
+        :param point: A point on the line.
+        :type point: Point
+        
+        :return: The calculated t value.
+        :rtype: float
+        
+        :Example:
+        
+        .. code-block:: python
+           
+           >>> l = Line(Point(0,0), Vector(1,0))
+           >>> result = l.calculate_t_from_point(Point(3,0))
+           >>> print(result)
+           3
+        
+           >>> l = Line(Point(0,0,0), Vector(1,0,0))
+           >>> result = l.calculate_t_from_point(Point(3,0,0))
+           >>> print(result)
+           3
+            
+        """
+        for P0,vL,point in zip(self.P0,self.vL,point): # loop through x, y, z components
+            if not math.isclose(vL, 0, abs_tol=ABS_TOL):
+                return (point-P0) / vL
+        raise Exception()
+                
+    
+    def contains(self,obj):
+        """Tests if the line contains the object.
+        
+        :param obj: A point, halfline or segment.
+        :type obj: Point, Halfline, Segment
+            
+        :return:  For point, True if the point lies on the line; otherwise False. 
+            For halfline, True if the halfline startpoint is on the line and 
+            the halfline vector is collinear to the line vector; otherwise False. 
+            For segment, True if the segment start and endpoints are on the line; otherwise False. 
+        :rtype: bool
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> l = Line(Point(0,0), Vector(1,0))
+           >>> result = Point(2,0) in l
+           >>> print(result)
+           True
+           
+           # 3D example
+           >>> l = Line(Point(0,0,0), Vector(1,0,0))
+           >>> hl = Halfline(Point(0,0,0), Vector(-1,0,0))
+           >>> result = hl in l
+           >>> print(result)
+           True
+            
+        """
+        if obj.__class__.__name__=='Point':
+            t=self.calculate_t_from_point(obj)
+            pt=self.calculate_point(t)           
+            return obj==pt 
+                    
+        elif obj.__class__.__name__=='Halfline':
+            return obj.P0 in self and obj.vL.is_collinear(self.vL)
+        
+        elif obj.__class__.__name__=='Segment':
+            return obj.P0 in self and obj.P1 in self
+        
+        else:
+            raise TypeError
+        
+    
+    def distance_to_point(self,point):
+        """Returns the distance from this line to the supplied point.
+        
+        :param point: A point.
+        :type point: Point2D or Point3D
+                    
+        :return: The distance from the line to the point. 
+        :rtype: float
+        
+        .. rubric:: Code Example
+        
+        .. code-block:: python
+           
+           # 2D example
+           >>> l = Line(Point(0,0), Vector(1,0))
+           >>> result = l.distance_to_point(Point(0,10))
+           >>> print(result)
+           10
+           
+           # 3D example
+           >>> l = Line(Point(0,0,0), Vector(1,0,0))
+           >>> result = l.distance_to_point(Point(10,0,0))
+           >>> print(result)
+           0
+            
+        .. seealso:: `<https://geomalgorithms.com/a02-_lines.html>`_
+            
+        """
+        w=point-self.P0
+        b=w.dot(self.vL) / self.vL.dot(self.vL)
+        ptB=self.P0+self.vL*b
+        return (ptB-point).length
+        
+    
+    def intersect_line(self,line):
+        """Returns the intersection of this line with the supplied line. 
+        
+        :param line: A line.
+        :type line: Line
+        
+        :return: Returns a line (this line) if lines are collinear. 
+            Returns None (i.e. no intersection) if lines are parallel. 
+            For 2D, returns a point if lines are skew.  
+            For 3D, returns either None or a point if lines are skew. 
+        :rtype: None, Point, Line 
+        
+        .. rubric:: Code Example
+        
+        .. code-block:: python
+           
+           # 2D example
+           >>> l1 = Line(Point(0,0), Vector(1,0))
+           >>> l2 = Line(Point(0,0), Vector(0,1))
+           >>> result = l.intersect_line(l2)
+           >>> print(result)
+           Point(0,0)
+           
+           # 3D example
+           >>> l1 = Line(Point(0,0,0), Vector(1,0,0))
+           >>> l2 = Line(Point(0,0,1), Vector(1,0,0))
+           >>> result = l1.intersect_line(l2)
+           >>> print(result)
+           None
+        
+        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
+        
+        """
+        if self==line: # test for collinear lines
+            return self
+        elif self.is_parallel(line): # test for parallel lines
+            return None 
+        else: # a skew line
+            return self._intersect_line_skew(line)
+    
+    
+    def is_parallel(self,line):
+        """Tests if this line and the supplied line are parallel. 
+        
+        :param obj: A line.
+        :type obj: Line
+        
+        :return: Returns True if the lines are parallel (this includes the
+            case of equal lines); 
+            otherwise False. 
+        :rtype: bool
+            
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> l1 = Line(Point(0,0), Vector(1,0))
+           >>> l2 = Line(Point(0,0), Vector(0,1))
+           >>> result = l.is_parallel(l2)
+           >>> print(result)
+           False
+           
+           # 3D example
+           >>> l1 = Line(Point3D(0,0,0), Vector(1,0,0))
+           >>> l2 = Line(Point3D(0,0,1), Vector(2,0,0))
+           >>> result = l1.is_parallel(l2)
+           >>> print(result)
+           True
+            
+        """
+        return self.vL.is_collinear(line.vL)
+
+    
+
+    
+    
+    @property
+    def P0(self):
+        """The starting point of the line.
+        
+        :rtype: Point
+        
+        """
+        return self._P0
+    
+    
+    @property
+    def vL(self):
+        """The vector of the line.
+        
+        :rtype: Vector
+        
+        """
+        return self._vL
+
+    
+
+
+class Line_old():
     "A n-D line"
     
     classname='Line'

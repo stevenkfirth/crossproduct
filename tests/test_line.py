@@ -1,8 +1,131 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from crossproduct import Point2D, Vector2D, Line2D, Halfline2D, Segment2D, \
-    Point3D, Vector3D, Line3D, Halfline3D, Segment3D
+from crossproduct import Point, Vector, Line
+
+
+
+class Test_Line(unittest.TestCase):
+    
+    def test___eq__(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        l=Line(P0,vL)
+        self.assertTrue(l==Line(P0,vL*2))
+        self.assertTrue(l==Line(P0,vL.opposite))
+        self.assertTrue(l==Line(P0+vL,vL))
+        self.assertFalse(l==Line(P0,vL.perp_vector))
+        self.assertFalse(l==Line(P0+vL.perp_vector,vL))
+        
+        P0,vL=Point(0,0,0),Vector(1,1,1)
+        l=Line(P0,vL)
+        self.assertTrue(l==Line(P0,vL*2))
+        self.assertTrue(l==Line(P0,vL.opposite))
+        self.assertTrue(l==Line(P0+vL,vL))
+        self.assertFalse(l==Line(P0,Vector(1,-1,0)))
+        self.assertFalse(l==Line(P0+Vector(1,-1,0),vL))
+        
+    
+    
+    def test___init__(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        l=Line(P0,vL)
+        self.assertIsInstance(l,
+                              Line)
+        self.assertEqual(l.P0,
+                         P0)
+        self.assertEqual(l.vL,
+                         vL)
+        
+        
+    def test_calculate_point(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        l=Line(P0,vL)
+        self.assertEqual(l.calculate_point(2),
+                         P0+vL*2)
+        
+        P0,vL=Point(0,0,0),Vector(1,1,1)
+        l=Line(P0,vL)
+        self.assertEqual(l.calculate_point(2),
+                         P0+vL*2)
+        
+        
+        
+    def test_calculate_t_from_point(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        l=Line(P0,vL)
+        self.assertEqual(l.calculate_t_from_point(P0+vL*2),
+                         2)
+        
+        P0,vL=Point(0,0,0),Vector(1,1,1) 
+        l=Line(P0,vL)
+        self.assertEqual(l.calculate_t_from_point(P0+vL*2),
+                         2)
+    
+    
+    def test___contains__(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        l=Line(P0,vL)
+        
+        # point
+        self.assertTrue(l.contains(P0))
+        self.assertTrue(l.contains(P0+vL))
+        self.assertFalse(l.contains(P0+vL.perp_vector))
+        
+        # # halfline
+        # self.assertTrue(Halfline2D(P0,vL) in l)
+        # self.assertTrue(Halfline2D(P0+vL,vL) in l)
+        # self.assertFalse(Halfline2D(P0+vL.perp_vector,vL) in l)
+        # self.assertFalse(Halfline2D(P0,vL.perp_vector) in l)
+        
+        # # segment
+        # self.assertTrue(Segment2D(P0,P0+vL) in l)
+        # self.assertTrue(Segment2D(P0,P0+vL*10) in l)
+        # self.assertFalse(Segment2D(P0+vL.perp_vector,P0+vL) in l)
+        # self.assertFalse(Segment2D(P0+vL.perp_vector,P0+vL+vL.perp_vector) in l)
+    
+        P0,vL=Point(0,0,0),Vector(1,1,1) 
+        l=Line(P0,vL)
+        
+        # point
+        self.assertTrue(l.contains(P0))
+        self.assertTrue(l.contains(P0+vL))
+        self.assertFalse(l.contains(P0+Vector(1,-1,0)))
+        
+#        # halfline
+#        self.assertTrue(Halfline3D(P0,vL) in l)
+#        self.assertTrue(Halfline3D(P0+vL,vL) in l)
+#        self.assertFalse(Halfline3D(P0+Vector3D(1,-1,0),vL) in l)
+#        self.assertFalse(Halfline3D(P0,Vector3D(1,-1,0)) in l)
+#        
+#        # segment
+#        self.assertTrue(Segment3D(P0,P0+vL) in l)
+#        self.assertTrue(Segment3D(P0,P0+vL*10) in l)
+#        self.assertFalse(Segment3D(P0+Vector3D(1,-1,0),P0+vL) in l)
+#        self.assertFalse(Segment3D(P0+Vector3D(1,-1,0),P0+vL+Vector3D(1,-1,0)) in l)
+        
+    
+    
+    
+    
+    def test_is_parallel(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        l=Line(P0,vL)
+        self.assertTrue(l.is_parallel(l))
+        self.assertTrue(l.is_parallel(Line(P0,vL.opposite)))
+        self.assertTrue(l.is_parallel(Line(P0+vL.perp_vector,vL)))
+        
+        P0,vL=Point(0,0,0),Vector(1,1,1) 
+        l=Line(P0,vL)
+        self.assertTrue(l.is_parallel(l))
+        self.assertTrue(l.is_parallel(Line(P0,vL.opposite)))
+        self.assertTrue(l.is_parallel(Line(P0+Vector(1,-1,0),vL)))
+        
 
 
 class Test_Line2D(unittest.TestCase):
@@ -324,12 +447,14 @@ class Test_Line3D(unittest.TestCase):
     
 if __name__=='__main__':
     
-    P0=Point2D(0,0)
-    vL=Vector2D(1,1)
-    unittest.main(Test_Line2D())
+    unittest.main(Test_Line())
     
-    P0=Point3D(0,0,0)
-    vL=Vector3D(1,1,1)
-    unittest.main(Test_Line3D())
+    # P0=Point2D(0,0)
+    # vL=Vector2D(1,1)
+    # unittest.main(Test_Line2D())
+    
+    # P0=Point3D(0,0,0)
+    # vL=Vector3D(1,1,1)
+    # unittest.main(Test_Line3D())
     
     

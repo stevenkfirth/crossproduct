@@ -13,7 +13,7 @@
 
 
 #from .halfline import Halfline2D, Halfline3D
-#from .line import Line2D, Line3D
+from .line import Line
 #from .plane import Plane3D
 #from .plane_volume import PlaneVolume3D
 from .point import Point
