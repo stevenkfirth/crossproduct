@@ -1,14 +1,117 @@
 # -*- coding: utf-8 -*-
 
-from .vector import Vector2D, Vector3D
+import collections.abc
+import itertools
+import math
 
-SMALL_NUM=0.00000001
+#from .vector import Vector2D, Vector3D
+
+ABS_TOL = 1e-7 # default value for math.isclose
 
 
-class Point():
-    " A n-D point"
+class Coordinate():
+    """A coordinate.
+    
+    
+    """
+    
+    def __init__(self,value):
+        ""
+        self._value=value
+        
+    @property
+    def value(self):
+        ""
+        return self._value
+    
 
-    classname='Point'
+class Point(collections.abc.Sequence):
+    """A point, as decribed by xy or xyz coordinates.
+    
+    In crossproduct Points are immutable sequences, similar to tuples. 
+    Iterating over a Point will provide its coordinates.
+    
+    :param coordinates: Argument list of two (xy) or three (xyz) coordinates. 
+        Coordinates should be of type int, float or similar numeric.
+    
+    :raises ValueError: If less then 2 or more than 3 arguments are supplied.
+    
+    .. rubric:: Code Example
+    
+    .. code-block:: python
+       
+       >>> pt = Point(1,2)
+       >>> print(pt)
+       Point(1,2)
+       >>> print(list(pt))
+       [1,2]
+       >>> print(list(pt[1]))
+       2
+    
+    .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Basic-Definitions>`_
+    
+    """
+    
+    def __eq__(self,point):
+        """Tests if this point and the supplied point have the same coordinates.
+        
+        A tolerance value is used so coordinates with very small difference 
+        are considered equal.
+        
+        :param point: The point to be tested.
+        :type point: Point
+        
+        :raises ValueError: If points are not of the same length.
+        
+        :return: True if the point coordinates are the same, otherwise False.
+        :rtype: bool
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> result = Point(1,2) == Point(2,2)
+            >>> print(result)
+            False
+            
+        """
+        zipped=itertools.zip_longest(self,point) # missing values filled with None
+        try:
+            result=[math.isclose(a, b, abs_tol=ABS_TOL) for a,b in zipped]
+        except TypeError: # occurs if say a or b is None
+            raise ValueError('Points to compare must be of the same length.')
+        return all(result)
+        
+        
+        
+        
+        # if isinstance(point,Point2D):
+        #     return (abs(self.x-point.x)<SMALL_NUM and 
+        #             abs(self.y-point.y)<SMALL_NUM)
+        # else:
+        #     return False
+    
+    
+    def __getitem__(self,index):
+        ""
+        return self._coordinates[index]
+    
+    
+    def __init__(self,*coordinates):
+        ""
+        if len(coordinates)==2 or len(coordinates)==3:
+            self._coordinates=coordinates
+        else:
+            raise ValueError('Point coordinates must have a length of 2 or 3')
+
+
+    def __len__(self):
+        ""
+        return len(self._coordinates)
+
+
+    
+    
     
     def distance_to_point(self,point):
         """Returns the distance to the supplied point.

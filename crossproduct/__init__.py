@@ -12,16 +12,16 @@
 # // Users of this code must verify correctness for their application.
 
 
-from .halfline import Halfline2D, Halfline3D
-from .line import Line2D, Line3D
-from .plane import Plane3D
-from .plane_volume import PlaneVolume3D
-from .point import Point2D, Point3D
-from .points import Points
-from .polyline import Polyline2D, Polyline3D
-from .polylines import Polylines
-from .polygon import Polygon2D, Polygon3D
-from .polygons import Polygons
-from .segment import Segment2D, Segment3D
-from .segments import Segments
-from .vector import Vector2D, Vector3D
+#from .halfline import Halfline2D, Halfline3D
+#from .line import Line2D, Line3D
+#from .plane import Plane3D
+#from .plane_volume import PlaneVolume3D
+from .point import Point
+#from .points import Points
+#from .polyline import Polyline2D, Polyline3D
+#from .polylines import Polylines
+#from .polygon import Polygon2D, Polygon3D
+#from .polygons import Polygons
+#from .segment import Segment2D, Segment3D
+#from .segments import Segments
+#from .vector import Vector2D, Vector3D
