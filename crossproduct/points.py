@@ -1,10 +1,71 @@
 # -*- coding: utf-8 -*-
 
-from collections.abc import Sequence
+import collections.abc
 from .point import Point
 
+class Points(collections.abc.MutableSequence):
+    """A sequence of points.    
+    
+    In crossproduct a Points object is a mutable sequence. 
+    Iterating over a Points object will provide its Point instances.
+    Index, append, insert and delete actions are available.
+    
+    :param points: An argument list of Point instances. 
+    
+    .. rubric:: Code Example
+        
+    .. code-block:: python
+        
+        >>> pts = Points(Point(0,0), Point(1,0))
+        >>> print(pts)
+        Points(Point(0.0,0.0), Point(1.0,0.0))
+        
+        >>> print(pts[1])
+        Point(1.0,0.0)
+    
+    """
+    
+    def __delitem__(self,index):
+        ""
+        del self._points[index]
+        
+    
+    def __getitem__(self,index):
+        ""
+        return self._points[index]
+    
+    
+    def __init__(self,*points):
+        ""
+        self._points=list(points)
+    
+    
+    def __len__(self):
+        ""
+        return len(self._points)
+    
+    
+    def __repr__(self):
+        ""
+        return 'Points(%s)' % ', '.join([str(pt) for pt in self])
+    
+    
+    def __setitem__(self,index,value):
+        ""
+        self._points[index]=value
+    
+    
+    def insert(self,index,value):
+        ""
+        return self._points.insert(index,value)
+    
+    
 
-class Points(Sequence):
+
+
+from collections.abc import Sequence
+
+class Points_old(Sequence):
     """A sequence of points.    
     
     :param points: A sequence of Point2D or Point3D instances. 

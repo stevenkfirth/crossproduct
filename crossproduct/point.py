@@ -4,35 +4,22 @@ import collections.abc
 import itertools
 import math
 
-#from .vector import Vector2D, Vector3D
+from .vector import Vector
 
 ABS_TOL = 1e-7 # default value for math.isclose
 
 
-class Coordinate():
-    """A coordinate.
-    
-    
-    """
-    
-    def __init__(self,value):
-        ""
-        self._value=value
-        
-    @property
-    def value(self):
-        ""
-        return self._value
-    
 
 class Point(collections.abc.Sequence):
-    """A point, as decribed by xy or xyz coordinates.
+    """A point, as described by xy or xyz coordinates.
     
-    In crossproduct Points are immutable sequences, similar to tuples. 
+    In crossproduct a Point object is a immutable sequence. 
     Iterating over a Point will provide its coordinates.
+    Indexing a Point will return the coordinate for that index (0=x, 1=y, 2=z)
     
     :param coordinates: Argument list of two (xy) or three (xyz) coordinates. 
-        Coordinates should be of type int, float or similar numeric.
+        Coordinates should be of type int, float or similar numeric. These values
+        are converted to floats.
     
     :raises ValueError: If less then 2 or more than 3 arguments are supplied.
     
@@ -42,15 +29,43 @@ class Point(collections.abc.Sequence):
        
        >>> pt = Point(1,2)
        >>> print(pt)
-       Point(1,2)
-       >>> print(list(pt))
-       [1,2]
-       >>> print(list(pt[1]))
-       2
+       Point(1.0,2.0)
+       >>> print(list(pt))      # print a list of the coordinates
+       [1.0,2.0]
+       >>> print(pt[1])      # print the y coordinate
+       2.0
     
     .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Basic-Definitions>`_
     
     """
+    
+    def __add__(self,vector):
+        """The addition of this point and a vector.
+        
+        :param vector: The vector to be added to the point.
+        :type vector: Vector
+        
+        :rtype: Point
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> p = Point(1,2)
+            >>> result = p + Vector(1,1)
+            >>> print(result)
+            Point(2.0,3.0)
+        
+        .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Vector-Addition>`_
+        
+        """
+        zipped=itertools.zip_longest(self,vector) # missing values filled with None
+        try:
+            coordinates=[a+b for a,b in zipped]
+        except TypeError: # occurs if, say, a or b is None
+            raise ValueError('Point and vector to add must be of the same length.')
+        return Point(*coordinates)
+    
     
     def __eq__(self,point):
         """Tests if this point and the supplied point have the same coordinates.
@@ -66,7 +81,7 @@ class Point(collections.abc.Sequence):
         :return: True if the point coordinates are the same, otherwise False.
         :rtype: bool
         
-        :Example:
+        .. rubric:: Code Example
     
         .. code-block:: python
         
@@ -77,19 +92,10 @@ class Point(collections.abc.Sequence):
         """
         zipped=itertools.zip_longest(self,point) # missing values filled with None
         try:
-            result=[math.isclose(a, b, abs_tol=ABS_TOL) for a,b in zipped]
-        except TypeError: # occurs if say a or b is None
+            result=[self._coordinates_equal(a,b) for a,b in zipped]
+        except TypeError: # occurs if, say, a or b is None
             raise ValueError('Points to compare must be of the same length.')
         return all(result)
-        
-        
-        
-        
-        # if isinstance(point,Point2D):
-        #     return (abs(self.x-point.x)<SMALL_NUM and 
-        #             abs(self.y-point.y)<SMALL_NUM)
-        # else:
-        #     return False
     
     
     def __getitem__(self,index):
@@ -100,7 +106,7 @@ class Point(collections.abc.Sequence):
     def __init__(self,*coordinates):
         ""
         if len(coordinates)==2 or len(coordinates)==3:
-            self._coordinates=coordinates
+            self._coordinates=tuple(float(c) for c in coordinates)
         else:
             raise ValueError('Point coordinates must have a length of 2 or 3')
 
@@ -110,38 +116,217 @@ class Point(collections.abc.Sequence):
         return len(self._coordinates)
 
 
+    def __lt__(self,point):
+        """Tests if the coordinates of this point are lower than the supplied point.
+        
+        A tolerance value is used so coordinates with very small difference 
+        are considered equal.
+        
+        :param point: The point to be tested.
+        :type point: Point
+        
+        :raises ValueError: If points are not of the same length.
+        
+        :return: True if the x coordinate of this point is lower than the 
+            supplied point, otherwise False. If both x coordinates are equal, then 
+            True if the y coordinate of this point is lower than the 
+            supplied point, otherwise False. For 3D points -> if both x and y coordinates 
+            are equal, then 
+            True if the z coordinate of this point is lower than the 
+            supplied point, otherwise False. 
+        :rtype: bool
+        
+        .. rubric:: Code Example
     
+        .. code-block:: python
+        
+            >>> result = Point(1,2) < Point(2,2)
+            >>> print(result)
+            True
+        
+        """
+        zipped=itertools.zip_longest(self,point) # missing values filled with None
+        try:
+            for a,b in zipped:
+                if self._coordinates_equal(a, b): continue
+                return a<b
+        except TypeError: # occurs if, say, a or b is None
+            raise ValueError('Points to compare must be of the same length.')
+    
+    
+    def __repr__(self):
+        ""
+        return 'Point(%s)' % ','.join([str(c) for c in self])
+    
+        
+    def __sub__(self,point_or_vector):
+        """Subtraction of supplied object from this point.
+        
+        :param point_or_vector: Either a point or a vector.
+        :type point_or_vector: Point or Vector
+        
+        :return: If a point is supplied, then a vector is returned (i.e. v=P1-P0). 
+            If a vector is supplied, then a point is returned (i.e. P1=P0-v).
+        :rtype: Point2D or Vector2D
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> result = Point(2,2) - Point(1,2)
+            >>> print(result)
+            Vector(1.0,0.0)
+        
+        """
+        zipped=itertools.zip_longest(self,point_or_vector) # missing values filled with None
+        try:
+            coordinates=[a-b for a,b in zipped]
+        except TypeError: # occurs if, say, a or b is None
+            raise ValueError(r'Point and point/vector to subtract must be of the same length.')
+        if isinstance(point_or_vector,Point):
+            return Vector(*coordinates)
+        else:
+            return Point(*coordinates)
+            
+    
+    def _coordinates_equal(self,a,b):
+        """Return True if a and b are equal within the tolerance value.
+        """
+        return math.isclose(a, b, abs_tol=ABS_TOL)
+        
     
     
     def distance_to_point(self,point):
         """Returns the distance to the supplied point.
         
         :param point: The point to calculate the distance to.
-        :type point: Point2D or Point3D
+        :type point: Point
         
         :return: The distance between the two points.
         :rtype: float
         
-        :Example:
+        .. rubric:: Code Example
     
         .. code-block:: python
            
-           # 2D example
-           >>> p1 = Point2D(1,2)
-           >>> p1 = Point2D(2,2)
-           >>> result = p1.distance_to_point(p2)
-           >>> print(result)
-           1
-           
-           # 3D example
-           >>> p1 = Point3D(1,2,3)
-           >>> p1 = Point3D(2,2,3)
+           >>> p1 = Point(1,2)
+           >>> p1 = Point(2,2)
            >>> result = p1.distance_to_point(p2)
            >>> print(result)
            1
             
         """
         return (point-self).length
+    
+    
+    def project_2D(self,coordinate_index):
+        """Projection of a 3D point as a 2D point.
+        
+        :param coordinate_index: The index of the coordinate to ignore.
+            Use coordinate_index=0 to ignore the x-coordinate, coordinate_index=1 
+            for the y-coordinate and coordinate_index=2 for the z-coordinate.
+        :type coordinate_index: int
+        
+        :raises ValueError: If coordinate_index is not between 0 and 2.
+        
+        :return: A 2D point based on the projection of the 3D point.
+        :rtype: Point2D
+               
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> pt = Point(1,2,3)
+            >>> result = pt.project_2D(1)
+            >>> print(result)
+            Point(1.0,3.0)   
+        
+        """
+        
+        if coordinate_index==0:
+            return Point(self.y,self.z)
+        elif coordinate_index==1:
+            return Point(self.z,self.x)
+        elif coordinate_index==2:
+            return Point(self.x,self.y)
+        else:
+            raise ValueError('coordinate_index must be between 0 and 2')
+    
+    
+    def project_3D(self,plane,coordinate_index):
+        """Projection of the point on a 3D plane.
+        
+        :param plane: The plane for the projection
+        :type plane: Plane
+        :param coordinate_index: The index of the coordinate which was ignored 
+            to create the 2D projection. For example, coordinate_index=0
+            means that the x-coordinate was ignored and this point
+            was originally projected onto the yz plane.
+        :type coordinate_index: int
+        
+        :raises ValueError: If coordinate_index is not between 0 and 2.
+        
+        :return: The 3D point as projected onto the plane.
+        :rtype: Point
+               
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> pt = Point(2,2)
+            >>> pl = Plane3D(Point(0,0,1), Vector(0,0,1))
+            >>> result = pt.project_3D(pl, 2)
+            Point(2.0,2.0,1.0)   
+        
+        """
+        
+        if coordinate_index==0:
+            point=plane.point_yz(self.x,self.y)
+        elif coordinate_index==1:
+            point=plane.point_zx(self.x,self.y)
+        elif coordinate_index==2:
+            point=plane.point_xy(self.x,self.y)
+        else:
+            raise ValueError('coordinate_index must be between 0 and 2')
+            
+        return point
+    
+    
+    @property
+    def x(self):
+        """The x coordinate of the point.
+        
+        :rtype: int, float
+        
+        """
+        return self[0]
+    
+    
+    @property
+    def y(self):
+        """The y coordinate of the point.
+        
+        :rtype: int, float
+        
+        """
+        return self[1]
+    
+    
+    @property
+    def z(self):
+        """The z coordinate of the point.
+        
+        :raises IndexError: If point is a 2D point.
+        
+        :rtype: int, float
+        
+        """
+        return self[2]
+    
+    
+    
+    
+    
     
 
 
