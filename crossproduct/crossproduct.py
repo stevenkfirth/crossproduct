@@ -340,7 +340,33 @@ class Points(collections.abc.MutableSequence):
     def __delitem__(self,index):
         ""
         del self._points[index]
+       
+       
+    def __eq__(self,points):
+        """Tests if this points sequence and the supplied points sequence are equal.
         
+        :param points: The points sequence to be tested.
+        :type points: Points
+        
+        :return: True if the sequence items are equal, otherwise False.
+        :rtype: bool
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> pts1 = Points(Point(0,0), Point(1,0))
+            >>> pts2 = Points(Point(0,0), Point(1,0))
+            >>> result = pts1 == pts2
+            >>> print(result)
+            True
+            
+        """
+        if isinstance(points,Points) and self._points==points._points:
+            return True
+        else:
+            return False
+    
     
     def __getitem__(self,index):
         ""
@@ -2003,7 +2029,8 @@ class Segment():
            Point(0,0,0)
                 
         """
-        if t>=0-SMALL_NUM and t<=1+SMALL_NUM: ## MADE A CHANGE HERE
+        if ((math.isclose(t, 0, abs_tol=ABS_TOL) or t>0) and
+            (math.isclose(t, 1, abs_tol=ABS_TOL) or t<1)):
             return self.line.calculate_point(t)
         else:
             raise ValueError('For a segment, t must be equal to or between 0 and 1')
@@ -2048,7 +2075,7 @@ class Segment():
         
         if isinstance(obj,Segment):
             
-            return obj.P0 in self and obj.P1 in self
+            return self.contains(obj.P0) and self.contains(obj.P1)
             
         else:
             return TypeError()
@@ -2088,7 +2115,7 @@ class Segment():
            Segments()               
         
         """
-        if self in segment:
+        if segment.contains(self):
             return Segments()
         
         if self.line==segment.line:
@@ -2219,6 +2246,98 @@ class Segment():
             return self.line.distance_to_point(point)
     
     
+    def distance_to_segment(self,segment):
+        """Returns the distance from this segment to the supplied segment.
+        
+        :param segment: A 3D segment.
+        :type segment: Segment
+        
+        :return: The distance between the two segments.
+        :rtype: float
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> s1 = Segment(Point(0,0,0), Point(0,0,1))
+            >>> s2 = Segment(Point(0,0,2), Point(0,0,3))
+            >>> result= s1.distance_to_segment(s2)
+            >>> print(result)
+            1     
+        
+        .. seealso:: `<https://geomalgorithms.com/a07-_distance.html>`_
+        
+        """
+        u=self.line.vL
+        v=segment.line.vL
+        w=self.P0-segment.P0
+        a=u.dot(u)
+        b=u.dot(v)
+        c=v.dot(v)
+        d=u.dot(w)
+        e=v.dot(w)
+        D=a*c - b*b
+        sc,sN,sD = D,D,D      # sc = sN / sD, default sD = D >= 0
+        tc,tN,tD = D,D,D       # tc = tN / tD, default tD = D >= 0
+        
+        if math.isclose(D, 0, abs_tol=ABS_TOL):
+            
+            sN=0 # force using point P0 on segment S1
+            sD=1 # to prevent possible division by 0.0 later
+            tN=e
+            tD=c
+            
+        else: # get the closest points on the infinite lines
+            
+            sN=b*e-c*d
+            tN=a*e-b*d
+            
+            if sN<0: # sc < 0 => the s=0 edge is visible
+                
+                sN=0
+                tN=e
+                tD=c
+                
+            elif sN>sD: # sc > 1  => the s=1 edge is visible
+                
+                sN=sD
+                tN=e+b
+                tD=c
+                
+        if tN<0: # tc < 0 => the t=0 edge is visible
+            
+            tN=0
+            # recompute sc for this edge
+            if -d<0:
+                sN=0
+            elif -d>a:
+                sN-sD
+            else:
+                sN=-d
+                sD=a
+                
+        elif tN>tD: # tc > 1  => the t=1 edge is visible
+            
+            tN=tD
+            # recompute sc for this edge
+            if -d+b<0:
+                sN=0
+            elif -d+b>a:
+                sN=sD
+            else:
+                sN=-d+b
+                sD=a
+                
+        # finally do the division to get sc and tc
+        sc=0 if math.isclose(sN, 0, abs_tol=ABS_TOL) else sN / sD
+        tc=0 if math.isclose(tN, 0, abs_tol=ABS_TOL) else tN / tD
+        
+        # get the difference of the two closest points
+        dP = w + u*sc - v*tc  # =  S1(sc) - S2(tc)
+            
+        return dP.length
+
+    
     def intersect_halfline(self,halfline):
         """Returns the interesection of this segment and a halfline.
         
@@ -2252,55 +2371,28 @@ class Segment():
         .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
         
         """
-        #2D
-        if halfline in self.line: 
-            if self.P0 in halfline and self.P1 in halfline:
+        if self.line.contains(halfline): 
+            if halfline.contains(self.P0) and halfline.contains(self.P1):
                 return self
             elif self.P0==halfline.P0:
                 return self.P0
             elif self.P1==halfline.P0:
                 return self.P1
-            elif self.P0 in halfline:
-                return Segment2D(self.P0,halfline.P0,)
-            elif self.P1 in halfline:
-                return Segment2D(halfline.P0,self.P1)
+            elif halfline.contains(self.P0):
+                return Segment(self.P0,halfline.P0,)
+            elif halfline.contains(self.P1):
+                return Segment(halfline.P0,self.P1)
             else: 
                 return None
         elif self.line.is_parallel(halfline): # parallel but not collinear
             return None 
         else:
             p=self.line.intersect_line_skew(halfline.line)
-            #print(p)
-            if p in self and p in halfline:
+            if self.contains(p) and halfline.contains(p):
                 return p
             else:
                 return None
                 
-        #3D
-        if halfline in self.line: 
-            if self.P0 in halfline and self.P1 in halfline:
-                return self
-            elif self.P0==halfline.P0:
-                return self.P0
-            elif self.P1==halfline.P0:
-                return self.P1
-            elif self.P0 in halfline:
-                return Segment2D(self.P0,halfline.P0,)
-            elif self.P1 in halfline:
-                return Segment2D(halfline.P0,self.P1)
-            else: 
-                return None
-        elif self.line.is_parallel(halfline): # parallel but not collinear
-            return None 
-        else:
-            p=self.line._intersect_line_skew(halfline.line)
-            #print(p)
-            if p in self and p in halfline:
-                return p
-            else:
-                return None
-        
-    
 
     def intersect_line(self,line):
         """Returns the intersection of this segment with the supplied line.
@@ -2341,7 +2433,7 @@ class Segment():
             return None 
         else:
             p=self.line._intersect_line_skew(line)
-            if p in self:
+            if self.contains(p):
                 return p
             else:
                 return None
@@ -2380,21 +2472,11 @@ class Segment():
         .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
         
         """
-        #2D
-        if segment in self.line:
+        if self.line.contains(segment):
             
-            try:
-                t0=self.line.calculate_t_from_x(segment.P0.x)
-            except ValueError:
-                t0=self.line.calculate_t_from_y(segment.P0.y)
+            t0=self.line.calculate_t_from_point(segment.P0)
+            t1=self.line.calculate_t_from_point(segment.P1)
                 
-            try:
-                t1=self.line.calculate_t_from_x(segment.P1.x)
-            except ValueError:
-                t1=self.line.calculate_t_from_y(segment.P1.y)
-            
-            #t1=self.calculate_t_from_point(segment.P1)
-            
             if t0 > t1: # must have t0 smaller than t1, swap if not
                 t0, t1 = t1, t0 
             
@@ -2408,62 +2490,18 @@ class Segment():
                 return self.calculate_point(t0)
             
             # they overlap in a valid subsegment
-            return Segment2D(self.calculate_point(t0),self.calculate_point(t1))
+            return Segment(self.calculate_point(t0),self.calculate_point(t1))
         
         elif self.line.is_parallel(segment.line): # parallel but not collinear
             return None 
         
         else:
             p=self.line._intersect_line_skew(segment.line)
-            if p in self and p in segment:
+            if self.contains(p) and segment.contains(p):
                 return p
             else:
                 return None
     
-        #3D
-        if segment in self.line:
-            
-            try:
-                t0=self.calculate_t_from_x(segment.P0.x)
-            except ValueError:
-                try:
-                    t0=self.calculate_t_from_y(segment.P0.y)
-                except ValueError:
-                    t0=self.calculate_t_from_z(segment.P0.z)
-                    
-            try:
-                t1=self.calculate_t_from_x(segment.P1.x)
-            except ValueError:
-                try:
-                    t1=self.calculate_t_from_y(segment.P1.y)
-                except ValueError:
-                    t1=self.calculate_t_from_z(segment.P1.z)
-                    
-            if t0 > t1: # must have t0 smaller than t1, swap if not
-                t0, t1 = t1, t0 
-            
-            if (t0 > 1 or t1 < 0): # intersecting segment does not overlap
-                return None
-            
-            if t0<0: t0=0 # clip to min 0
-            if t1>1: t1=1 # clip to max 1
-            
-            if t0==t1: # point overlap
-                return self.calculate_point(t0)
-            
-            # they overlap in a valid subsegment
-            return Segment3D(self.calculate_point(t0),self.calculate_point(t1))
-        
-        elif self.line.is_parallel(segment.line): # parallel but not collinear
-            return None 
-        
-        else:
-            p=self.line._intersect_line_skew(segment.line)
-            if p in self and p in segment:
-                return p
-            else:
-                return None
-        
     
     @property
     def line(self):
@@ -2488,8 +2526,8 @@ class Segment():
         
         
         """
-        return Line2D(self.P0,self.P1-self.P0)
-        return Line3D(self.P0,self.P1-self.P0)
+        return Line(self.P0,self.P1-self.P0)
+        
 
     @property
     def order(self):
@@ -2592,14 +2630,14 @@ class Segment():
         """
         
         if coordinate_index==0:
-            return Segment2D(Point2D(self.P0.y,self.P0.z),
-                              Point2D(self.P1.y,self.P1.z))
+            return Segment(Point(self.P0.y,self.P0.z),
+                              Point(self.P1.y,self.P1.z))
         elif coordinate_index==1:
-            return Segment2D(Point2D(self.P0.z,self.P0.x),
-                             Point2D(self.P1.z,self.P1.x))
+            return Segment(Point(self.P0.z,self.P0.x),
+                             Point(self.P1.z,self.P1.x))
         elif coordinate_index==2:
-            return Segment2D(Point2D(self.P0.x,self.P0.y),
-                             Point2D(self.P1.x,self.P1.y))
+            return Segment(Point(self.P0.x,self.P0.y),
+                             Point(self.P1.x,self.P1.y))
         else:
             raise Exception
                     
@@ -2630,10 +2668,9 @@ class Segment():
         """
         P0=self.P0.project_3D(plane,coordinate_index)
         P1=self.P1.project_3D(plane,coordinate_index)
-        return Segment3D(P0,P1)
+        return Segment(P0,P1)
     
 
-    # IS SEGMENTS AN ITERABLE SEQUENCE - IF SO THEN THIS IS 'list(self)'
     @property
     def points(self):
         """Return the points P0 and P1 of the segment.
@@ -2686,7 +2723,115 @@ class Segment():
            Segment(Point(1,0,0), Point(0,0,0))
             
         """
-        return self.__class__(self.P1,self.P0)
+        return Segment(self.P1,self.P0)
+ 
+    
+ 
+class Segments(collections.abc.MutableSequence):
+    """A sequence of segments.    
+    
+    In crossproduct a Segments object is a mutable sequence. 
+    Iterating over a Segments object will provide its Segment instances.
+    Index, append, insert and delete actions are available.
+    
+    :param segments: An argument list of Segment instances. 
+    
+    .. rubric:: Code Example
+        
+    .. code-block:: python
+        
+        
+    """
+    
+    def __delitem__(self,index):
+        ""
+        del self._segments[index]
+    
+    
+    def __eq__(self,segments):
+        """Tests if this segments sequence and the supplied segments sequence are equal.
+        
+        :param segments: The segments sequence to be tested.
+        :type segments: Segments
+        
+        :return: True if the sequence items are equal, otherwise False.
+        :rtype: bool
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            
+        """
+        if isinstance(segments,Segments) and self._segments==segments._segments:
+            return True
+        else:
+            return False
+    
+    
+    def __getitem__(self,index):
+        ""
+        return self._segments[index]
+    
+    
+    def __init__(self,*segments):
+        ""
+        self._segments=list(segments)
+    
+    
+    def __len__(self):
+        ""
+        return len(self._segments)
+    
+    
+    def __repr__(self):
+        ""
+        return 'Segments(%s)' % ', '.join([str(pt) for pt in self])
+    
+    
+    def __setitem__(self,index,value):
+        ""
+        self._segments[index]=value
+    
+    
+    def insert(self,index,value):
+        ""
+        return self._segments.insert(index,value)
+
+
+
+class Polyline(collections.abc.Sequence):
+    """A polyline
+    
+    In crossproduct a Polyline object is a immutable sequence. 
+    Iterating over a Polyline will provide its Point instances.
+    
+    :param coordinates: Argument list of Point instances.
+    
+    .. rubric:: Code Example
+    
+    .. code-block:: python
+       
+    """
+    
+    def __getitem__(self,index):
+        ""
+        return self._points[index]
+    
+    
+    def __init__(self,*points):
+        ""
+        self._points=points
+        
+
+    def __len__(self):
+        ""
+        return len(self._points)
+
+    
+    def __repr__(self):
+        ""
+        return 'Polyline(%s)' % ','.join([str(pt) for pt in self])
     
 
 
@@ -2787,3 +2932,4 @@ class Plane():
         
         """
         return self._N
+

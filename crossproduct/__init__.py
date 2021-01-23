@@ -32,5 +32,7 @@ from .crossproduct import Points
 from .crossproduct import Line
 from .crossproduct import Halfline
 from .crossproduct import Segment
+from .crossproduct import Segments
+from .crossproduct import Polyline
 from .crossproduct import Plane
 
