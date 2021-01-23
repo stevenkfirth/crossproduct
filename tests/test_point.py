@@ -101,16 +101,6 @@ class Test_Point(unittest.TestCase):
                          pt1)
         
         
-    def test__coordinates_equal(self):
-        ""
-        pt=Point(0,0)
-        self.assertTrue(pt._coordinates_equal(0,0))
-        self.assertFalse(pt._coordinates_equal(0,1))
-        self.assertTrue(pt._coordinates_equal(0,0.0000000001))
-        
-        
-        
-        
     def test_distance_to_point(self):
         ""
         pt1=Point(0,0)

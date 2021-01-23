@@ -1,8 +1,167 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from crossproduct import Point2D, Point3D,Vector2D, Vector3D, \
-    Halfline2D, Halfline3D, Line2D, Line3D, Segment2D, Segment3D
+from crossproduct import Point, Vector, Line, Halfline, Segment
+
+
+class Test_Halfline(unittest.TestCase):
+    
+    def test___eq__(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        hl=Halfline(P0,vL)
+        self.assertTrue(hl==hl)
+    
+        P0,vL=Point(0,0,0),Vector(1,1,1)
+        hl=Halfline(P0,vL)
+        self.assertTrue(hl==hl)
+        
+        
+    def test___init__(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        hl=Halfline(P0,vL)
+        self.assertIsInstance(hl,Halfline)
+        self.assertEqual(hl.P0,Point(0,0))
+        self.assertEqual(hl.vL,Vector(1,1))
+        
+        P0,vL=Point(0,0,0),Vector(1,1,1)
+        hl=Halfline(P0,vL)
+        self.assertIsInstance(hl,Halfline)
+        self.assertEqual(hl.P0,Point(0,0,0))
+        self.assertEqual(hl.vL,Vector(1,1,1))
+        
+    
+    def test_calculate_point(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        hl=Halfline(P0,vL)
+        self.assertEqual(hl.calculate_point(2),
+                         P0+vL*2)
+
+        P0,vL=Point(0,0,0),Vector(1,1,1)
+        hl=Halfline(P0,vL)
+        self.assertEqual(hl.calculate_point(2),
+                         P0+vL*2)
+
+
+    def test_contains(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        hl=Halfline(P0,vL)
+        # point
+        self.assertTrue(hl.contains(P0))
+        self.assertTrue(hl.contains(P0+vL))
+        self.assertTrue(hl.contains(P0+vL*10))
+        self.assertFalse(hl.contains(P0+vL.opposite))
+        self.assertFalse(hl.contains(P0+vL.perp_vector))
+        # segment
+        self.assertTrue(hl.contains(Segment(P0,P0+vL)))
+        self.assertTrue(hl.contains(Segment(P0+vL,P0+vL*2)))
+        self.assertFalse(hl.contains(Segment(P0+vL*-1,P0)))
+        self.assertFalse(hl.contains(Segment(P0+vL*-2,P0+vL*-1)))
+        self.assertFalse(hl.contains(Segment(P0+vL.perp_vector,P0+vL+vL.perp_vector)))
+
+        P0,vL=Point(0,0,0),Vector(1,1,1)
+        hl=Halfline(P0,vL)
+        # point
+        self.assertTrue(hl.contains(P0))
+        self.assertTrue(hl.contains(P0+vL))
+        self.assertTrue(hl.contains(P0+vL*10))
+        self.assertFalse(hl.contains(P0+vL.opposite))
+        self.assertFalse(hl.contains(P0+Vector(1,-1,0)))
+        # segment
+        self.assertTrue(hl.contains(Segment(P0,P0+vL)))
+        self.assertTrue(hl.contains(Segment(P0+vL,P0+vL*2)))
+        self.assertFalse(hl.contains(Segment(P0+vL*-1,P0)))
+        self.assertFalse(hl.contains(Segment(P0+vL*-2,P0+vL*-1)))
+        self.assertFalse(hl.contains(Segment(P0+Vector(1,-1,0),P0+vL+Vector(1,-1,0))))
+        
+        
+    def test_distance_to_point(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        hl=Halfline(P0,vL)
+        self.assertEqual(hl.distance_to_point(P0),
+                         0)
+        self.assertEqual(hl.distance_to_point(P0-vL),
+                         vL.length)
+        self.assertEqual(hl.distance_to_point(P0+vL),
+                         0)
+        self.assertEqual(hl.distance_to_point(P0+Vector(1,-1)),
+                         Vector(1,-1).length)
+
+
+        P0,vL=Point(0,0,0),Vector(1,1,1)
+        hl=Halfline(P0,vL)
+        self.assertEqual(hl.distance_to_point(P0),
+                         0)
+        self.assertEqual(hl.distance_to_point(P0-vL),
+                         vL.length)
+        self.assertEqual(hl.distance_to_point(P0+vL),
+                         0)
+        self.assertEqual(hl.distance_to_point(P0+Vector(1,-1,0)),
+                         Vector(1,-1,0).length)
+
+
+    def test_intersect_halfline(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        hl=Halfline(P0,vL)
+        # same
+        self.assertEqual(hl.intersect_halfline(hl),
+                         hl)
+        # codirectional
+        self.assertEqual(hl.intersect_halfline(Halfline(P0+vL,vL)),
+                         Halfline(P0+vL,vL))
+        self.assertEqual(hl.intersect_halfline(Halfline(P0+vL*-1,vL)),
+                         hl)
+        # parallel
+        self.assertEqual(hl.intersect_halfline(Halfline(P0+vL.perp_vector,vL)),
+                         None)
+        # collinear but not codirectinal
+        self.assertEqual(hl.intersect_halfline(Halfline(P0,vL*-1)),
+                         hl.P0)
+        self.assertEqual(hl.intersect_halfline(Halfline(P0+vL,vL*-1)),
+                         Segment(P0,P0+vL))
+        # skew
+        self.assertEqual(hl.intersect_halfline(Halfline(P0,vL.perp_vector)),
+                         hl.P0)
+        self.assertEqual(hl.intersect_halfline(Halfline(P0+vL,vL.perp_vector)),
+                         P0+vL)
+        self.assertEqual(hl.intersect_halfline(Halfline(P0+vL*-1,vL.perp_vector)),
+                         None)
+
+
+    def test_intersect_line(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        hl=Halfline(P0,vL)
+        # collinear
+        self.assertEqual(hl.intersect_line(Line(P0,vL)),
+                         hl)
+        # parallel
+        self.assertEqual(hl.intersect_line(Line(Point(0,1),vL)),
+                         None)
+        # skew - same P0s
+        self.assertEqual(hl.intersect_line(Line(P0,Vector(0,1))),
+                         P0)
+        # skew - different P0s
+        self.assertEqual(hl.intersect_line(Line(Point(0.5,0),Vector(0,1))),
+                         Point(0.5,0.5))
+
+
+    def test_line(self):
+        P0,vL=Point(0,0),Vector(1,1) 
+        hl=Halfline(P0,vL)
+        self.assertEqual(hl.line,
+                         Line(P0,vL))
+    
+        P0,vL=Point(0,0,0),Vector(1,1,1)
+        hl=Halfline(P0,vL)
+        self.assertEqual(hl.line,
+                         Line(P0,vL))
+    
 
 
 
@@ -225,13 +384,16 @@ class Test_Halfline3D(unittest.TestCase):
     
 if __name__=='__main__':
     
-    P0=Point2D(0,0)
-    vL=Vector2D(1,1)
-    unittest.main(Test_Halfline2D())
     
-    P0=Point3D(0,0,0)
-    vL=Vector3D(1,1,1)
-    unittest.main(Test_Halfline3D())
+    unittest.main(Test_Halfline())
+    
+    # P0=Point2D(0,0)
+    # vL=Vector2D(1,1)
+    # unittest.main(Test_Halfline2D())
+    
+    # P0=Point3D(0,0,0)
+    # vL=Vector3D(1,1,1)
+    # unittest.main(Test_Halfline3D())
     
     
     
