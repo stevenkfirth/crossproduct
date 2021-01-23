@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from crossproduct import Point, Vector
+from crossproduct import Point, Vector, Plane
 
 
 class Test_Point(unittest.TestCase):
@@ -120,13 +120,12 @@ class Test_Point(unittest.TestCase):
         self.assertEqual(pt.project_2D(0),
                          Point(2,3))
     
-    # TO DO WHEN PLANE IS AVAILABLE
-    # def test_project_3D(self):
-    #     ""
-    #     pl=Plane3D(Point3D(0,0,1),Vector3D(0,0,1))
-    #     pt=Point2D(2,2)
-    #     self.assertEqual(pt.project_3D(pl,2),
-    #                       Point3D(2,2,1.0))
+    def test_project_3D(self):
+        ""
+        pl=Plane(Point(0,0,1),Vector(0,0,1))
+        pt=Point(2,2)
+        self.assertEqual(pt.project_3D(pl,2),
+                          Point(2,2,1.0))
     
 
 
