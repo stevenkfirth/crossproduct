@@ -3016,6 +3016,49 @@ class Polyline(collections.abc.Sequence):
        
     """
     
+    def __eq__(self,polyline):
+        """Tests if this polyline and the supplied polyline are equal.
+        
+        :param polyline: A polyline.
+        :type polyline: Polyline2D, Polyline3D
+        
+        :return: True if the polylines have the same points in the same order, 
+            either as supplied or in reverse;
+            otherwise False.
+        :rtype: bool
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> pl = Polyline2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> result = pl == pl
+           >>> print(result)
+           True
+           
+           # 3D example
+           >>> pl1 = Polyline3D(Point3D(0,0,0), Point3D(1,0,0))
+           >>> pl2 = Polyline3D(Point3D(0,0,0), Point3D(-1,0,0))
+           >>> result = pl1 == pl2
+           >>> print(result)
+           False
+            
+        """
+        
+        if isinstance(polyline,Polyline):
+            
+            if self._points==polyline._points or self._points==polyline.reverse._points:
+                return True
+            else:
+                return False
+            
+        else:
+            return False
+    
+
+    
+    
     def __getitem__(self,index):
         ""
         return self._points[index]
@@ -3035,6 +3078,26 @@ class Polyline(collections.abc.Sequence):
         ""
         return 'Polyline(%s)' % ','.join([str(pt) for pt in self])
     
+    
+    @property
+    def segments(self):
+        """Returns a Segments sequence of the segments in the polyline.
+        
+        :rtype: Segments
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pl = Polyline2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> print(pl.segments)
+           Segments(Segment2D(Point2D(0,0), Point2D(1,0)), 
+                    Segment2D(Point2D(1,0), Point2D(1,1))
+        
+        """
+        n=len(self)
+        return Segments(*[Segment(self[i],self[i+1]) for i in range(n-1)])
+
 
 
 class Plane():
@@ -3386,22 +3449,576 @@ class Polygon(collections.abc.Sequence):
 
     .. code-block:: python
        
-       >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+       >>> pg = Polygon(Point(0,0), Point(1,0), Point(1,1))
        >>> print(pg)
-       Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+       Polygon(Point(0,0), Point(1,0), Point(1,1))
     
     """
+
+    def __eq__(self,polygon):
+        """Tests if this polygon and the supplied polygon are equal.
+        
+        :param polygon: A polygon.
+        :type polygon: Polygon
+        
+        :return: True if the two polygons have the same points and 
+            the points are in the same order (from any start point), 
+            either forward or reversed;       
+            otherwise False.
+        :rtype: bool
+        
+        .. rubric:: Code Example
+
+        .. code-block:: python
+           
+           # 2D example
+           >>> pg1 = Polygon(Point(0,0), Point(1,0), Point(1,1))
+           >>> pg2 = Polygon(Point(0,0), Point(1,1), Point(1,0))
+           >>> result = pl1 = pl2
+           >>> print(result)
+           True
+            
+        """
+        if isinstance(polygon,Polygon):
+            
+            for i in range(len(self._points)):
+                if self.reorder(i)._points==polygon._points:
+                    return True
+            for i in range(len(self._points)):
+                if self.reverse.reorder(i)._points==polygon._points:
+                    return True
+            return False
+            
+        else:
+            return False
+        
     
+    def __getitem__(self,index):
+        ""
+        return self._points[index]
+    
+   
     def __init__(self,*points,known_convex=False,known_simple=True):
         ""
         
-        self._points=Points(*points)
+        self._points=list(points)
         self._known_convex=known_convex
         self._known_simple=known_simple
         self._triangles=None
         self._ccw=None
         
 
+    def __len__(self):
+        ""
+        return len(self._points)
+
+
+    def __repr__(self):
+        ""
+        return 'Polygon(%s)' % ','.join([str(pt) for pt in self])
+
+
+    @property
+    def _area_2D(self):
+        """Returns the area of the polygon.
+        
+        :rtype: float
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> print(pg.area)
+           0.5
+
+        .. seealso:: `<https://geomalgorithms.com/a01-_area.html>`_
+
+        """
+        return abs(self.signed_area)
+    
+    
+    @property
+    def _area_3D(self):
+        """Returns the area of the polygon
+        
+        :return result:
+        :rtype float:
+
+        .. seealso:: `<https://geomalgorithms.com/a01-_area.html>`_            
+
+        """
+        
+        i,pg=self.project_2D()
+        N=self.plane.N
+        
+        if i==0:
+            return pg.signed_area*(N.length/(N.x))
+        elif i==1:
+            return pg.signed_area*(N.length/(N.y))
+        elif i==2:
+            return pg.signed_area*(N.length/(N.z))
+        else:
+            raise Exception
+    
+    
+    def _contains_2D(self,obj):
+        """Tests if the polygon contains the geometric object.
+        
+        :param obj: A point. 
+        :type obj: Point2D, Point3D
+            
+        :return: For point, True if the point lies inside the polygon 
+            or on a polygon edge; otherwise False.
+        :rtype: bool
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> result = Point2D(0,0) in pg
+           >>> print(result)
+           True
+            
+        """
+        if isinstance(obj,Point):
+            return self._winding_number(obj) > 0 or obj in self.polyline
+        else:
+            return TypeError
+    
+    
+    def _contains_3D(self,obj):
+        """Tests if the polygon contains the object
+        
+        :param obj: A 3D point. 
+        :type obj: Point3D
+            
+        :return: For point, True if the point lies inside the polygon 
+            or on a polygon edge; otherwise False.
+        :rtype bool:
+            
+        """
+        if isinstance(obj,Point):
+            point=obj
+            if point in self.plane:
+                i,self2D=self.project_2D()
+                point2D=point.project_2D(i)
+                return point2D in self2D
+            else:
+                return False
+        else:
+            raise Exception('Not implemented')
+    
+    
+    def _winding_number(self,point):
+        """Returns the winding number of the point for a 2D polygon.
+        
+        :param point: A 2D point.
+        :type point: Point2D
+        
+        :return: The number of times the polygon segments wind around the point.
+            Note: does not include a point on a top or right hand edge.
+        :rtype: int
+        
+        .. seealso:: `<https://geomalgorithms.com/a03-_inclusion.html>`_
+        
+        """
+        wn=0 # the  winding number counter
+        # loop through all edges of the polygon
+        for ps in self.polyline.segments: # edge from V[i] to  V[i+1]
+            if ps.P0.y <= point.y: # start y <= P.y
+                if ps.P1.y > point.y: # an upward crossing
+                    if ps.line.vL.perp_product(point-ps.P1)>0: # P left of  edge
+                        wn+=1
+            else:
+                if ps.P1.y <= point.y: # a downward crossing
+                    if ps.line.vL.perp_product(point-ps.P1)<0: # P right of  edge
+                        wn-=1
+        return wn
+
+    
+    @property
+    def area(self):
+        """
+        """
+        if len(self[0])==2:
+            return self._area_2D
+        elif len(self[0])==3:
+            return self._area_3D
+        else:
+            raise Exception
+
+
+    @property
+    def ccw(self):
+        """An equivalent 2D polygon with points in a counterclockwise orientation
+        
+        :rtype: Polygon2D
+        
+        """
+        if not self._ccw:
+            if self.is_counterclockwise:
+                self._ccw=self
+            else:
+                self._ccw=self.reverse
+        return self._ccw
+    
+    
+    def contains(self,obj):
+        """
+        """
+        if len(self[0])==2:
+            return self._contains_2D(obj)
+        elif len(self[0])==3:
+            return self._contains_3D(obj)
+        else:
+            raise Exception
+
+
+
+
+    @property
+    def is_counterclockwise(self):
+        """Tests if a 2D polygon points are in a counterclockwise direction.
+        
+        :raises ValueError: If the three polygon points being tested
+            all lie on a straight line. 
+        :return: Returns True if the three polygon points centered around the 
+            rightmost lowest point are in a counterclockwise order.
+            Returns False if these polygon points are in a clockwise order.
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1),Point2D(0,1))
+           >>> print(pg.is_counterclockwise)
+           True        
+        
+        """
+        i=self.rightmost_lowest_vertex
+        P0=self[self.previous_index(i)]
+        P1=self[i]
+        P2=self[self.next_index(i)]
+        v0=P1-P0
+        v1=P2-P1
+        result=v0.perp_product(v1)
+        if result>0:
+            return True
+        elif result<0:
+            return False
+        else:
+            raise ValueError
+        
+    
+
+    @property
+    def known_convex(self):
+        """The known_convex property of the polyline.
+        
+        :return: True if the polygon is known to be a convex polygon.
+            False if it is not known if the polygon is convex or not, 
+            or if it is known that the polygon is a concave polygon.
+        :rtype: bool
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1), known_convex=True)
+           >>> print(pg.known_convex)
+           True        
+        
+        """
+        return self._known_convex
+        
+    
+    @property
+    def known_simple(self):
+        """The known_simple property of the polyline.
+        
+        :return: True if the polygon is known to be a simple polygon.
+            False if it is not known if the polygon is simple or not, 
+            or if it is known that the polygon is a non-simple polygon.
+        :rtype: bool
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1), known_simple=True)
+           >>> print(pg.known_simple)
+           True        
+        
+        """
+        return self._known_simple
+    
+ 
+    def next_index(self,i):
+        """Returns the next point index in the polygon.
+        
+        :param i: A point index.
+        :type i: int
+        
+        :return: Returns the index of the next point in the polygon. 
+            If i is the index of the last point, then the index of 
+            the first point (i.e. 0) is returned.
+        :rtype: int
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> result = pg.next_index(0)
+           >>> print(result)
+           1
+        
+        """
+        n=len(self)
+        if i==n-1:
+            return 0
+        else:
+            return i+1
+    
+    
+    @property
+    def plane(self):
+        """Returns the plane of the 3D polygon
+        
+        :return plane: a 3D plane which contains all the polygon points
+        :rtype: Plane3D
+        
+        """
+        P0,P1,P2=self[:3]
+        N=(P1-P0).cross_product(P2-P1)
+        return Plane(P0,N)
+
+
+    @property
+    def polyline(self):
+        """Returns a polyline of the polygon points.
+        
+        :return: A polyline of the polygon points which starts and ends at 
+            the first polygon point.
+        :rtype: Polyline     
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> print(pg.polyline)
+           Polyline2D(Point2D(0,0), Point2D(1,0), Point2D(1,1), Point2D(0,0))
+        
+        """
+        closed_points=tuple(list(self) + [self[0]])
+        return Polyline(*closed_points)
+
+    
+    def previous_index(self,i):
+        """Returns the previous point index in the polygon.
+        
+        :param i: A point index.
+        :type i: int
+        
+        :return: Returns the index of the previous point in the polygon. 
+            If i is the index of the first point (i.e. 0), then the index of 
+            the last point is returned.
+        :rtype: int
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> result = pg.previous_index(0)
+           >>> print(result)
+           2
+        
+        """
+        n=len(self)
+        if i==0:
+            return n-1
+        else:
+            return i-1
+        
+    
+    def project_2D(self):
+        """Projects the 3D polygon to a 2D polygon.
+        
+        :return: A tuple (coordinate_index,polygon). 
+            coordinate_index=0 to ignore the x-coordinate, coordinate_index=1 
+            for the y-coordinate and coordinate_index=2 for the z-coordinate.
+            polygon is the 2D projected polygon.
+        :rtype: tuple
+            
+        """
+        i=self.plane.N.index_largest_absolute_coordinate
+        
+        if i==0:
+            pg=Polygon(*[Point(pt.y,pt.z) for pt in self],
+                         known_convex=self.known_convex,
+                         known_simple=self.known_simple)
+        elif i==1:
+            pg=Polygon(*[Point(pt.z,pt.x) for pt in self],
+                         known_convex=self.known_convex,
+                         known_simple=self.known_simple)
+        elif i==2:
+            pg=Polygon(*[Point(pt.x,pt.y) for pt in self],
+                         known_convex=self.known_convex,
+                         known_simple=self.known_simple)
+        else:
+            raise Exception
+                    
+        return i, pg
+    
+
+    def project_3D(self,plane,coordinate_index):
+        """Projection of 2D polygon on a 3D plane.
+        
+        :param plane: The plane for the projection.
+        :type plane: Plane3D
+        :param coordinate_index: The index of the coordinate which was ignored 
+            to create the 2D projection. For example, coordinate_index=0
+            means that the x-coordinate was ignored and this point
+            was originally projected onto the yz plane.
+        :type coordinate_index: int
+        
+        :return: 3D polygon which has been projected from the 2D polygon.
+        :rtype: Polygon3D
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> pl = Plane3D(Point3D(0,0,1), Vector3D(0,0,1))
+           >>> result = pg.project_3D(pl, 2)
+           >>> print(result)
+           Polygon3D(Point3D(0,0,1), Point3D(1,0,1), Point3D(1,1,1))
+        
+        """
+        points=[pt.project_3D(plane,coordinate_index) for pt in self]
+        return Polygon(*points,
+                       known_convex=self.known_convex,
+                       known_simple=self.known_simple)
+        
+    
+    def reorder(self,i):
+        """Returns a polygon with reordered points from a new start point.
+        
+        :param i: The index of the new start point.
+        :type i: int
+        
+        :return: A polygon equal to this polygon with points
+            starting at the new start point.
+        :rtype: Polygon
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> pg = Polygon(Point(0,0), Point(1,0), Point(1,1))
+           >>> result = pg.reorder(1)
+           >>> print(result)
+           Polygon(Point(1,0), Point(1,1), Point(0,0))
+        
+           # 3D example
+           >>> pg = Polygon(Point(0,0,0), Point(1,0,0), Point(1,1,0))
+           >>> result = pg.reorder(1)
+           >>> print(result)
+           Polygon(Point(1,0,0), Point(1,1,0), Point(0,0,0))
+        
+        """
+        points=[]
+        for _ in range(len(self)):
+            points.append(self[i])
+            i=self.next_index(i)
+        return Polygon(*points)
+        
+    
+    @property
+    def reverse(self):
+        """Returns a polygon with the points reversed.
+        
+        :return: A new polygon with the points in reverse order.
+        :rtype: Polygon
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> pg = Polygon(Point(0,0), Point(1,0), Point(1,1))
+           >>> print(pg.reverse)
+           Polygon(Point(1,1), Point(1,0), Point(0,0))
+        
+           # 3D example
+           >>> pg = Polygon(Point(0,0,0), Point(1,0,0), Point(1,1,0))
+           >>> print(pg.reverse)
+           Polygon(Point(1,1,0), Point(1,0,0), Point(0,0,0))
+        
+        """
+        points=[self[i] 
+                for i in range(len(self)-1,-1,-1)]
+        return Polygon(*points)
+
+
+    @property
+    def rightmost_lowest_vertex(self):
+        """Returns the index of the rightmost lowest point of a 2D polygon.
+        
+        :rtype: int
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> print(pg.rightmost_lowest_vertex)
+           Point2D(1,0)
+        
+        """
+        min_i=0
+        for i in range(1,len(self)):
+            if self[i].y>self[min_i].y:
+                continue
+            if (self[i].y==self[min_i].y) and (self[i].x < self[min_i].x):
+                continue
+            min_i=i
+        return min_i
+    
+
+    @property
+    def signed_area(self):
+        """Returns the signed area of a 2D polygon.
+        
+        :return: Returns a value greater than 0 if polygon points are ordered counterclockwise.
+            Returns a value less than 0 if polygon points are ordered clockwise.
+        :rtype: float
+                
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,1), Point2D(1,0))
+           >>> print(pg.signed_area)
+           -0.5
+        
+        .. seealso:: `<https://geomalgorithms.com/a01-_area.html>`_
+        
+        """
+        n=len(self)
+        points=self.polyline
+        if n<3: return 0  # a degenerate polygon
+        a=0
+        for i in range(1,n):
+            a+=points[i].x * (points[i+1].y - points[i-1].y)
+        a+=points[n].x * (points[1].y - points[n-1].y) # wrap-around term
+        return a / 2.0
 
 
 

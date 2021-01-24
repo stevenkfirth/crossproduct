@@ -6,7 +6,7 @@ import mpl_toolkits.mplot3d
 import cProfile
 from pprint import pprint
 
-from crossproduct import Point, Vector, Line, Halfline, Segment, Polyline, Plane, 
+from crossproduct import Point, Vector, Line, Halfline, Segment, Polyline, Plane
 from crossproduct import Polygon, Polygons
 
 
@@ -20,12 +20,175 @@ class Test_Polygon(unittest.TestCase):
     points3d=(Point(0,0,0),Point(1,0,0),Point(1,1,0),Point(0,1,0))
     
     """
+    
+    def test___eq__(self):
+        ""
+        pg=Polygon(*points2d)
+        self.assertTrue(pg==pg)
+        
+        pg2=Polygon(Point(0,0),Point(1,0),Point(0,1))
+        self.assertFalse(pg==pg2)
+        
+
 
     def test___init__(self):
         ""
         pg=Polygon(*points2d)
         self.assertIsInstance(pg,Polygon)
-        self.assertEqual(pg.points,Points(*points))
+        self.assertEqual(tuple(pg),
+                         points2d)
+
+
+    def test__winding_number(self):
+        ""
+        pg=Polygon(*points2d)
+        self.assertEqual(pg._winding_number(pg[0]),
+                         1)
+        self.assertEqual(pg._winding_number(pg[1]),
+                         0)
+        self.assertEqual(pg._winding_number(pg[2]),
+                         0)
+        self.assertEqual(pg._winding_number(pg[3]),
+                         0) 
+        self.assertEqual(pg._winding_number(Point(-0.5,0.5)),
+                         0)
+        self.assertEqual(pg._winding_number(Point(0.5,0.5)),
+                         1)
+        
+
+    def test_area(self):
+        ""
+        pg=Polygon(*points2d)
+        self.assertEqual(pg.area, # ccw
+                         1)
+        self.assertEqual(pg.reverse.area, # cw
+                         1)
+        
+        pg=Polygon(*points3d)
+        self.assertEqual(pg.area, # ccw
+                          1)
+        self.assertEqual(pg.reverse.area, # cw
+                          1)
+        
+        
+    def test_ccw(self):
+        ""
+        
+
+    def test_contains(self):
+        ""
+        pg=Polygon(*points2d)
+        # Point
+        self.assertTrue(pg.contains(pg[0]))
+        self.assertTrue(pg.contains(pg[1]))
+        self.assertTrue(pg.contains(pg[2]))
+        self.assertTrue(pg.contains(pg[3]))
+        self.assertTrue(pg.contains(Point(0.5,0.5)))
+        
+
+
+    def test_is_counterclockwise(self):
+        ""
+        pg=Polygon(*points2d)
+        self.assertTrue(pg.is_counterclockwise)
+        self.assertFalse(pg.reverse.is_counterclockwise)
+        
+
+
+    def test_known_convex(self):
+        ""
+        pg=Polygon(*points2d)
+        self.assertFalse(pg.known_convex)
+        
+        
+    def test_known_simple(self):
+        ""
+        pg=Polygon(*points2d)
+        self.assertTrue(pg.known_simple)
+
+
+    def test_next_index(self):
+        ""
+        pg=Polygon(*points2d)
+        self.assertEqual(pg.next_index(0),
+                         1)
+        self.assertEqual(pg.next_index(3),
+                         0)
+        
+    
+    def test_plane(self):
+        ""
+        pg=Polygon(*points3d)
+        self.assertEqual(pg.plane,
+                         Plane(Point(0,0,0),Vector(0,0,1)))
+
+
+    def test_polyline(self):
+        ""
+        pg=Polygon(*points3d)
+        self.assertEqual(pg.polyline,
+                         Polyline(Point(0,0,0),
+                                  Point(1,0,0),
+                                  Point(1,1,0),
+                                  Point(0,1,0),
+                                  Point(0,0,0)))
+
+    
+    def test_prevous_index(self):
+        ""
+        pg=Polygon(*points2d)
+        self.assertEqual(pg.previous_index(0),
+                         3)
+        self.assertEqual(pg.previous_index(3),
+                         2)
+
+
+    def test_project_2D(self):
+        ""
+        pg=Polygon(*points3d)
+        self.assertEqual(pg.project_2D(),
+                         (2,Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))))
+
+    
+    def test_project_3D(self):
+        ""
+
+    
+    def test_reorder(self):
+        ""
+        pg=Polygon(*points2d)
+        self.assertEqual(pg.reorder(1),
+                         Polygon(Point(1,0),
+                                   Point(1,1),
+                                   Point(0,1),
+                                   Point(0,0)))
+        
+        
+    def test_reverse(self):
+        ""
+        pg=Polygon(*points2d)
+        self.assertEqual(pg.reverse,
+                         Polygon(Point(0,1),
+                                   Point(1,1),
+                                   Point(1,0),
+                                   Point(0,0)))
+
+
+    def test_rightmost_lowest_vertex(self):
+        ""
+        pg=Polygon(*points2d)
+        self.assertEqual(pg.rightmost_lowest_vertex, 
+                         1)
+
+        
+    def test_signed_area(self):
+        ""
+        pg=Polygon(*points2d)
+        self.assertEqual(pg.signed_area, # ccw
+                         1)
+        self.assertEqual(pg.reverse.signed_area, # cw
+                         -1)
+
 
 
 class Test_Polygon_old(unittest.TestCase):

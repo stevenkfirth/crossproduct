@@ -1025,7 +1025,7 @@ class Polygon2D(Polygon):
     
     @property
     def ccw(self):
-        """An equivalent polygon with points in a counterclockwise orientation
+        """An equivalent 2D polygon with points in a counterclockwise orientation
         
         :rtype: Polygon2D
         
