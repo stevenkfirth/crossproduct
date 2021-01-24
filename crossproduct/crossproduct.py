@@ -621,7 +621,7 @@ class Vector(collections.abc.Sequence):
     
     def __repr__(self):
         ""
-        return 'Vector(%s)' % ','.join([str(c) for c in self.coordinates])
+        return 'Vector(%s)' % ','.join([str(c) for c in self])
 
 
     def __sub__(self,vector):
@@ -3047,9 +3047,9 @@ class Plane():
         - P0 is the start point of the plane
     
     :param P0: A 3D point on the plane.
-    :type P0: Point3D
+    :type P0: Point
     :param N: A 3D vector which is normal to the plane.
-    :type N: Vector3D 
+    :type N: Vector
     
     .. rubric:: Code Example
     
@@ -3067,7 +3067,7 @@ class Plane():
         """Tests if this plane and the supplied plane are equal, i.e. coplanar.
         
         :param plane: A 3D plane.
-        :type plane: Plane3D 
+        :type plane: Plane
         
         :return: True if the normal vectors are collinear and 
             a point can exist on both planes;
@@ -3076,7 +3076,7 @@ class Plane():
             
         """
         if isinstance(plane,Plane):
-            return self._N.is_collinear(plane.N) and plane.P0 in self
+            return self.N.is_collinear(plane.N) and self.contains(plane.P0)
         else:
             return False
 
@@ -3089,41 +3089,35 @@ class Plane():
         
     def __repr__(self):
         ""
-        return 'Plane3D(%s, %s)' % (self._P0,self._N)
+        return 'Plane(%s, %s)' % (self.P0,self.N)
     
 
     def contains(self,obj):
         """Tests if the plane contains the object.
         
         :param obj: A 3D geometric object.
-        :type obj: Point3D, Line3D, Halfline3D, Segment3D
+        :type obj: Point, Line, Halfline, Segment
             
+        :raises TypeError: If obj is of a type that cannot be contained in a plane.
+        
         :rtype: bool
         
         """
-        if obj.__class__.__name__=='Point3D':
-            
-            point=obj
-            return self._N.is_perpendicular(point-self._P0)
-            
-        elif obj.__class__.__name__=='Line3D':
-            
-            return obj.P0 in self and self._N.is_perpendicular(obj.vL)
-          
-        elif obj.__class__.__name__ in ['Halfline3D','Segment3D']:
-            
-            return obj.P0 in self and self._N.is_perpendicular(obj.line.vL)
-        
+        if isinstance(obj,Point):
+            return self.N.is_perpendicular(obj-self.P0)
+        elif isinstance(obj,Line):
+            return self.contains(obj.P0) and self.N.is_perpendicular(obj.vL)
+        elif isinstance(obj,Halfline) or isinstance(obj,Segment):            
+            return self.contains(obj.P0) and self.N.is_perpendicular(obj.line.vL)
         else:
-
-            raise Exception('%s in Plane not yet implemented' % obj.__class__.__name__)
+            raise TypeError
 
 
     def distance_to_point(self,point):
         """Returns the distance to the supplied point.
         
         :param point: A 3D point.
-        :type point: Point3D
+        :type point: Point
         
         :return: The distance between the plane and the point
         :rtype: float
@@ -3138,7 +3132,7 @@ class Plane():
         """Returns the intersection of this plane and a halfline.
         
         :param halfline: A 3D halfline. 
-        :type halfline: Halfline3D 
+        :type halfline: Halfline
         
         :return: Returns None for parallel, non-collinear plane and halfline.
             Returns None for skew, non-intersecting plane and halfline.
@@ -3149,13 +3143,13 @@ class Plane():
         .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
             
         """
-        if halfline in self: # plane and halfline are collinear
+        if self.contains(halfline): # plane and halfline are collinear
             return halfline
-        elif self._N.is_perpendicular(halfline.line.vL): # plane and halfline are parallel 
+        elif self.N.is_perpendicular(halfline.line.vL): # plane and halfline are parallel 
             return None
         else:
             ipt=self._intersect_line_skew(halfline.line)
-            if ipt in halfline:
+            if halfline.contains(ipt):
                 return ipt
             else:
                 return None
@@ -3165,7 +3159,7 @@ class Plane():
         """Returns the intersection of this plane and a line.
         
         :param line: A 3D line. 
-        :type line: Line3D 
+        :type line: Line
         
         :return: Returns None for parallel, non-collinear plane and line.
             Returns a line for a line on the plane.
@@ -3175,9 +3169,9 @@ class Plane():
         .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
         
         """
-        if line in self: # plane and line are collinear
+        if self.contains(line): # plane and line are collinear
             return line
-        elif self._N.is_perpendicular(line.vL): # plane and line are parallel 
+        elif self.N.is_perpendicular(line.vL): # plane and line are parallel 
             return None
         else:
             return self._intersect_line_skew(line)
@@ -3187,44 +3181,41 @@ class Plane():
         """Returns the intersection of this plane and a skew line.
         
         :param skew_line: A 3D line which is skew to the plane.
-        :type skew_line: Line3D
+        :type skew_line: Line
         
         :return: The intersection point.
-        :rtype: Point3D
+        :rtype: Point
         
         """
-        if not self._N.is_perpendicular(skew_line.vL):
-            n=self._N
-            u=skew_line.vL
-            w=skew_line.P0-self._P0
-            t=-n.dot(w) / n.dot(u)
-            return skew_line.calculate_point(t)
-        else:
-            raise ValueError('%s and %s are not skew' % (self,skew_line))
+        n=self.N
+        u=skew_line.vL
+        w=skew_line.P0-self.P0
+        t=-n.dot(w) / n.dot(u)
+        return skew_line.calculate_point(t)
         
         
     def intersect_segment(self,segment):
         """Returns the intersection of this plane and a segment.
         
         :param segment: A 3D segment.
-        :type segment: Segment3D
+        :type segment: Segment
         
         :return: Returns None for parallel, non-collinear plane and segment.
             Returns None for skew, non-intersecting plane and segment.
             Returns a segment for a segment on the plane.
             Returns a point for a skew segment which intersects the plane.
-        :rtype: None, Point3D, Segment3D
+        :rtype: None, Point, Segment
         
         .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
             
         """
-        if segment in self: # segment lies on the plane
+        if self.contains(segment): # segment lies on the plane
             return segment
-        elif self._N.is_perpendicular(segment.line.vL): # plane and segment are parallel 
+        elif self.N.is_perpendicular(segment.line.vL): # plane and segment are parallel 
             return None
         else:
             ipt=self._intersect_line_skew(segment.line)
-            if ipt in segment:
+            if segment.contains(ipt):
                 return ipt
             else:
                 return None
@@ -3247,13 +3238,13 @@ class Plane():
             result=self.intersect_segment(s)
             if result is None:
                 continue
-            elif result.__class__.__name__=='Point3D':
+            elif isinstance(result,Point):
                 ipts.append(result,unique=True)
-            elif result.__class__.__name__=='Segment3D':
+            elif isinstance(result,Segment):
                 isegments.append(result,unique=True)
             else:
                 raise Exception
-        ipts=ipts.remove_points_in_segments(isegments)
+        ipts.remove_points_in_segments(isegments)
         return ipts,isegments
         
             
@@ -3261,83 +3252,83 @@ class Plane():
         """Returns the intersection of this plane and another plane.
         
         :param plane: A 3D plane.
-        :type plane: Plane3D 
+        :type plane: Plane
         
         :return: Returns None for parallel, non-coplanar planes.
             Returns a plane for two coplanar planes.
             Returns a line for non-parallel planes.
-        :rtype: None, Line3D, Plane3D   
+        :rtype: None, Line, Plane   
 
         .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_         
         
         """
         if plane==self:
             return self
-        elif plane.N.is_collinear(self._N):
+        elif plane.N.is_collinear(self.N):
             return None
         else:
-            n1=self._N
-            d1=-n1.dot(self._P0-Point3D(0,0,0))
+            n1=self.N
+            d1=-n1.dot(self.P0-Point(0,0,0))
             n2=plane.N
-            d2=-n2.dot(plane.P0-Point3D(0,0,0))
+            d2=-n2.dot(plane.P0-Point(0,0,0))
             n3=n1.cross_product(n2)
-            P0=Point3D(0,0,0) + ((n1*d2-n2*d1).cross_product(n3) * (1 / (n3.length**2)))
+            P0=Point(0,0,0) + ((n1*d2-n2*d1).cross_product(n3) * (1 / (n3.length**2)))
             u=n3
-            return Line3D(P0,u)
+            return Line(P0,u)
 
 
     @property
     def P0(self):
         """The start point of the plane.
         
-        :rtype: Point2D
+        :rtype: Point
         
         """
         return self._P0
 
 
     def point_xy(self,x,y):
-        """Returns a point on the plane given a x and y coordinates.
+        """Returns a 3D point on the plane given a x and y coordinates.
         
         :param x: An x-coordinate.
         :type x: float
         :param y: A y-coordinate.
         :type y: float
         
-        :rtype: Point3D
+        :rtype: Point
         
         """
-        z=self._P0.z-(self._N.x*(x-self._P0.x)+self._N.y*(y-self._P0.y))/self._N.z
+        z=self.P0.z-(self.N.x*(x-self.P0.x)+self.N.y*(y-self.P0.y))/self.N.z
         return Point(x,y,z)
     
     
     def point_zx(self,z,x):
-        """Returns a point on the plane given a x and y coordinates.
+        """Returns a 3D point on the plane given a x and y coordinates.
         
         :param z: A z-coordinate.
         :type z: float
         :param x: An x-coordinate.
         :type x: float
         
-        :rtype: Point3D
+        :rtype: Point
         
         """
-        y=self._P0.y-(self._N.z*(z-self._P0.z)+self._N.x*(x-self._P0.x))/self._N.y
+        y=self.P0.y-(self.N.z*(z-self.P0.z)+self.N.x*(x-self.P0.x))/self.N.y
         return Point(x,y,z)
     
     
     def point_yz(self,y,z):
-        """Returns a point on the plane given a x and y coordinates.
+        """Returns a 3D point on the plane given a x and y coordinates.
         
         :param y: A y-coordinate.
         :type y: float
         :param z: A z-coordinate.
         :type z: float
         
-        :rtype: Point3D
+        :rtype: Point
         
         """
-        x=self._P0.x-(self._N.y*(y-self._P0.y)+self._N.z*(z-self._P0.z))/self._N.x
+        x=self.P0.x-(self.N.y*(y-self.P0.y)+self.N.z*(z-self.P0.z))/self.N.x
         return Point(x,y,z)
     
 
@@ -3345,7 +3336,7 @@ class Plane():
     def N(self):
         """The vector normal to the plane.
         
-        :rtype: Vector3D
+        :rtype: Vector
         
         """
         return self._N
@@ -3355,7 +3346,7 @@ class Plane():
         """Returns the signed distance to the supplied point.
         
         :param point: A 3D point.
-        :type point:  Point3D
+        :type point:  Point
         
         :return: The signed distance between the plane and the point.
             The return value is positive for one side of the plane 
@@ -3364,6 +3355,106 @@ class Plane():
         :rtype: float
             
         """
-        return self._N.dot(point-self._P0) / self._N.length
+        return self.N.dot(point-self.P0) / self.N.length
+
+
+
+class Polygon(collections.abc.Sequence):
+    """A polygon, situated on an xy or xyz plane. 
+    
+    In crossproduct a Polygon object is a immutable sequence. 
+    Iterating over a Polygon will provide its Point instances.
+    
+    The default polygon is one which is known to be a simple polygon,
+    but it is not known if it is convex or not.
+    
+    :param points: Argument list of the Point instances of the vertices 
+        of the polygon, in order. The first point is not repeated at the end. 
+    :type points: Points
+    :param known_convex: True if the polygon is known to be a convex polygon;
+        otherwise False. 
+        Default is False.
+    :type known_convex: bool
+    :param known_simple: True if the polygon is known to be a simple polygon;
+        otherwise False.  
+        A simple polygon is one whose edges do not intersect and whose
+        vertices do not share any common points.
+        Default is True.
+    :type known_simple: bool
+    
+    .. rubric:: Code Example
+
+    .. code-block:: python
+       
+       >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+       >>> print(pg)
+       Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+    
+    """
+    
+    def __init__(self,*points,known_convex=False,known_simple=True):
+        ""
+        
+        self._points=Points(*points)
+        self._known_convex=known_convex
+        self._known_simple=known_simple
+        self._triangles=None
+        self._ccw=None
+        
+
+
+
+
+class Polygons(collections.abc.MutableSequence):
+    """A sequence of polygons.    
+    
+    :param polygons: A sequence of Polygon instances. 
+        
+    .. rubric:: Code Example
+    
+    .. code-block:: python
+        
+        >>> pgs = Polygons(Polygon(Point(0,0), Point(1,0), Point(1,1)))                       
+        >>> print(pgs)
+        Polygons(Polygon(Point(0,0), Point(1,0), Point(1,1)))
+        
+        >>> print(pgs[0])
+        Polygon(Point(0,0), Point(1,0), Point(1,1))
+    """
+    
+    def __delitem__(self,index):
+        ""
+        del self._polygons[index]
+    
+   
+    def __getitem__(self,index):
+        ""
+        return self._polygons[index]
+    
+    
+    def __init__(self,*polygons):
+        ""
+        self._polygons=list(polygons)
+
+
+    def __len__(self):
+        ""
+        return len(self._polygons)
+    
+    
+    def __repr__(self):
+        ""
+        return 'Polygons(%s)' % ', '.join([str(pg) for pg in self])
+    
+    
+    def __setitem__(self,index,value):
+        ""
+        self._polygons[index]=value
+    
+
+    def insert(self,index,value):
+        ""
+        return self._polygons.insert(index,value)
+
 
 

@@ -6,10 +6,8 @@ import mpl_toolkits.mplot3d
 import cProfile
 from pprint import pprint
 
-from crossproduct import Point2D, Point3D, \
-    Vector2D, Vector3D, Line2D, Polygon2D, Polygon3D, Plane3D, \
-    Segment2D, Segment3D, Halfline2D, Points, Segments, Polygons, Polygon2D, \
-    Polyline2D, Polylines, Line3D, Polyline3D, PlaneVolume3D
+from crossproduct import Point, Vector, Line, Halfline, Segment, Polyline, Plane, 
+from crossproduct import Polygon, Polygons
 
 
 plot=False # Set to true to see the test plots
@@ -17,6 +15,20 @@ plot=False # Set to true to see the test plots
 
 
 class Test_Polygon(unittest.TestCase):
+    """
+    points2d=(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+    points3d=(Point(0,0,0),Point(1,0,0),Point(1,1,0),Point(0,1,0))
+    
+    """
+
+    def test___init__(self):
+        ""
+        pg=Polygon(*points2d)
+        self.assertIsInstance(pg,Polygon)
+        self.assertEqual(pg.points,Points(*points))
+
+
+class Test_Polygon_old(unittest.TestCase):
     """
     points2d=(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
     """
@@ -1510,8 +1522,8 @@ class Test_Example1(unittest.TestCase):
     
 if __name__=='__main__':
     
-    points2d=(Point2D(0,0),Point2D(1,0),Point2D(1,1),Point2D(0,1))
-    points3d=(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))
+    points2d=(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+    points3d=(Point(0,0,0),Point(1,0,0),Point(1,1,0),Point(0,1,0))
     
     #cProfile.run('unittest.main(Test_Polygon())')
     
@@ -1523,7 +1535,7 @@ if __name__=='__main__':
     
     #unittest.main(Test_Example())
     
-    unittest.main(Test_Example1())
+    #unittest.main(Test_Example1())
     
     # points=(Point3D(0,0,0),Point3D(1,0,0),Point3D(1,1,0),Point3D(0,1,0))
     # 
