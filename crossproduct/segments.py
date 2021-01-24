@@ -101,7 +101,7 @@ class Segments(Sequence):
         
     
     def add_first(self,segment):
-        """Adds the first available segment to the supplied segment.
+        """Returns the addition of the first available segment to the supplied segment.
         
         This iterates through the segments in the Segments sequence. 
             When the first segment which can be added to the supplied segment is found,

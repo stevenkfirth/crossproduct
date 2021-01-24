@@ -393,9 +393,102 @@ class Points(collections.abc.MutableSequence):
         self._points[index]=value
     
     
+    # @property
+    # def coordinates(self):
+    #     """Returns the coordiantes of the Points sequence.
+        
+    #     :return: i.e. ((0,0,0),(1,0,0))
+    #     :rtype: tuple
+        
+    #     """
+    #     return tuple(tuple(pt) for pt in self)
+    
+    
     def insert(self,index,value):
         ""
         return self._points.insert(index,value)
+    
+    
+    # def project_2D(self,coordinate_index):
+    #     """Projection of 3D points on a 2D plane.
+        
+    #     :param coordinate_index: The index of the coordinate to ignore.
+    #         Use coordinate_index=0 to ignore the x-coordinate, coordinate_index=1 
+    #         for the y-coordinate and coordinate_index=2 for the z-coordinate.
+    #     :type coordinate_index: int
+        
+    #     :return: Sequence of 2D points which have been projected from 3D points.
+    #     :rtype: Points
+        
+    #     :Example:
+    
+    #     .. code-block:: python
+        
+    #         >>> pts = Points(Point3D(1,2,3), Point3D(4,5,6))
+    #         >>> result = pts.project_2D(2)
+    #         >>> print(result)
+    #         Points(Point2D(1,2), Point2D(4,5))
+               
+    #     """
+    #     points=[pt.project_2D(coordinate_index) for pt in self]
+    #     return Points(*points)
+    
+    
+    # def project_3D(self,plane,coordinate_index):
+    #     """Projection of 2D points on a 3D plane.
+        
+    #     :param plane: The plane for the projection
+    #     :type plane: Plane3D
+    #     :param coordinate_index: The index of the coordinate which was ignored 
+    #         to create the 2D projection. For example, coordinate_index=0
+    #         means that the x-coordinate was ignored and this point
+    #         was originally projected onto the yz plane.
+    #     :type coordinate_index: int
+        
+    #     :return: Sequence of 3D points which have been projected from 2D points.
+    #     :rtype: Points
+               
+    #     :Example:
+    
+    #     .. code-block:: python
+        
+    #         >>> pt = Points(Point2D(2,2))
+    #         >>> pl = Plane3D(Point3D(0,0,1), Vector3D(0,0,1))
+    #         >>> result = pts.project_3D(pl, 2)
+    #         Points(Point3D(2,2,1))
+        
+    #     """
+    #     points=[pt.project_3D(plane,coordinate_index) for pt in self]
+    #     return Points(*points)
+    
+    
+    def remove_points_in_segments(self,segments):
+        """Removes any points that are contained by any of the segments.
+        
+        :param segments: The segments to check.
+        :type segments: Segments
+        
+        :return: None, changes are made in place.
+        :rtype: None
+        
+        .. rubric:: Code Example
+        
+        .. code-block:: python
+        
+            >>> pts = Points(Point(0,0), Point(1,0))
+            >>> segments = Segments(Segment(Point(0,0), Point(0,1)))
+            >>> pts.remove_points_in_segments(segments)
+            >>> print(pts)
+            Points(Point(1.0,0.0))
+        
+        """
+        for pt in self:
+            if segments.contains(pt):
+                self.remove(pt)
+        
+        #points=[pt for pt in self if not segments.contains(pt)]
+        #return Points(*points)
+        
     
     
 
@@ -1942,8 +2035,8 @@ class Segment():
                   line.calculate_t_from_point(self.P1),
                   line.calculate_t_from_point(segment.P0),
                   line.calculate_t_from_point(segment.P1)]
-        return self.__class__(line.calculate_point(min(t_values)),
-                              line.calculate_point(max(t_values)))
+        return Segment(line.calculate_point(min(t_values)),
+                       line.calculate_point(max(t_values)))
     
     
     def __eq__(self,segment):
@@ -2130,16 +2223,16 @@ class Segment():
             if t0>=1 or t1<=0:
                 return Segments(self)
             elif t0>=0 and t1>=1:
-                return Segments(self.__class__(self.calculate_point(0),
-                                               self.calculate_point(t0)),)
+                return Segments(Segment(self.calculate_point(0),
+                                        self.calculate_point(t0)),)
             elif t0<=0 and t1<=1:
-                return Segments(self.__class__(self.calculate_point(t1),
-                                               self.calculate_point(1)),)
+                return Segments(Segment(self.calculate_point(t1),
+                                        self.calculate_point(1)),)
             else:
-                return Segments(self.__class__(self.calculate_point(0),
-                                               self.calculate_point(t0)),
-                        self.__class__(self.calculate_point(t1),
-                                       self.calculate_point(1)))
+                return Segments(Segment(self.calculate_point(0),
+                                        self.calculate_point(t0)),
+                                Segment(self.calculate_point(t1),
+                                        self.calculate_point(1)))
         else:
             return Segments(self)
         
@@ -2725,7 +2818,7 @@ class Segment():
         """
         return Segment(self.P1,self.P0)
  
-    
+
  
 class Segments(collections.abc.MutableSequence):
     """A sequence of segments.    
@@ -2740,6 +2833,13 @@ class Segments(collections.abc.MutableSequence):
         
     .. code-block:: python
         
+           # 2D example
+           >>> s1 = Segment(Point(0,0), Point(1,0)
+           >>> s2 = Segment(Point(1,0), Point(1,1))
+           >>> sgmts = Segments(s1,s2)
+           >>> print(sgmts)
+           Segments((Segment(Point(0.0,0.0), Point(1.0,0.0)),
+                     Segment(Point(1.0,0.0), Point(1.0,1.0))))
         
     """
     
@@ -2786,13 +2886,115 @@ class Segments(collections.abc.MutableSequence):
     
     def __repr__(self):
         ""
-        return 'Segments(%s)' % ', '.join([str(pt) for pt in self])
+        return 'Segments(%s)' % ', '.join([str(s) for s in self])
     
     
     def __setitem__(self,index,value):
         ""
         self._segments[index]=value
     
+    
+    def add_all(self):
+        """Adds together the segments in the sequence where possible
+        
+        :returns: None, as changes are made in place.
+        
+        :return: Returns a new Segments sequence where the segments have been
+            added together where possible to form new segments.        
+        :rtype: Segments
+        
+        """
+        i=0
+        while True:
+            try:
+                s=self[i]
+            except IndexError:
+                break
+            try:
+                new_s,index=Segments(*self[i+1:]).add_first(s)
+                self[i]=new_s
+                del self[i+1+index]
+            except ValueError:
+                i+=1
+        
+        
+        # segments=[s for s in self]
+        # i=0
+        
+        # while True:
+        #     try:
+        #         s=segments[i]
+        #     except IndexError:
+        #         break
+        #     try:
+        #         new_s,index=Segments(*segments[i+1:]).add_first(s)
+        #         #print(new_s,index)
+        #         segments[i]=new_s
+        #         segments.pop(i+index+1)
+        #     except ValueError:
+        #         i+=1
+        
+        # return Segments(*segments)
+    
+    
+    def add_first(self,segment):
+        """Adds the first available segment to the supplied segment.
+        
+        This iterates through the segments in the Segments sequence. 
+        When the first segment which can be added to the supplied segment is found,
+        the result of this addition is returned along with its index.
+        
+        :raises ValueError: If no valid additions are found.
+        
+        :return: Returns a tuple with the addition result and the index of the segment which was added.
+        :rtype: tuple (Segment,int)
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> sgmts = Segments(Segment(Point(0,0), Point(1,0)))
+            >>> result = sgmts.add_first(Segment(Point(1,0), Point(2,0)))
+            >>> print(result)
+            (Segment(Point(0.0,0.0), Point(2.0,0.0)),0)
+        
+        """
+        for i,s in enumerate(self):
+            try:
+                result=segment+s
+                return result,i
+            except ValueError:
+                pass
+            
+        raise ValueError
+
+    
+    def contains(self,obj):
+        """Tests if the segments sequence contains the object.
+        
+        :param obj: A point or segment. 
+        :type obj: Point, Segment
+            
+        :return: For point, True if the point lies on one of the segments; otherwise False. 
+            For segment, True if the segment start and endpoints are on one of the the segments; otherwise False. 
+        :rtype: bool
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> sgmts = Segments(Segment(Point(0,0), Point(1,0)))
+           >>> result = sgmts.contains_point(Point(2,0))
+           >>> print(result)
+           False
+           
+        """
+        for s in self:
+            if s.contains(obj):
+                return True
+        return False
+
     
     def insert(self,index,value):
         ""
@@ -2806,7 +3008,7 @@ class Polyline(collections.abc.Sequence):
     In crossproduct a Polyline object is a immutable sequence. 
     Iterating over a Polyline will provide its Point instances.
     
-    :param coordinates: Argument list of Point instances.
+    :param points: Argument list of Point instances.
     
     .. rubric:: Code Example
     
@@ -2849,23 +3051,239 @@ class Plane():
     :param N: A 3D vector which is normal to the plane.
     :type N: Vector3D 
     
-    :Example:
+    .. rubric:: Code Example
     
     .. code-block:: python
        
-       >>> pn = Plane3D(Point3D(0,0,0), Vector3D(0,0,1))
+       >>> pn = Plane(Point(0,0,0), Vector(0,0,1))
        >>> print(pn)
-       Plane3D(Point3D(0,0,0), Vector3D(0,0,1))
+       Plane(Point(0,0,0), Vector(0,0,1))
 
     .. seealso: `<https://geomalgorithms.com/a04-_planes.html>`_
 
     """    
     
-    
+    def __eq__(self,plane):
+        """Tests if this plane and the supplied plane are equal, i.e. coplanar.
+        
+        :param plane: A 3D plane.
+        :type plane: Plane3D 
+        
+        :return: True if the normal vectors are collinear and 
+            a point can exist on both planes;
+            otherwise False.
+        :rtype: bool
+            
+        """
+        if isinstance(plane,Plane):
+            return self._N.is_collinear(plane.N) and plane.P0 in self
+        else:
+            return False
+
+
     def __init__(self,P0,N):
         ""
         self._P0=P0
         self._N=N
+
+        
+    def __repr__(self):
+        ""
+        return 'Plane3D(%s, %s)' % (self._P0,self._N)
+    
+
+    def contains(self,obj):
+        """Tests if the plane contains the object.
+        
+        :param obj: A 3D geometric object.
+        :type obj: Point3D, Line3D, Halfline3D, Segment3D
+            
+        :rtype: bool
+        
+        """
+        if obj.__class__.__name__=='Point3D':
+            
+            point=obj
+            return self._N.is_perpendicular(point-self._P0)
+            
+        elif obj.__class__.__name__=='Line3D':
+            
+            return obj.P0 in self and self._N.is_perpendicular(obj.vL)
+          
+        elif obj.__class__.__name__ in ['Halfline3D','Segment3D']:
+            
+            return obj.P0 in self and self._N.is_perpendicular(obj.line.vL)
+        
+        else:
+
+            raise Exception('%s in Plane not yet implemented' % obj.__class__.__name__)
+
+
+    def distance_to_point(self,point):
+        """Returns the distance to the supplied point.
+        
+        :param point: A 3D point.
+        :type point: Point3D
+        
+        :return: The distance between the plane and the point
+        :rtype: float
+        
+        .. seealso: `<https://geomalgorithms.com/a04-_planes.html>`_
+        
+        """
+        return abs(self.signed_distance_to_point(point))
+    
+    
+    def intersect_halfline(self,halfline):
+        """Returns the intersection of this plane and a halfline.
+        
+        :param halfline: A 3D halfline. 
+        :type halfline: Halfline3D 
+        
+        :return: Returns None for parallel, non-collinear plane and halfline.
+            Returns None for skew, non-intersecting plane and halfline.
+            Returns halfline for a halfline on the plane.
+            Return point for a skew halfline which intersects the plane.
+        :rtype: None, Point3D, Halfline3D
+        
+        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
+            
+        """
+        if halfline in self: # plane and halfline are collinear
+            return halfline
+        elif self._N.is_perpendicular(halfline.line.vL): # plane and halfline are parallel 
+            return None
+        else:
+            ipt=self._intersect_line_skew(halfline.line)
+            if ipt in halfline:
+                return ipt
+            else:
+                return None
+        
+        
+    def intersect_line(self,line):
+        """Returns the intersection of this plane and a line.
+        
+        :param line: A 3D line. 
+        :type line: Line3D 
+        
+        :return: Returns None for parallel, non-collinear plane and line.
+            Returns a line for a line on the plane.
+            Returns a point for a skew line which intersects the plane.
+        :rtype: None, Point3D, Line3D        
+        
+        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
+        
+        """
+        if line in self: # plane and line are collinear
+            return line
+        elif self._N.is_perpendicular(line.vL): # plane and line are parallel 
+            return None
+        else:
+            return self._intersect_line_skew(line)
+            
+        
+    def _intersect_line_skew(self,skew_line):
+        """Returns the intersection of this plane and a skew line.
+        
+        :param skew_line: A 3D line which is skew to the plane.
+        :type skew_line: Line3D
+        
+        :return: The intersection point.
+        :rtype: Point3D
+        
+        """
+        if not self._N.is_perpendicular(skew_line.vL):
+            n=self._N
+            u=skew_line.vL
+            w=skew_line.P0-self._P0
+            t=-n.dot(w) / n.dot(u)
+            return skew_line.calculate_point(t)
+        else:
+            raise ValueError('%s and %s are not skew' % (self,skew_line))
+        
+        
+    def intersect_segment(self,segment):
+        """Returns the intersection of this plane and a segment.
+        
+        :param segment: A 3D segment.
+        :type segment: Segment3D
+        
+        :return: Returns None for parallel, non-collinear plane and segment.
+            Returns None for skew, non-intersecting plane and segment.
+            Returns a segment for a segment on the plane.
+            Returns a point for a skew segment which intersects the plane.
+        :rtype: None, Point3D, Segment3D
+        
+        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
+            
+        """
+        if segment in self: # segment lies on the plane
+            return segment
+        elif self._N.is_perpendicular(segment.line.vL): # plane and segment are parallel 
+            return None
+        else:
+            ipt=self._intersect_line_skew(segment.line)
+            if ipt in segment:
+                return ipt
+            else:
+                return None
+            
+            
+    def intersect_segments(self,segments):
+        """Returns the intersection of this plane and a Segments sequence.
+        
+        :param segments: A sequence of 3D segments. 
+        :type segments: Segments 
+        
+        :return: A tuple of intersection points and intersection segments 
+            (Points,Segments)
+        :rtype: tuple
+        
+        """
+        ipts=Points()
+        isegments=Segments()
+        for s in segments:
+            result=self.intersect_segment(s)
+            if result is None:
+                continue
+            elif result.__class__.__name__=='Point3D':
+                ipts.append(result,unique=True)
+            elif result.__class__.__name__=='Segment3D':
+                isegments.append(result,unique=True)
+            else:
+                raise Exception
+        ipts=ipts.remove_points_in_segments(isegments)
+        return ipts,isegments
+        
+            
+    def intersect_plane(self,plane):
+        """Returns the intersection of this plane and another plane.
+        
+        :param plane: A 3D plane.
+        :type plane: Plane3D 
+        
+        :return: Returns None for parallel, non-coplanar planes.
+            Returns a plane for two coplanar planes.
+            Returns a line for non-parallel planes.
+        :rtype: None, Line3D, Plane3D   
+
+        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_         
+        
+        """
+        if plane==self:
+            return self
+        elif plane.N.is_collinear(self._N):
+            return None
+        else:
+            n1=self._N
+            d1=-n1.dot(self._P0-Point3D(0,0,0))
+            n2=plane.N
+            d2=-n2.dot(plane.P0-Point3D(0,0,0))
+            n3=n1.cross_product(n2)
+            P0=Point3D(0,0,0) + ((n1*d2-n2*d1).cross_product(n3) * (1 / (n3.length**2)))
+            u=n3
+            return Line3D(P0,u)
 
 
     @property
@@ -2923,7 +3341,6 @@ class Plane():
         return Point(x,y,z)
     
 
-
     @property
     def N(self):
         """The vector normal to the plane.
@@ -2932,4 +3349,21 @@ class Plane():
         
         """
         return self._N
+
+
+    def signed_distance_to_point(self,point):
+        """Returns the signed distance to the supplied point.
+        
+        :param point: A 3D point.
+        :type point:  Point3D
+        
+        :return: The signed distance between the plane and the point.
+            The return value is positive for one side of the plane 
+            (the side in the direction of the normal) and is negative for
+            the other side.
+        :rtype: float
+            
+        """
+        return self._N.dot(point-self._P0) / self._N.length
+
 
