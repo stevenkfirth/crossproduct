@@ -209,6 +209,19 @@ class Point(collections.abc.Sequence):
         return (point-self).length
     
     
+    def plot(self, ax, *args, **kwargs):
+        """Plots the point on the supplied axes.
+        
+        :param ax: An 2D or 3D Axes instance.
+        :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
+        :param args: positional arguments to be passed to the Axes.plot call.
+        :param kwargs: keyword arguments to be passed to the Axes.plot call.
+                   
+        """
+        x=[[c] for c in self]
+        ax.plot(*x, *args, **kwargs)
+    
+    
     def project_2D(self,coordinate_index):
         """Projection of a 3D point as a 2D point.
         
@@ -460,6 +473,19 @@ class Points(collections.abc.MutableSequence):
     #     """
     #     points=[pt.project_3D(plane,coordinate_index) for pt in self]
     #     return Points(*points)
+    
+    
+    def plot(self, ax, *args, **kwargs):
+        """Plots the points on the supplied axes.
+        
+        :param ax: An 2D or 3D Axes instance.
+        :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
+        :param args: positional arguments to be passed to the Axes.plot call.
+        :param kwargs: keyword arguments to be passed to the Axes.plot call.
+                   
+        """
+        for pt in self:
+            pt.plot(ax,*args,**kwargs)
     
     
     def remove_points_in_segments(self,segments):
@@ -1024,6 +1050,33 @@ class Vector(collections.abc.Sequence):
         else:
             raise ValueError('"perp_vector" method only applicable for a 2D vector.')
 
+
+    def plot(self, ax, 
+             **kwargs):
+        """Plots the vector on the supplied axes.
+        
+        :param ax: An 2D or 3D Axes instance.
+        :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
+        :param kwargs: keyword arguments to be passed to the Axes.arrow (2D)
+        or axes.quiver (3D) call.
+           
+        .. note::
+            
+            For 2D vector, this is plotted using the `axes.arrow` method. 
+            Two new defaults are used: the default for `length_includes_head` 
+            is set to True; and the default for `head_width` is set to 0.5.
+        
+        """
+        start_point=[0 for _ in self]
+        try: #2D
+            ax.arrow(*start_point,*self,
+                     head_width=kwargs.get('head_width') or 0.05,
+                     length_includes_head=True,
+                     **kwargs)
+        except TypeError: #3D
+            ax.quiver(*start_point,*self,
+                      **kwargs)
+        
 
     def triple_product(self,vector1,vector2):
         """Returns the triple product of this vector and 2 supplied vectors.
@@ -2673,32 +2726,19 @@ class Segment():
         return self._P1
         
     
-    def plot2D(self,ax,**kwargs):
+    def plot(self,ax,*args,**kwargs):
         """Plots the segment on the supplied axes.
         
-        :param ax: An Axes instance.
-        :type ax:  matplotlib.axes.Axes 
-        :param kwargs: keyword arguments to be supplied to the Axes.plot call
-                            
-        """
-        x=[p.x for p in self.points]
-        y=[p.y for p in self.points]
-        ax.plot(x,y,**kwargs)
-
-
-    def plot3D(self,ax,**kwargs):
-        """Plots the segment on the supplied axes
+        :param ax: An 2D or 3D Axes instance.
+        :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
         
-        :param ax: An Axes3D instance.
-        :type ax: mpl_toolkits.mplot3d.axes3d.Axes3D
-        :param kwargs: keyword arguments to be supplied to the Axes3D.plot call
-                    
+        :param args: positional arguments to be passed to the Axes.plot call.
+        :param kwargs: keyword arguments to be passed to the Axes.plot call.
+        
         """
-        x=[p.x for p in self.points]
-        y=[p.y for p in self.points]
-        z=[p.z for p in self.points]
-        ax.plot(x,y,z,**kwargs)
-
+        zipped=zip(self.P0,self.P1)
+        ax.plot(*zipped,*args,**kwargs)
+            
 
     def project_2D(self,coordinate_index):
         """Projection of the 3D segment as a 2D segment.
@@ -3001,6 +3041,19 @@ class Segments(collections.abc.MutableSequence):
         return self._segments.insert(index,value)
 
 
+    def plot(self, ax, *args, **kwargs):
+        """Plots the segments on the supplied axes.
+        
+        :param ax: An 2D or 3D Axes instance.
+        :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
+        :param args: positional arguments to be passed to the Axes.plot call.
+        :param kwargs: keyword arguments to be passed to the Axes.plot call.
+                   
+        """
+        for sg in self:
+            sg.plot(ax,*args,**kwargs)
+    
+
 
 class Polyline(collections.abc.Sequence):
     """A polyline
@@ -3077,6 +3130,19 @@ class Polyline(collections.abc.Sequence):
     def __repr__(self):
         ""
         return 'Polyline(%s)' % ','.join([str(pt) for pt in self])
+    
+    
+    def plot(self, ax, *args, **kwargs):
+        """Plots the polyline on the supplied axes.
+        
+        :param ax: An 2D or 3D Axes instance.
+        :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
+        :param args: positional arguments to be passed to the Axes.plot call.
+        :param kwargs: keyword arguments to be passed to the Axes.plot call.
+                   
+        """
+        zipped=zip(*self)
+        ax.plot(*zipped,*args,**kwargs)
     
     
     @property
@@ -3794,6 +3860,25 @@ class Polygon(collections.abc.Sequence):
         P0,P1,P2=self[:3]
         N=(P1-P0).cross_product(P2-P1)
         return Plane(P0,N)
+
+
+    def plot(self, ax, *args, **kwargs):
+        """Plots the polygon on the supplied axes.
+        
+        :param ax: An 2D or 3D Axes instance.
+        :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
+        :param args: positional arguments to be passed to the Axes.fill call.
+        :param kwargs: keyword arguments to be passed to the Axes.fill call.
+                   
+        """
+        if len(self[0])==2: #2D
+            zipped=zip(*self)
+            ax.fill(*zipped,*args,**kwargs)
+        elif len(self[0])==3: #3D
+            from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+            verts=[[tuple(pt) for pt in self]]
+            pc=Poly3DCollection(verts,**kwargs)
+            ax.add_collection3d(pc)
 
 
     @property
