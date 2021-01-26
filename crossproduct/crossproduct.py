@@ -1278,8 +1278,8 @@ class Line():
             ipt=self2D._intersect_line_skew_2D(skew_line2D)
             
             # find t values for the intersection point on each 2D line
-            t1=self2D.calculate_t_from_point(ipt)
-            t2=skew_line2D.calculate_t_from_point(ipt)
+            t1=self2D.calculate_t_from_coordinates(*ipt)
+            t2=skew_line2D.calculate_t_from_coordinates(*ipt)
             
             # calculate the 3D intersection points from the t values
             ipt1=self.calculate_point(t1)
@@ -1325,11 +1325,14 @@ class Line():
         return self.P0 + (self.vL * t)
 
 
-    def calculate_t_from_point(self,point):
-        """Returns t for a given point.
+    def calculate_t_from_coordinates(self,*coordinates):
+        """Returns t for a given set of coordinates.
         
-        :param point: A point on the line.
-        :type point: Point
+        First attempts to calculate t from the x coordinate. 
+        If this fails then next attempts to calculate t from the y coordinate.
+        If this fails then attempts to calculate t from the z coordinate.
+        
+        :param coordinates: Argument list of xy or xyz coordinate values (floats).
         
         :return: The calculated t value.
         :rtype: float
@@ -1349,7 +1352,7 @@ class Line():
            3
             
         """
-        for P0,vL,point in zip(self.P0,self.vL,point): # loop through x, y, z components
+        for P0,vL,point in zip(self.P0,self.vL,coordinates): # loop through x, y, z components
             if not math.isclose(vL, 0, abs_tol=ABS_TOL):
                 return (point-P0) / vL
         raise Exception()
@@ -1386,7 +1389,7 @@ class Line():
             
         """
         if isinstance(obj,Point):
-            t=self.calculate_t_from_point(obj)
+            t=self.calculate_t_from_coordinates(*obj)
             pt=self.calculate_point(t)           
             return obj==pt 
                     
@@ -1577,6 +1580,32 @@ class Line():
         
         """
         return self._P0
+    
+    
+    def plot(self, ax, *args, trange=(-10,10), **kwargs):
+        """Plots the line on the supplied axes.
+        
+        :param ax: An 2D or 3D Axes instance.
+        :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
+        
+        :param args: positional arguments to be passed to the Axes.plot call.
+        :param kwargs: keyword arguments to be passed to the Axes.plot call.
+                   
+        """
+        xmin,xmax=(float(x) for x in ax.get_xlim())
+        ymin,ymax=(float(y) for y in ax.get_ylim())
+        try:
+            zmin,zmax=(float(z) for z in ax.get_zlim())
+        except AttributeError:
+            zmin,zmax=None,None
+        
+        t0=self.calculate_t_from_coordinates(xmin,ymin,zmin)
+        t1=self.calculate_t_from_coordinates(xmax,ymax,zmax)
+        
+        sg=Segment(self.calculate_point(t0),
+                   self.calculate_point(t1))
+        sg.plot(ax,*args,**kwargs)
+        
     
     
     def project_2D(self,coordinate_index):
@@ -1771,7 +1800,7 @@ class Halfline():
         """
         if isinstance(obj,Point):
             
-            t=self.line.calculate_t_from_point(obj)
+            t=self.line.calculate_t_from_coordinates(*obj)
             try:
                 pt=self.calculate_point(t)  
             except ValueError: # t<0
@@ -1958,6 +1987,44 @@ class Halfline():
         
         """
         return self._P0
+    
+    
+    def plot(self, ax, *args, **kwargs):
+        """Plots the line on the supplied axes.
+        
+        :param ax: An 2D or 3D Axes instance.
+        :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
+        
+        :param args: positional arguments to be passed to the Axes.plot call.
+        :param kwargs: keyword arguments to be passed to the Axes.plot call.
+                   
+        """
+        xmin,xmax=(float(x) for x in ax.get_xlim())
+        ymin,ymax=(float(y) for y in ax.get_ylim())
+        try:
+            zmin,zmax=(float(z) for z in ax.get_zlim())
+        except AttributeError:
+            zmin,zmax=None,None
+        
+        t0=self.line.calculate_t_from_coordinates(xmin,ymin,zmin)
+        t1=self.line.calculate_t_from_coordinates(xmax,ymax,zmax)
+        
+        #print('pre',t0,t1)
+        
+        if t1>t0:
+            if t0<0:t0=0
+            if t1<=0:t1=1  
+        elif t1<t0:
+            if t0<=0:t0=1
+            if t1<0:t1=0
+        
+        #print('post',t0,t1)    
+        
+        sg=Segment(self.calculate_point(t0),
+                   self.calculate_point(t1))
+        sg.plot(ax,*args,**kwargs)
+        
+    
     
     
     def project_2D(self,coordinate_index):
@@ -3416,6 +3483,43 @@ class Plane():
         return self._P0
 
 
+    def plot(self, ax, *args, **kwargs):
+        """Plots the polygon on the supplied axes.
+        
+        :param ax: An 2D or 3D Axes instance.
+        :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
+        :param args: positional arguments to be passed to the Axes.fill or 
+        Axes.add_collection3d call.
+        :param kwargs: keyword arguments to be passed to the Axes.fill or 
+        Axes.add_collection3d call.
+                   
+        """
+        
+        xmin,xmax=(float(x) for x in ax.get_xlim())
+        ymin,ymax=(float(y) for y in ax.get_ylim())
+        zmin,zmax=(float(z) for z in ax.get_zlim())
+        
+        try:
+            pt0=self.point_xy(xmin,ymin)
+            pt1=self.point_xy(xmax,ymin)
+            pt2=self.point_xy(xmax,ymax)
+            pt3=self.point_xy(xmin,ymax)
+        except ValueError:
+            try:
+                pt0=self.point_yz(ymin,zmin)
+                pt1=self.point_yz(ymax,zmin)
+                pt2=self.point_yz(ymax,zmax)
+                pt3=self.point_yz(ymin,zmax)
+            except ValueError:
+                pt0=self.point_zx(zmin,xmin)
+                pt1=self.point_zx(zmax,xmin)
+                pt2=self.point_zx(zmax,xmax)
+                pt3=self.point_zx(zmin,xmax)
+        
+        pg=Polygon(pt0,pt1,pt2,pt3)
+        pg.plot(ax,*args,**kwargs)
+
+
     def point_xy(self,x,y):
         """Returns a 3D point on the plane given a x and y coordinates.
         
@@ -3424,40 +3528,55 @@ class Plane():
         :param y: A y-coordinate.
         :type y: float
         
-        :rtype: Point
-        
-        """
-        z=self.P0.z-(self.N.x*(x-self.P0.x)+self.N.y*(y-self.P0.y))/self.N.z
-        return Point(x,y,z)
-    
-    
-    def point_zx(self,z,x):
-        """Returns a 3D point on the plane given a x and y coordinates.
-        
-        :param z: A z-coordinate.
-        :type z: float
-        :param x: An x-coordinate.
-        :type x: float
+        :raises ValueError: If there are no points on the plane with the xy values.
         
         :rtype: Point
         
         """
-        y=self.P0.y-(self.N.z*(z-self.P0.z)+self.N.x*(x-self.P0.x))/self.N.y
+        try:
+            z=self.P0.z-(self.N.x*(x-self.P0.x)+self.N.y*(y-self.P0.y))/self.N.z
+        except ZeroDivisionError:
+            raise ValueError('xy points (%s,%s) must exist on the plane.' % (x,y))
         return Point(x,y,z)
     
     
     def point_yz(self,y,z):
-        """Returns a 3D point on the plane given a x and y coordinates.
+        """Returns a 3D point on the plane given a y and z coordinates.
         
         :param y: A y-coordinate.
         :type y: float
         :param z: A z-coordinate.
         :type z: float
         
+        :raises ValueError: If there are no points on the plane with the yz values.
+        
         :rtype: Point
         
         """
-        x=self.P0.x-(self.N.y*(y-self.P0.y)+self.N.z*(z-self.P0.z))/self.N.x
+        try:
+            x=self.P0.x-(self.N.y*(y-self.P0.y)+self.N.z*(z-self.P0.z))/self.N.x
+        except ZeroDivisionError:
+            raise ValueError('yz points (%s,%s) must exist on the plane.' % (y,z))
+        return Point(x,y,z)
+    
+    
+    def point_zx(self,z,x):
+        """Returns a 3D point on the plane given a z and x coordinates.
+        
+        :param z: A z-coordinate.
+        :type z: float
+        :param x: An x-coordinate.
+        :type x: float
+        
+        :raises ValueError: If there are no points on the plane with the zx values.
+        
+        :rtype: Point
+        
+        """
+        try:
+            y=self.P0.y-(self.N.z*(z-self.P0.z)+self.N.x*(x-self.P0.x))/self.N.y
+        except ZeroDivisionError:
+            raise ValueError('zx points (%s,%s) must exist on the plane.' % (z,x))
         return Point(x,y,z)
     
 
@@ -3867,8 +3986,10 @@ class Polygon(collections.abc.Sequence):
         
         :param ax: An 2D or 3D Axes instance.
         :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
-        :param args: positional arguments to be passed to the Axes.fill call.
-        :param kwargs: keyword arguments to be passed to the Axes.fill call.
+        :param args: positional arguments to be passed to the Axes.fill or 
+        Axes.add_collection3d call.
+        :param kwargs: keyword arguments to be passed to the Axes.fill or 
+        Axes.add_collection3d call.
                    
         """
         if len(self[0])==2: #2D

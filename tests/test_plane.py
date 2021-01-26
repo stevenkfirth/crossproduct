@@ -210,6 +210,16 @@ class Test_Plane(unittest.TestCase):
                          Line(Point(1,0,0), Vector(0,1,0)))
         
         
+    def test_plot(self):
+        ""
+        P0=Point(0,0,0)
+        N=Vector(1,0,0)
+        pl=Plane(P0,N)
+        import matplotlib.pyplot as plt
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        pl.plot(ax)
+        
         
     def test_point_xy(self):
         ""
@@ -219,6 +229,18 @@ class Test_Plane(unittest.TestCase):
         
         self.assertEqual(pl.point_xy(1,1),
                          Point(1,1,10))
+        
+        P0=Point(0,0,0)
+        N=Vector(0,1,0)
+        pl=Plane(P0,N)
+        self.assertRaises(ValueError,
+                          pl.point_xy,1,1)
+        
+        #print(pl.point_xy(0,0))
+        
+        
+        
+        
         
         
     def test_signed_distance_to_point(self):

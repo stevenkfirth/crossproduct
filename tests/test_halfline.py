@@ -2,6 +2,7 @@
 
 import unittest
 from crossproduct import Point, Vector, Line, Halfline, Segment
+import matplotlib.pyplot as plt
 
 
 class Test_Halfline(unittest.TestCase):
@@ -162,7 +163,13 @@ class Test_Halfline(unittest.TestCase):
         self.assertEqual(hl.line,
                          Line(P0,vL))
     
-
+    def test_plot(self):
+        ""
+        P0,vL=Point(0,0),Vector(-1,1) 
+        hl=Halfline(P0,vL)
+        fig, ax = plt.subplots()
+        hl.plot(ax)
+   
 
 
 class Test_Halfline2D(unittest.TestCase):

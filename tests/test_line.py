@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
+
 import unittest
 from crossproduct import Point, Vector, Line, Halfline, Segment
-
+import matplotlib.pyplot as plt
 
 
 class Test_Line(unittest.TestCase):
@@ -75,16 +76,20 @@ class Test_Line(unittest.TestCase):
         
         
         
-    def test_calculate_t_from_point(self):
+    def test_calculate_t_from_coordinates(self):
         ""
         P0,vL=Point(0,0),Vector(1,1) 
         l=Line(P0,vL)
-        self.assertEqual(l.calculate_t_from_point(P0+vL*2),
+        self.assertEqual(l.calculate_t_from_coordinates(*(P0+vL*2)),
                          2)
+        self.assertEqual(l.calculate_t_from_coordinates(2,0),
+                         2)
+        
+        
         
         P0,vL=Point(0,0,0),Vector(1,1,1) 
         l=Line(P0,vL)
-        self.assertEqual(l.calculate_t_from_point(P0+vL*2),
+        self.assertEqual(l.calculate_t_from_coordinates(*(P0+vL*2)),
                          2)
     
     
@@ -224,6 +229,14 @@ class Test_Line(unittest.TestCase):
         self.assertTrue(l.is_parallel(l))
         self.assertTrue(l.is_parallel(Line(P0,vL.opposite)))
         self.assertTrue(l.is_parallel(Line(P0+Vector(1,-1,0),vL)))
+        
+        
+    def test_plot(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        l=Line(P0,vL)
+        fig, ax = plt.subplots()
+        l.plot(ax)
         
 
     def test_project_2D(self):
