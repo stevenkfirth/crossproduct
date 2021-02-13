@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import math
 from crossproduct import Vector
 
 
@@ -74,7 +75,32 @@ class Test_Vector(unittest.TestCase):
         self.assertEqual(v1-v2,
                          Vector(-1,0,0))
         
+
+    def test_angle(self):
+        ""
+        v1=Vector(1,0)
+        self.assertEqual(v1.angle(v1),
+                         0)
+        self.assertEqual(v1.angle(Vector(0,1)),
+                         90)
+        self.assertAlmostEqual(v1.angle(Vector(1,1)), 
+                               45)
+        self.assertAlmostEqual(v1.angle(Vector(-1,0)), 
+                               180)
         
+        v1=Vector(1,0,0)
+        self.assertEqual(v1.angle(v1),
+                         0)
+        self.assertEqual(v1.angle(Vector(0,1,0)),
+                         90)
+        self.assertAlmostEqual(v1.angle(Vector(1,1,0)), 
+                               45)
+        self.assertAlmostEqual(v1.angle(Vector(-1,0,0)), 
+                               180)
+        
+    
+    
+    
     def test_cross_product(self):
         ""
         v1=Vector(1,0,0)

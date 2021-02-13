@@ -674,6 +674,19 @@ class Vector(collections.abc.Sequence):
         except TypeError: # occurs if, say, a or b is None
             raise ValueError(r'Vectors to subtract must be of the same length.')
         return Vector(*coordinates)
+
+
+    def angle(self,vector):
+        """Returns the angle between this vector and the supplied vector.
+        
+        :param vector: A 2D or 3D vector.
+        :type vector: Vector
+        
+        :return: The angle in degrees.
+        :rtype: float
+        
+        """
+        return math.degrees(math.acos(self.dot(vector)/self.length/vector.length))
         
 
     def cross_product(self,vector):
@@ -4227,6 +4240,31 @@ class Polygon(collections.abc.Sequence):
         return a / 2.0
 
 
+    def to_tuple(self):
+        """Returns a tuple of point tuples.
+        
+        """
+        return tuple(tuple(pt) for pt in self)
+
+
+    def __hash__(self):
+        """
+        """
+        return hash(self.to_tuple())
+
+
+
+class SimplePolygon(Polygon):
+    """
+    """
+    
+    
+    
+class ConvexSimplePolygon(SimplePolygon):
+    """
+    """
+
+
 
 class Polygons(collections.abc.MutableSequence):
     """A sequence of polygons.    
@@ -4280,4 +4318,81 @@ class Polygons(collections.abc.MutableSequence):
         return self._polygons.insert(index,value)
 
 
+
+class Polyhedron(collections.abc.Sequence):
+    """A polyhedron. 
+    
+    In crossproduct a Polyhedron object is a immutable sequence. 
+    Iterating over a Polyhedron will provide its Polygon instances.
+    
+    
+    .. rubric:: Code Example
+
+    .. code-block:: python
+       
+       >>> 
+    
+    """
+
+    def __eq__(self,polyhedron):
+        """Tests if this polyhedron and the supplied polyhedron are equal.
+        
+        :param polyhedron: A polyhedron.
+        :type polygon: Polyhedron
+        
+        :return: True if the two polyhedrons have the same polygons;       
+            otherwise False.
+        :rtype: bool
+        
+        .. rubric:: Code Example
+
+        .. code-block:: python
+           
+           # 2D example
+           
+            
+        """
+        if isinstance(polyhedron,Polyhedron):
+            
+            if not len(self)==len(polyhedron):
+                
+                return False
+            
+            for pg in self:
+                
+                for pg1 in polyhedron:
+                    
+                    if pg==pg1:
+                        
+                        break
+            
+                else:
+                    
+                    return False
+            
+            return True
+            
+        else:
+            return False
+        
+    
+    def __getitem__(self,index):
+        ""
+        return self._polygons[index]
+    
+   
+    def __init__(self,*polygons):
+        ""
+        
+        self._polygons=tuple(polygons)
+        
+
+    def __len__(self):
+        ""
+        return len(self._polygons)
+
+
+    def __repr__(self):
+        ""
+        return 'Polyhedron(%s)' % ','.join([str(pg) for pg in self])
 

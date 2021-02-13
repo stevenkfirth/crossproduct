@@ -37,3 +37,4 @@ from .crossproduct import Polyline
 from .crossproduct import Plane
 from .crossproduct import Polygon
 from .crossproduct import Polygons
+from .crossproduct import Polyhedron
