@@ -36,5 +36,7 @@ from .crossproduct import Segments
 from .crossproduct import Polyline
 from .crossproduct import Plane
 from .crossproduct import Polygon
+from .crossproduct import SimplePolygon
+from .crossproduct import ConvexSimplePolygon
 from .crossproduct import Polygons
 from .crossproduct import Polyhedron
