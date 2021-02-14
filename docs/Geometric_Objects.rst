@@ -1,83 +1,67 @@
 
-Geometric_Objects
+Geometric Objects
 =================
 
-`crossproduct` defines a series of Python classes to represent the major geometric objects.
+*crossproduct* defines a series of Python classes to represent the major geometric objects.
 
-An instance of a geometric class is instanciated by providing the underlying information needed to form the object, 
+Instance creation
+-----------------
+
+An instance of a geometric class is created by providing the underlying information needed to form the object, 
 such as the x and y coordinates of a 2D point:
 
 .. code-block:: python
 
-   >>> from crossproduct import Point2D 
-   >>> pt = Point2D(1,0)
+   >>> from crossproduct import Point
+   >>> pt = Point(1,0)
    >>> print(pt)
-   Point2D(1,0)
+   Point(1,0)
+   
+Objects are immutable
+---------------------
    
 Once a geometric object instance is formed, it is considered immutable and cannot be changed. 
-Operations, such as adding a vector to a point, result in a new point being returned:
+Operations, such as adding a vector to a point, result in a new `Point` instance being returned:
 
 .. code-block:: python
 
-   >>> from crossproduct import Point2D 
-   >>> pt1 = Point2D(1,0)
-   >>> pt2 = pt1 + Vector2D(1,0)
+   >>> from crossproduct import Point
+   >>> pt1 = Point(1,0)
+   >>> pt2 = pt1 + Vector(1,0)
    >>> print(pt1, pt2)
-   Point2D(1,0), Point2D(2,0)
+   Point(1,0), Point(2,0)
    
-`crossproduct` also defines sequences (i.e. collections) of geometric objects which act in a similar manner to python lists but with additional methods.
-These sequences include :py:class:`~crossproduct.points.Points`, :py:class:`~crossproduct.segments.Segments` and :py:class:`~crossproduct.simple_polygons.SimplePolygons`. 
-A sequence can contain any number of geometric object instances:
+Some objects are sequences
+--------------------------
 
+Some of the geometric objects are implemented as immutable sequences (more formally they are subclasses of `collections.abc.Sequence`).
+Iterating over the object will return the items belonging to that object.
+For example, iterating over a `Polygon` will return the points of the polygon:
+   
 .. code-block:: python
 
-   >>> from crossproduct import Segment2D, Segments
-   >>> s1 = Segment2D(Point2D(0,0), Point2D(1,0))
-   >>> s2 = Segment2D(Point2D(0,0), Point2D(0,1))
-   >>> segments = Segments(s1,s2)
-   >>> print(segments)
-   Segments(Segment2D(Point2D(0,0), Point2D(1,0)), Segment2D(Point2D(0,0), Point2D(0,1)))
+   >>> from crossproduct import Point, Polygon
+   >>> pg = Polygon(Point(0,0),Point(1,0),Point(1,1))
+   >>> for pt in pg: print pt
+   Point(0,0)
+   Point(1,0)
+   Point(1,1)
+   
+Indexing, slicing etc. will also work on these objects. 
+The objects that this applies to are: `Point`, `Vector`, `Segment`, `Polyline`, `Polygon` and `Polyhedron`.
+   
+Objects can be 2D or 3D
+-----------------------
+   
+Geometric objects can be specified as 2D or 3D, as given by the number of coordinates passes when they are formed.
+   
+.. code-block:: python
 
-The geometric object classes available are:
-
-+----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
-| Group                                                                      | Geometric Object Classes                                                                 |
-+============================================================================+==========================================================================================+
-| Point                                                                      | :py:class:`~crossproduct.point.Point2D`                                                  |
-|                                                                            | :py:class:`~crossproduct.point.Point3D`                                                  |
-|                                                                            | :py:class:`~crossproduct.points.Points`                                                  |
-+----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
-| Vector                                                                     | :py:class:`~crossproduct.vector.Vector2D`                                                |
-|                                                                            | :py:class:`~crossproduct.vector.Vector3D`                                                |
-+----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
-| Line                                                                       | :py:class:`~crossproduct.line.Line2D`                                                    |
-|                                                                            | :py:class:`~crossproduct.line.Line3D`                                                    |
-+----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
-| Halfline                                                                   | :py:class:`~crossproduct.halfline.Halfline2D`                                            |
-|                                                                            | :py:class:`~crossproduct.halfline.Halfline3D`                                            |
-+----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
-| Segment                                                                    | :py:class:`~crossproduct.segment.Segment2D`                                              |
-|                                                                            | :py:class:`~crossproduct.segment.Segment3D`                                              |
-|                                                                            | :py:class:`~crossproduct.segments.Segments`                                              |
-+----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
-| Polyline                                                                   | :py:class:`~crossproduct.polyline.Polyline2D`                                            |
-|                                                                            | :py:class:`~crossproduct.polyline.Polyline3D`                                            |
-|                                                                            | :py:class:`~crossproduct.polylines.Polylines`                                            |
-+----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
-| Plane                                                                      | :py:class:`~crossproduct.plane.Plane3D`                                                  |
-+----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
-| PlaneVolume                                                                | :py:class:`~crossproduct.plane_volume.PlaneVolume3D`                                     |
-+----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
-| Polygon                                                                    | :py:class:`~crossproduct.polygon.Polygon2D`                                              |
-|                                                                            | :py:class:`~crossproduct.polygon.Polygon3D`                                              |
-|                                                                            | :py:class:`~crossproduct.polygons.Polygons`                                              |
-+----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
-| Polyhedron                                                                 | :py:class:`~crossproduct.polyhedron.Polyhedron3D`                                        |
-|                                                                            | :py:class:`~crossproduct.polyhedrons.Polyhedrons`                                        |
-+----------------------------------------------------------------------------+------------------------------------------------------------------------------------------+
-
-
-
+   >>> from crossproduct import Point, Line
+   >>> pt = Point(1,0)                             # 2D Point
+   >>> line = Line(Point(0,0,0), Vector(1,1,1)     # 3D Line
+   
+   
 
 
 

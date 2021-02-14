@@ -10,9 +10,9 @@ ABS_TOL = 1e-7 # default value for math.isclose
 class Point(collections.abc.Sequence):
     """A point, as described by xy or xyz coordinates.
     
-    In crossproduct a Point object is a immutable sequence. 
-    Iterating over a Point will provide its coordinates.
-    Indexing a Point will return the coordinate for that index (0=x, 1=y, 2=z)
+    In *crossproduct* a `Point` object is a immutable sequence. 
+    Iterating over a `Point` will provide its coordinates.
+    Indexing a `Point` will return the coordinate for that index (0=x, 1=y, 2=z).
     
     :param coordinates: Argument list of two (xy) or three (xyz) coordinates. 
         Coordinates should be of type int, float or similar numeric. These values
@@ -185,14 +185,19 @@ class Point(collections.abc.Sequence):
         else:
             return Point(*coordinates)
              
+        
+    def _distance_to_point(self,point):
+        ""
+        return (point-self).length
+        
     
-    def distance_to_point(self,point):
-        """Returns the distance to the supplied point.
+    def distance(self,obj):
+        """Returns the distance to the supplied object.
         
-        :param point: The point to calculate the distance to.
-        :type point: Point
+        :param obj: The object to calculate the distance to.
+        :type obj: Point
         
-        :return: The distance between the two points.
+        :returns: The distance between the point and the object.
         :rtype: float
         
         .. rubric:: Code Example
@@ -201,12 +206,14 @@ class Point(collections.abc.Sequence):
            
            >>> p1 = Point(1,2)
            >>> p1 = Point(2,2)
-           >>> result = p1.distance_to_point(p2)
-           >>> print(result)
+           >>> print(p1.distance(p2))
            1
             
         """
-        return (point-self).length
+        if isinstance(obj, Point):
+            return self._distance_to_point(obj)
+        else:
+            raise TypeError('Point.distance does not accept a %s type' % obj.__class__)
     
     
     def plot(self, ax, *args, **kwargs):
@@ -1071,13 +1078,13 @@ class Vector(collections.abc.Sequence):
         :param ax: An 2D or 3D Axes instance.
         :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
         :param kwargs: keyword arguments to be passed to the Axes.arrow (2D)
-        or axes.quiver (3D) call.
+            or axes.quiver (3D) call.
            
         .. note::
             
-            For 2D vector, this is plotted using the `axes.arrow` method. 
-            Two new defaults are used: the default for `length_includes_head` 
-            is set to True; and the default for `head_width` is set to 0.5.
+            For 2D vector, this is plotted using the 'axes.arrow' method. 
+            Two new defaults are used: the default for 'length_includes_head' 
+            is set to True; and the default for 'head_width' is set to 0.5.
         
         """
         start_point=[0 for _ in self]
@@ -1416,7 +1423,7 @@ class Line():
             raise TypeError
         
         
-    def distance_to_line(self,line):
+    def _distance_to_line(self,line):
         """Returns the distance from this line to the supplied line.
         
         :param line: A line.
@@ -1477,7 +1484,7 @@ class Line():
 
 
     
-    def distance_to_point(self,point):
+    def _distance_to_point(self,point):
         """Returns the distance from this line to the supplied point.
         
         :param point: A point.
@@ -1511,7 +1518,34 @@ class Line():
         return (ptB-point).length
         
     
-    def intersect_line(self,line):
+    def distance(self,obj):
+        """Returns the distance to the supplied object.
+        
+        :param obj: The object to calculate the distance to.
+        :type obj: Point, Line
+        
+        :returns: The distance between the line and the object.
+        :rtype: float
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> l = Line(Point(0,0), Vector(1,0))
+           >>> result = l.distance(Point(0,10))
+           >>> print(result)
+           10
+            
+        """
+        if isinstance(obj, Point):
+            return self._distance_to_point(obj)
+        if isinstance(obj, Line):
+            return self._distance_to_line(obj)
+        else:
+            raise TypeError('Line.distance does not accept a %s type' % obj.__class__)
+    
+    
+    def _intersect_line(self,line):
         """Returns the intersection of this line with the supplied line. 
         
         :param line: A line.
@@ -1551,6 +1585,10 @@ class Line():
         else: # a skew line
             return self._intersect_line_skew(line)
             
+        
+    def intersect(self,obj):
+        ""
+        
     
     def is_parallel(self,line):
         """Tests if this line and the supplied line are parallel. 
@@ -1786,10 +1824,11 @@ class Halfline():
     def contains(self,obj):
         """Tests if the halfline contains the object.
         
-        :param obj: A point or segment.
-        :type obj: Point, Segment
+        :param obj: A point, halfline or segment.
+        :type obj: Point, Halfline, Segment
             
         :return: For point, True if the point lies on the halfline; otherwise False. 
+            For halfline, ... TO DO ...    
             For segment, True if the segment start point and end point are on the halfline; otherwise False
         :rtype: bool
         
@@ -1797,19 +1836,10 @@ class Halfline():
         
         .. code-block:: python
            
-           # 2D example
            >>> hl = Halfline(Point(0,0), Vector(1,0))
-           >>> result = Point(2,0) in l
-           >>> print(result)
+           >>> print(hl.contains(Point(2,0)))
            True
            
-           # 3D example
-           >>> hl = Halfline(Point(0,0,0), Vector(1,0,0))
-           >>> hl = Halfline(Point(0,0,0), Vector(-1,0,0))
-           >>> result = hl in l
-           >>> print(result)
-           False            
-        
         """
         if isinstance(obj,Point):
             
@@ -1821,13 +1851,16 @@ class Halfline():
             return obj==pt 
         
         elif isinstance(obj,Segment):
+            raise Exception('TO DO')
+        
+        elif isinstance(obj,Segment):
             return self.contains(obj.P0) and self.contains(obj.P1)
             
         else:
             return TypeError()
 
 
-    def distance_to_point(self,point):
+    def _distance_to_point(self,point):
         """Returns the distance from this halfline to the supplied point.
         
         :param point: A point.
@@ -1864,7 +1897,29 @@ class Halfline():
             return self.line.distance_to_point(point)
 
 
-    def intersect_halfline(self,halfline):
+    def distance(self,obj):
+        """Returns the distance to the supplied object.
+        
+        :param obj: The object to calculate the distance to.
+        :type obj: Point
+        
+        :returns: The distance between the halfline and the object.
+        :rtype: float
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> 
+            
+        """
+        if isinstance(obj, Point):
+            return self._distance_to_point(obj)
+        else:
+            raise TypeError('Halfline.distance does not accept a %s type' % obj.__class__)
+
+
+    def _intersect_halfline(self,halfline):
         """Returns the intersection of this halfline with the supplied halfline.
         
         :param halfline: A halfline.
@@ -1920,7 +1975,7 @@ class Halfline():
                 return None
         
 
-    def intersect_line(self,line):
+    def _intersect_line(self,line):
         """Returns the intersection of this halfline with the supplied line.
         
         :param line: A line.
@@ -1964,6 +2019,9 @@ class Halfline():
                 return p
             else:
                 return None
+
+    def intersect(self,obj):
+        ""
 
 
     @property
@@ -2431,7 +2489,7 @@ class Segment():
             return Segments(*result)        
         
             
-    def distance_to_point(self,point):
+    def _distance_to_point(self,point):
         """Returns the distance from the segment to the supplied point.
         
         :param point: A point.
@@ -2472,7 +2530,7 @@ class Segment():
             return self.line.distance_to_point(point)
     
     
-    def distance_to_segment(self,segment):
+    def _distance_to_segment(self,segment):
         """Returns the distance from this segment to the supplied segment.
         
         :param segment: A 3D segment.
@@ -2563,8 +2621,32 @@ class Segment():
             
         return dP.length
 
+
+    def distance(self,obj):
+        """Returns the distance to the supplied object.
+        
+        :param obj: The object to calculate the distance to.
+        :type obj: Point, Segment
+        
+        :returns: The distance between the segment and the object.
+        :rtype: float
+        
+        .. rubric:: Code Example
     
-    def intersect_halfline(self,halfline):
+        .. code-block:: python
+           
+           >>> 
+            
+        """
+        if isinstance(obj, Point):
+            return self._distance_to_point(obj)
+        elif isinstance(obj,Segment):
+            return self._distance_to_segment(obj)
+        else:
+            raise TypeError('Point.distance does not accept a %s type' % obj.__class__)
+
+    
+    def _intersect_halfline(self,halfline):
         """Returns the interesection of this segment and a halfline.
         
         :param halfline: A halfline.
@@ -2620,7 +2702,7 @@ class Segment():
                 return None
                 
 
-    def intersect_line(self,line):
+    def _intersect_line(self,line):
         """Returns the intersection of this segment with the supplied line.
         
         :param line: A line.
@@ -2665,7 +2747,7 @@ class Segment():
                 return None
 
 
-    def intersect_segment(self,segment):
+    def _intersect_segment(self,segment):
         """Returns the interesection of this segment and another segment.
         
         :param segment: A segment.
@@ -2728,6 +2810,9 @@ class Segment():
             else:
                 return None
     
+    
+    def intersect(self,obj):
+        ""
     
     @property
     def line(self):
@@ -3212,6 +3297,13 @@ class Polyline(collections.abc.Sequence):
         return 'Polyline(%s)' % ','.join([str(pt) for pt in self])
     
     
+    def contains(self,obj):
+        """
+        """
+    
+    def intersect(self,obj):
+        ""
+    
     def plot(self, ax, *args, **kwargs):
         """Plots the polyline on the supplied axes.
         
@@ -3322,7 +3414,7 @@ class Plane():
             raise TypeError
 
 
-    def distance_to_point(self,point):
+    def _distance_to_point(self,point):
         """Returns the distance to the supplied point.
         
         :param point: A 3D point.
@@ -3335,6 +3427,28 @@ class Plane():
         
         """
         return abs(self.signed_distance_to_point(point))
+    
+    
+    def distance(self,obj):
+        """Returns the distance to the supplied object.
+        
+        :param obj: The object to calculate the distance to.
+        :type obj: Point
+        
+        :returns: The distance between the plane and the object.
+        :rtype: float
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> 
+            
+        """
+        if isinstance(obj, Point):
+            return self._distance_to_point(obj)
+        else:
+            raise TypeError('Plane.distance does not accept a %s type' % obj.__class__)
     
     
     def intersect_halfline(self,halfline):
@@ -3403,7 +3517,7 @@ class Plane():
         return skew_line.calculate_point(t)
         
         
-    def intersect_segment(self,segment):
+    def _intersect_segment(self,segment):
         """Returns the intersection of this plane and a segment.
         
         :param segment: A 3D segment.
@@ -3430,7 +3544,7 @@ class Plane():
                 return None
             
             
-    def intersect_segments(self,segments):
+    def _intersect_segments(self,segments):
         """Returns the intersection of this plane and a Segments sequence.
         
         :param segments: A sequence of 3D segments. 
@@ -3457,7 +3571,7 @@ class Plane():
         return ipts,isegments
         
             
-    def intersect_plane(self,plane):
+    def _intersect_plane(self,plane):
         """Returns the intersection of this plane and another plane.
         
         :param plane: A 3D plane.
@@ -3486,6 +3600,9 @@ class Plane():
             return Line(P0,u)
 
 
+    def intersect(self,obj):
+        ""
+
     @property
     def P0(self):
         """The start point of the plane.
@@ -3502,9 +3619,9 @@ class Plane():
         :param ax: An 2D or 3D Axes instance.
         :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
         :param args: positional arguments to be passed to the Axes.fill or 
-        Axes.add_collection3d call.
+            Axes.add_collection3d call.
         :param kwargs: keyword arguments to be passed to the Axes.fill or 
-        Axes.add_collection3d call.
+            Axes.add_collection3d call.
                    
         """
         
@@ -4000,9 +4117,9 @@ class Polygon(collections.abc.Sequence):
         :param ax: An 2D or 3D Axes instance.
         :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
         :param args: positional arguments to be passed to the Axes.fill or 
-        Axes.add_collection3d call.
+            Axes.add_collection3d call.
         :param kwargs: keyword arguments to be passed to the Axes.fill or 
-        Axes.add_collection3d call.
+            Axes.add_collection3d call.
                    
         """
         if len(self[0])==2: #2D
@@ -4258,6 +4375,9 @@ class SimplePolygon(Polygon):
     """
     """
     
+    
+    def intersect(self,obj):
+        ""
     
     
 class ConvexSimplePolygon(SimplePolygon):

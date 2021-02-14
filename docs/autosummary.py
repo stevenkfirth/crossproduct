@@ -51,7 +51,7 @@ def create_stub_pages(klass):
                                                          name]))
         
 def create_class_page(klass):
-    filename=klass.__name__ + '.rst'
+    filename=klass.__name__ + '_class.rst'
     with open(filename,'w') as f:
         f.write(klass.__name__ + '\n')
         f.write('=' * len(klass.__name__) + '\n')
@@ -79,23 +79,17 @@ def delete_all_files_in_directory(mydir):
         os.remove(os.path.join(mydir, f))
 
 delete_all_files_in_directory(stub_dir)
-create_pages(crossproduct.Point2D)
-create_pages(crossproduct.Point3D)
+create_pages(crossproduct.Point)
 create_pages(crossproduct.Points)
-create_pages(crossproduct.Vector2D)
-create_pages(crossproduct.Vector3D)
-create_pages(crossproduct.Line2D)
-create_pages(crossproduct.Line3D)
-create_pages(crossproduct.Halfline2D)
-create_pages(crossproduct.Halfline3D)
-create_pages(crossproduct.Segment2D)
-create_pages(crossproduct.Segment3D)
+create_pages(crossproduct.Vector)
+create_pages(crossproduct.Line)
+create_pages(crossproduct.Halfline)
+create_pages(crossproduct.Segment)
 create_pages(crossproduct.Segments)
-create_pages(crossproduct.Polyline2D)
-create_pages(crossproduct.Polyline3D)
-create_pages(crossproduct.Polylines)
-create_pages(crossproduct.Plane3D)
-create_pages(crossproduct.PlaneVolume3D)
-create_pages(crossproduct.Polygon2D)
-create_pages(crossproduct.Polygon3D)
+create_pages(crossproduct.Polyline)
+#create_pages(crossproduct.Polylines)
+create_pages(crossproduct.Plane)
+create_pages(crossproduct.Polygon)
+create_pages(crossproduct.SimplePolygon)
 create_pages(crossproduct.Polygons)
+create_pages(crossproduct.Polyhedron)

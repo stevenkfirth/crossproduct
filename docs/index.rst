@@ -16,37 +16,34 @@ Geometry in Python - 2D and 3D
    Introduction
    Geometric_Objects
    Equality
-   Membership
+   Contains
    Distances
    Intersections
    Differences
    
 .. toctree::
    :maxdepth: 1
-   :caption: Geometric Classes
+   :caption: Geometric Objects
    
-   Point2D
-   Point3D
-   Points
-   Vector2D
-   Vector3D
-   Line2D
-   Line3D
-   Halfline2D
-   Halfline3D
-   Segment2D
-   Segment3D
-   Segments
-   Polyline2D
-   Polyline3D
-   Polylines
-   Plane3D
-   PlaneVolume3D
-   Polygon2D
-   Polygon3D
-   Polygons
+   Point_class
+   Vector_class
+   Line_class
+   Halfline_class
+   Segment_class
+   Polyline_class
+   Plane_class
+   Polygon_class
+   SimplePolygon_class
+   Polyhedron_class
    
-
+.. toctree::
+   :maxdepth: 1
+   :caption: Geometric Collections
+   
+   Points_class
+   Segments_class
+   Polygons_class
+   
 
 Indices and tables
 ==================
