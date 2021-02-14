@@ -303,6 +303,17 @@ class Point(collections.abc.Sequence):
     
     
     @property
+    def nD(self):
+        """The number of dimensions of the point.
+        
+        :returns: 2 or 3
+        :rtype: int
+        
+        """
+        return len(self)
+    
+    
+    @property
     def x(self):
         """The x coordinate of the point.
         
@@ -425,7 +436,7 @@ class Points(collections.abc.MutableSequence):
     
     
     def insert(self,index,value):
-        ""
+        "(Required by abstract base case"
         return self._points.insert(index,value)
     
     
@@ -3336,6 +3347,15 @@ class Polyline(collections.abc.Sequence):
         n=len(self)
         return Segments(*[Segment(self[i],self[i+1]) for i in range(n-1)])
 
+
+class Polylines():
+    """
+    """
+    def __init__(self):
+        ""
+        
+    def __repr__(self):
+        ""
 
 
 class Plane():

@@ -15,6 +15,7 @@ Geometry in Python - 2D and 3D
 
    Introduction
    Geometric_Objects
+   Geometric_Object_Collections
    Equality
    Contains
    Distances
@@ -42,6 +43,7 @@ Geometry in Python - 2D and 3D
    
    Points_class
    Segments_class
+   Polylines_class
    Polygons_class
    
 
