@@ -24,12 +24,13 @@ class Point(collections.abc.Sequence):
     
     .. code-block:: python
        
+       >>> from crossproduct import Point
        >>> pt = Point(1,2)
        >>> print(pt)
        Point(1.0,2.0)
-       >>> print(list(pt))      # print a list of the coordinates
+       >>> print(list(pt))      # prints a list of the coordinates
        [1.0,2.0]
-       >>> print(pt[1])      # print the y coordinate
+       >>> print(pt[1])         # prints the y coordinate
        2.0
     
     .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Basic-Definitions>`_
@@ -48,6 +49,7 @@ class Point(collections.abc.Sequence):
     
         .. code-block:: python
         
+            >>> from crossproduct import Point
             >>> p = Point(1,2)
             >>> result = p + Vector(1,1)
             >>> print(result)
@@ -82,6 +84,7 @@ class Point(collections.abc.Sequence):
     
         .. code-block:: python
         
+            >>> from crossproduct import Point
             >>> result = Point(1,2) == Point(2,2)
             >>> print(result)
             False
@@ -137,6 +140,7 @@ class Point(collections.abc.Sequence):
     
         .. code-block:: python
         
+            >>> from crossproduct import Point
             >>> result = Point(1,2) < Point(2,2)
             >>> print(result)
             True
@@ -164,12 +168,13 @@ class Point(collections.abc.Sequence):
         
         :return: If a point is supplied, then a vector is returned (i.e. v=P1-P0). 
             If a vector is supplied, then a point is returned (i.e. P1=P0-v).
-        :rtype: Point2D or Vector2D
+        :rtype: Point or Vector
         
         .. rubric:: Code Example
     
         .. code-block:: python
         
+            >>> from crossproduct import Point
             >>> result = Point(2,2) - Point(1,2)
             >>> print(result)
             Vector(1.0,0.0)
@@ -195,7 +200,8 @@ class Point(collections.abc.Sequence):
         """Returns the distance to the supplied object.
         
         :param obj: The object to calculate the distance to.
-        :type obj: Point
+        
+        :raises TypeError: If the supplied object type is not supported by this method.
         
         :returns: The distance between the point and the object.
         :rtype: float
@@ -204,7 +210,8 @@ class Point(collections.abc.Sequence):
     
         .. code-block:: python
            
-           >>> p1 = Point(1,2)
+           >>> from crossproduct import Point
+            >>> p1 = Point(1,2)
            >>> p1 = Point(2,2)
            >>> print(p1.distance(p2))
            1
@@ -216,6 +223,26 @@ class Point(collections.abc.Sequence):
             raise TypeError('Point.distance does not accept a %s type' % obj.__class__)
     
     
+    @property
+    def nD(self):
+        """The number of dimensions of the point.
+        
+        :returns: 2 or 3
+        :rtype: int
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> from crossproduct import Point
+            >>> pt = Point(1,1)
+            >>> print(pt.nD)
+            2
+            
+        """
+        return len(self)
+    
+    
     def plot(self, ax, *args, **kwargs):
         """Plots the point on the supplied axes.
         
@@ -224,6 +251,34 @@ class Point(collections.abc.Sequence):
         :param args: positional arguments to be passed to the Axes.plot call.
         :param kwargs: keyword arguments to be passed to the Axes.plot call.
                    
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> import matplotlib.pyplot as plt
+           >>> from crossproduct import Point
+           >>> fig, ax = plt.subplots()
+           >>> Point(1,1).plot(ax,color='blue',marker='o')
+           >>> Point(2,2).plot(ax,color='red',marker='o')
+           >>> plt.show()
+        
+        .. image:: /_static/point_plot_2D.png
+        
+        |
+        
+        .. code-block:: python
+           
+           >>> import matplotlib.pyplot as plt
+           >>> from mpl_toolkits.mplot3d import Axes3D
+           >>> from crossproduct import Point
+           >>> fig = plt.figure()
+           >>> ax = fig.add_subplot(111, projection='3d')
+           >>> Point(1,1,1).plot(ax,color='blue',marker='o')
+           >>> Point(2,2,2).plot(ax,color='red',marker='o')
+           >>> plt.show()
+           
+        .. image:: /_static/point_plot_3D.png
+        
         """
         x=[[c] for c in self]
         ax.plot(*x, *args, **kwargs)
@@ -240,12 +295,13 @@ class Point(collections.abc.Sequence):
         :raises ValueError: If coordinate_index is not between 0 and 2.
         
         :return: A 2D point based on the projection of the 3D point.
-        :rtype: Point2D
+        :rtype: Point
                
         .. rubric:: Code Example
     
         .. code-block:: python
         
+            >>> from crossproduct import Point
             >>> pt = Point(1,2,3)
             >>> result = pt.project_2D(1)
             >>> print(result)
@@ -264,7 +320,7 @@ class Point(collections.abc.Sequence):
     
     
     def project_3D(self,plane,coordinate_index):
-        """Projection of the point on a 3D plane.
+        """Projection of a 2D point on a 3D plane.
         
         :param plane: The plane for the projection
         :type plane: Plane
@@ -283,9 +339,11 @@ class Point(collections.abc.Sequence):
     
         .. code-block:: python
         
+            >>> from crossproduct import Point
             >>> pt = Point(2,2)
             >>> pl = Plane3D(Point(0,0,1), Vector(0,0,1))
             >>> result = pt.project_3D(pl, 2)
+            >>> print(result)
             Point(2.0,2.0,1.0)   
         
         """
@@ -302,23 +360,40 @@ class Point(collections.abc.Sequence):
         return point
     
     
-    @property
-    def nD(self):
-        """The number of dimensions of the point.
+    def to_tuple(self):
+        """Returns a tuple representation of the point.
         
-        :returns: 2 or 3
-        :rtype: int
+        :returns: The coordinates as a tuple. 
+            For a point, this can also be achieved by creating a 
+            tuple of the point itself (i.e. :code:`tuple(pt)`).
+        :rtype: tuple
+        
+        .. code-block:: python
+        
+            >>> from crossproduct import Point
+            >>> pt = Point(2,2)
+            >>> result = pt.to_tuple()
+            >>> print(result)
+            (2.0,2.0)
         
         """
-        return len(self)
-    
+        return tuple(self)
     
     @property
     def x(self):
         """The x coordinate of the point.
         
-        :rtype: int, float
+        :rtype: float
         
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> from crossproduct import Point
+            >>> pt = Point(0,1,2)
+            >>> print(pt.x)
+            0
+            
         """
         return self[0]
     
@@ -327,8 +402,17 @@ class Point(collections.abc.Sequence):
     def y(self):
         """The y coordinate of the point.
         
-        :rtype: int, float
+        :rtype: float
         
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> from crossproduct import Point
+            >>> pt = Point(0,1,2)
+            >>> print(pt.y)
+            1
+            
         """
         return self[1]
     
@@ -339,7 +423,16 @@ class Point(collections.abc.Sequence):
         
         :raises IndexError: If point is a 2D point.
         
-        :rtype: int, float
+        :rtype: float
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> from crossproduct import Point
+            >>> pt = Point(0,1,2)
+            >>> print(pt.z)
+            2
         
         """
         return self[2]
@@ -436,7 +529,7 @@ class Points(collections.abc.MutableSequence):
     
     
     def insert(self,index,value):
-        "(Required by abstract base case"
+        "(Required by abstract base case)"
         return self._points.insert(index,value)
     
     
@@ -539,9 +632,9 @@ class Points(collections.abc.MutableSequence):
 class Vector(collections.abc.Sequence):
     """A vector, as described by xy or xyz coordinates.
     
-    In crossproduct a Vector object is a immutable sequence. 
+    In *crossproduct* a Vector object is a immutable sequence. 
     Iterating over a Vector will provide its coordinates.
-    Indexing a vector will return the coordinate for that index (0=x, 1=y, 2=z)
+    Indexing a vector will return the coordinate for that index (0=x, 1=y, 2=z).
     
     :param coordinates: Argument list of two (xy) or three (xyz) coordinates. 
         Coordinates should be of type int, float or similar numeric. These values
@@ -553,6 +646,7 @@ class Vector(collections.abc.Sequence):
     
     .. code-block:: python
        
+       >>> from crossproduct import Vector
        >>> v = Vector(1,2)
        >>> print(v)
        Vector(1.0,2.0)
@@ -573,6 +667,7 @@ class Vector(collections.abc.Sequence):
     
         .. code-block:: python
            
+           >>> from crossproduct import Vector
            >>> v = Vector(1,2)
            >>> result = v + Vector(1,1)
            >>> print(result)
@@ -596,19 +691,20 @@ class Vector(collections.abc.Sequence):
         A tolerance value is used so coordinates with very small difference 
         are considered equal.
         
-        :param point: The point to be tested.
-        :type point: Point
+        :param vector: The vector to be tested.
+        :type vector: Vector
         
         :raises ValueError: If points are not of the same length.
         
-        :return: True if the point coordinates are the same, otherwise False.
+        :return: True if the vector coordinates are the same, otherwise False.
         :rtype: bool
         
         .. rubric:: Code Example
     
         .. code-block:: python
         
-            >>> result = Point(1,2) == Point(2,2)
+            >>> from crossproduct import Vector
+            >>> result = Vector(1,2) == Vector(2,2)
             >>> print(result)
             False
             
@@ -651,6 +747,7 @@ class Vector(collections.abc.Sequence):
         
         .. code-block:: python
            
+           >>> from crossproduct import Vector
            >>> v = Vector(1,2)
            >>> result = v1 * 2
            >>> print(result)
@@ -680,6 +777,7 @@ class Vector(collections.abc.Sequence):
     
         .. code-block:: python
            
+           >>> from crossproduct import Vector
            >>> v = Vector(1,2)
            >>> result = v - Vector(1,1)
            >>> print(result)
@@ -726,6 +824,7 @@ class Vector(collections.abc.Sequence):
         
         .. code-block:: python
            
+           >>> from crossproduct import Vector
            >>> v1 = Vector3D(1,0,0)
            >>> v2 = Vector3D(0,1,0)
            >>> result = v1.cross_product(v2)
@@ -757,6 +856,7 @@ class Vector(collections.abc.Sequence):
         
         .. code-block:: python
            
+           >>> from crossproduct import Vector
            >>> v1 = Vector(1,0)
            >>> v2 = Vector(0,1)               
            >>> result = v1.dot(v2)
@@ -794,12 +894,14 @@ class Vector(collections.abc.Sequence):
         .. code-block:: python
            
            # 2D example
+           >>> from crossproduct import Vector
            >>> v = Vector(1,2)
            >>> result = v.index_largest_absolute_coordinate
            >>> print(result)
            1
            
            # 3D example
+           >>> from crossproduct import Vector
            >>> v = Vector(1,2,3)
            >>> result = v.index_largest_absolute_coordinate
            >>> print(result)
@@ -825,6 +927,7 @@ class Vector(collections.abc.Sequence):
         .. code-block:: python
            
            # 2D example
+           >>> from crossproduct import Vector
            >>> v1 = Vector(1,2)
            >>> v2 = Vector(2,4)
            >>> result = v1.is_codirectional(v2)
@@ -832,6 +935,7 @@ class Vector(collections.abc.Sequence):
            True
            
            # 3D example
+           >>> from crossproduct import Vector
            >>> v1 = Vector(1,1,1)
            >>> v2 = Vector(1,0,0)
            >>> result = v1.is_codirectional(v2)
@@ -858,12 +962,14 @@ class Vector(collections.abc.Sequence):
         
         .. code-block:: python
            
+           >>> from crossproduct import Vector
            >>> v1 = Vector(1,0)
            >>> v2 = Vector(2,0)               
            >>> result = v1.is_collinear(v2)
            >>> print(result)
            True     
            
+           >>> from crossproduct import Vector
            >>> v1 = Vector3D(1,0,0)
            >>> v2 = Vector3D(2,0,0)               
            >>> result = v1.is_collinear(v2)
@@ -897,6 +1003,7 @@ class Vector(collections.abc.Sequence):
         .. code-block:: python
            
            # 2D example
+           >>> from crossproduct import Vector
            >>> v1 = Vector(1,2)
            >>> v2 = Vector(-2,-4)
            >>> result = v1.is_opposite(v2)
@@ -904,6 +1011,7 @@ class Vector(collections.abc.Sequence):
            True
            
            # 3D example
+           >>> from crossproduct import Vector
            >>> v1 = Vector(1,2,3)
            >>> v2 = Vector(-1,-2,-3)
            >>> result = v1.is_opposite(v2)
@@ -929,6 +1037,7 @@ class Vector(collections.abc.Sequence):
         .. code-block:: python
            
            # 2D example
+           >>> from crossproduct import Vector
            >>> v1 = Vector(1,0)
            >>> v2 = Vector(0,1)
            >>> result = v1.is_perpendicular(v2)
@@ -936,6 +1045,7 @@ class Vector(collections.abc.Sequence):
            True
            
            # 3D example
+           >>> from crossproduct import Vector
            >>> v1 = Vector(1,0,0)
            >>> v2 = Vector(0,1,0)
            >>> result = v1.is_perpendicular(v2)
@@ -957,6 +1067,7 @@ class Vector(collections.abc.Sequence):
     
         .. code-block:: python
            
+           >>> from crossproduct import Vector
            >>> v = Vector(1,0)
            >>> result = v.length
            >>> print(result)
@@ -980,6 +1091,7 @@ class Vector(collections.abc.Sequence):
     
         .. code-block:: python
            
+           >>> from crossproduct import Vector
            >>> v = Vector(3,0)
            >>> result = v.normalise
            >>> print(result)
@@ -1004,6 +1116,7 @@ class Vector(collections.abc.Sequence):
         .. code-block:: python
            
            # 2D example
+           >>> from crossproduct import Vector
            >>> v = Vector(1,2)
            >>> result = v.opposite
            >>> print(result)
@@ -1039,6 +1152,7 @@ class Vector(collections.abc.Sequence):
     
         .. code-block:: python
            
+           >>> from crossproduct import Vector
            >>> v1 = Vector(1,0)
            >>> v2 = Vector(1,0)               
            >>> result = v1.perp_product(v2)
@@ -1068,6 +1182,7 @@ class Vector(collections.abc.Sequence):
     
         .. code-block:: python
            
+           >>> from crossproduct import Vector
            >>> v = Vector(1,0)
            >>> result = v.perp_vector
            >>> print(result)
@@ -1127,6 +1242,7 @@ class Vector(collections.abc.Sequence):
     
         .. code-block:: python
            
+           >>> from crossproduct import Vector
            >>> v1 = Vector(1,0,0)
            >>> v2 = Vector(0,1,0)
            >>> v3 = Vector(0,0,1)
@@ -2361,7 +2477,7 @@ class Segment():
         """
         if isinstance(obj,Point):
             
-            t=self.line.calculate_t_from_point(obj)
+            t=self.line.calculate_t_from_coordinates(*obj)
             try:
                 pt=self.calculate_point(t)  
             except ValueError: # t<0<1

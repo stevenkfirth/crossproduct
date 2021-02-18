@@ -14,9 +14,11 @@ Point
    ~crossproduct.crossproduct.Point.__lt__
    ~crossproduct.crossproduct.Point.__sub__
    ~crossproduct.crossproduct.Point.distance
+   ~crossproduct.crossproduct.Point.nD
    ~crossproduct.crossproduct.Point.plot
    ~crossproduct.crossproduct.Point.project_2D
    ~crossproduct.crossproduct.Point.project_3D
+   ~crossproduct.crossproduct.Point.to_tuple
    ~crossproduct.crossproduct.Point.x
    ~crossproduct.crossproduct.Point.y
    ~crossproduct.crossproduct.Point.z
