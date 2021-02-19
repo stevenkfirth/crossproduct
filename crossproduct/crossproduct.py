@@ -1571,48 +1571,7 @@ class Line():
         return (ptB-point).length
     
     
-    def _intersect_line(self,line):
-        """Returns the intersection of this line with the supplied line. 
-        
-        :param line: A line.
-        :type line: Line
-        
-        :return: Returns a line (this line) if lines are collinear. 
-            Returns None (i.e. no intersection) if lines are parallel. 
-            For 2D, returns a point if lines are skew.  
-            For 3D, returns either None or a point if lines are skew. 
-        :rtype: None, Point, Line 
-        
-        .. rubric:: Code Example
-        
-        .. code-block:: python
-           
-           # 2D example
-           >>> from crossproduct import Point, Vector, Line
-           >>> l1 = Line(Point(0,0), Vector(1,0))
-           >>> l2 = Line(Point(0,0), Vector(0,1))
-           >>> result = l.intersect_line(l2)
-           >>> print(result)
-           Point(0,0)
-           
-           # 3D example
-           >>> from crossproduct import Point, Vector, Line
-           >>> l1 = Line(Point(0,0,0), Vector(1,0,0))
-           >>> l2 = Line(Point(0,0,1), Vector(1,0,0))
-           >>> result = l1.intersect_line(l2)
-           >>> print(result)
-           None
-        
-        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
-        
-        """
-        if self==line: # test for collinear lines
-            return self
-        elif self.is_parallel(line): # test for parallel lines
-            return None 
-        else: # a skew line
-            return self._intersect_line_skew(line)
-            
+    
     
     
     def _intersect_line_skew(self,skew_line):
@@ -1643,7 +1602,7 @@ class Line():
         
         - return value can be:
             - None -> no intersection (for skew lines which do not intersect in 3D space)
-            - Point3D -> a point (for skew lines which intersect)
+            - Point -> a point (for skew lines which intersect)
         
         """
         if not self.is_parallel(skew_line):
@@ -1653,14 +1612,9 @@ class Line():
             absolute_coords=[abs(x) for x in cp] 
             i=absolute_coords.index(max(absolute_coords)) % 3 # the coordinate to ignore for projection
                     
-            #print('i',i)
-            
             # project 3D lines to 2D
             self2D=self.project_2D(i)
             skew_line2D=skew_line.project_2D(i)
-            
-            #print('self2D', self2D)
-            #print('skew_line2D',skew_line2D)
             
             # find intersection point for 2D lines
             ipt=self2D._intersect_line_skew_2D(skew_line2D)
@@ -1672,8 +1626,6 @@ class Line():
             # calculate the 3D intersection points from the t values
             ipt1=self.calculate_point(t1)
             ipt2=skew_line.calculate_point(t2)
-            
-            #print(ipt1,ipt2)
             
             if ipt1==ipt2: # test the two 3D intersection points are the same
                 return ipt1
@@ -1731,12 +1683,14 @@ class Line():
         
         .. code-block:: python
            
+           # 2D example
            >>> from crossproduct import Point, Vector, Line
            >>> l = Line(Point(0,0), Vector(1,0))
            >>> result = l.calculate_t_from_point(Point(3,0))
            >>> print(result)
            3
         
+           # 3D example
            >>> from crossproduct import Point, Vector, Line
            >>> l = Line(Point(0,0,0), Vector(1,0,0))
            >>> result = l.calculate_t_from_point(Point(3,0,0))
@@ -1825,12 +1779,47 @@ class Line():
             raise TypeError('Line.distance does not accept a %s type' % obj.__class__)
     
     
-    def intersect(self,obj):
-        ""
-        if isinstance(obj, Line):
-            return self._intersect_line(obj)
-        else:
-            raise TypeError('Line.intersect does not accept a %s type' % obj.__class__)
+    def intersect_line(self,line):
+        """Returns the intersection of this line with the supplied line. 
+        
+        :param line: A line.
+        :type line: Line
+        
+        :return: Returns a line (this line) if lines are collinear. 
+            Returns None (i.e. no intersection) if lines are parallel. 
+            For 2D, returns a point if lines are skew.  
+            For 3D, returns either None or a point if lines are skew. 
+        :rtype: None, Point, Line 
+        
+        .. rubric:: Code Example
+        
+        .. code-block:: python
+           
+           # 2D example
+           >>> from crossproduct import Point, Vector, Line
+           >>> l1 = Line(Point(0,0), Vector(1,0))
+           >>> l2 = Line(Point(0,0), Vector(0,1))
+           >>> result = l.intersect_line(l2)
+           >>> print(result)
+           Point(0,0)
+           
+           # 3D example
+           >>> from crossproduct import Point, Vector, Line
+           >>> l1 = Line(Point(0,0,0), Vector(1,0,0))
+           >>> l2 = Line(Point(0,0,1), Vector(1,0,0))
+           >>> result = l1.intersect_line(l2)
+           >>> print(result)
+           None
+        
+        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
+        
+        """
+        if self==line: # test for collinear lines
+            return self
+        elif self.is_parallel(line): # test for parallel lines
+            return None 
+        else: # a skew line
+            return self._intersect_line_skew(line)
             
     
     def is_parallel(self,line):
@@ -1898,7 +1887,7 @@ class Line():
         return self._P0
     
     
-    def plot(self, ax, *args, trange=(-10,10), **kwargs):
+    def plot(self, ax, *args, **kwargs):
         """Plots the line on the supplied axes.
         
         :param ax: An 2D or 3D Axes instance.
@@ -1906,7 +1895,35 @@ class Line():
         
         :param args: positional arguments to be passed to the Axes.plot call.
         :param kwargs: keyword arguments to be passed to the Axes.plot call.
-                   
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> import matplotlib.pyplot as plt
+           >>> from crossproduct import Point, Vector, Line
+           >>> fig, ax = plt.subplots()
+           >>> l=Line(Point(0,0),Vector(1,1))
+           >>> l.plot(ax)
+           >>> plt.show()
+        
+        .. image:: /_static/line_plot_2D.png
+        
+        |
+        
+        .. code-block:: python
+           
+           >>> import matplotlib.pyplot as plt
+           >>> from mpl_toolkits.mplot3d import Axes3D
+           >>> from crossproduct import Point, Vector, Line
+           >>> fig = plt.figure()
+           >>> ax = fig.add_subplot(111, projection='3d')
+           >>> l=Line(Point(0,0,0),Vector(1,1,1))
+           >>> l.plot(ax)
+           >>> plt.show()
+           
+        .. image:: /_static/line_plot_3D.png
+        
         """
         xmin,xmax=(float(x) for x in ax.get_xlim())
         ymin,ymax=(float(y) for y in ax.get_ylim())
@@ -1977,6 +1994,7 @@ class Line():
         """
         return (tuple(self.P0),tuple(self.vL))
             
+    
     @property
     def vL(self):
         """The vector of the line.
@@ -2009,10 +2027,12 @@ class Halfline():
     
     .. code-block:: python
        
+       >>> from crossproduct import Point, Vector, Halfline
        >>> hl = Halfline(Point(0,0), Vector(1,0))
        >>> print(hl)
        Halfline(Point(0,0), Vector(1,0))
        
+       >>> from crossproduct import Point, Vector, Halfline
        >>> hl = Halfline(Point(0,0,0), Vector(1,0,0))
        >>> print(hl)
        Halfline(Point(0,0,0), Vector(1,0,0))
@@ -2027,6 +2047,8 @@ class Halfline():
         :param halfline: A halfline.
         :type halfline: Halfline
         
+        :raises Type Error: If the supplied argument is not a Halfline.
+        
         :return: True if the start points are the same and the vectors are codirectional;
             otherwise False.
             Also returns False is supplied halfline is not a Halfline object.
@@ -2037,12 +2059,14 @@ class Halfline():
         .. code-block:: python
            
            # 2D example
+           >>> from crossproduct import Point, Vector, Halfline
            >>> hl = Halfline(Point(0,0), Vector(1,0))
            >>> result = hl == hl
            >>> print(result)
            True
            
            # 3D example
+           >>> from crossproduct import Point, Vector, Halfline
            >>> hl1 = Halfline(Point(0,0,0), Vector(1,0,0))
            >>> hl2 = Halfline(Point(0,0,0), Vector(-1,0,0))
            >>> result = hl1 == hl2
@@ -2053,7 +2077,7 @@ class Halfline():
         if isinstance(halfline,Halfline):
             return self.P0==halfline.P0 and self.vL.is_codirectional(halfline.vL)
         else:
-            return False
+            raise TypeError('Halfline.__eq__ should be used with a Line instance')
         
     
     def __init__(self,P0,vL):
@@ -2086,12 +2110,14 @@ class Halfline():
         .. code-block:: python    
         
            # 2D example
+           >>> from crossproduct import Point, Vector, Halfline
            >>> hl = Halfline(Point(0,0), Vector(1,0))
            >>> result = hl.calcuate_point(3)
            >>> print(result)
            Point(3,0)
            
            # 3D example
+           >>> from crossproduct import Point, Vector, Halfline
            >>> hl = Halfline(Point(0,0,0), Vector(1,0,0))
            >>> result = hl.calcuate_point(3)
            >>> print(result)
@@ -2119,6 +2145,7 @@ class Halfline():
         
         .. code-block:: python
            
+           >>> from crossproduct import Point, Vector, Halfline
            >>> hl = Halfline(Point(0,0), Vector(1,0))
            >>> print(hl.contains(Point(2,0)))
            True
@@ -2157,12 +2184,14 @@ class Halfline():
         .. code-block:: python
            
            # 2D example
+           >>> from crossproduct import Point, Vector, Halfline
            >>> hl = Halfline(Point(0,0), Vector(1,0))
            >>> result = hl.distance_to_point(Point(0,10))
            >>> print(result)
            10
            
            # 3D example
+           >>> from crossproduct import Point, Vector, Halfline
            >>> hl = Halfline(Point(0,0,0), Vector(1,0,0))
            >>> result = hl.distance_to_point(Point(10,0,0))
            >>> print(result)
@@ -2193,7 +2222,19 @@ class Halfline():
     
         .. code-block:: python
            
-           >>> 
+           # 2D example
+           >>> from crossproduct import Point, Vector, Halfline
+           >>> hl = Halfline(Point(0,0), Vector(1,0))
+           >>> result = hl.distance_to_point(Point(0,10))
+           >>> print(result)
+           10
+           
+           # 3D example
+           >>> from crossproduct import Point, Vector, Halfline
+           >>> hl = Halfline(Point(0,0,0), Vector(1,0,0))
+           >>> result = hl.distance_to_point(Point(10,0,0))
+           >>> print(result)
+           0
             
         """
         if isinstance(obj, Point):
@@ -2202,7 +2243,7 @@ class Halfline():
             raise TypeError('Halfline.distance does not accept a %s type' % obj.__class__)
 
 
-    def _intersect_halfline(self,halfline):
+    def intersect_halfline(self,halfline):
         """Returns the intersection of this halfline with the supplied halfline.
         
         :param halfline: A halfline.
@@ -2221,12 +2262,14 @@ class Halfline():
         
         .. code-block:: python
            
+           >>> from crossproduct import Point, Vector, Halfline
            >>> hl1 = Halfline(Point(0,0), Vector(1,0))
            >>> hl2 = Halfline(Point(0,0), Vector(0,1))
            >>> result = hl1.intersect_line(hl2)
            >>> print(result)
            Point(0,0)
         
+           >>> from crossproduct import Point, Vector, Halfline
            >>> hl1 = Halfline(Point(0,0,0), Vector(1,0,0))
            >>> hl2 = Halfline(Point(0,0,0), Vector(0,1,0))
            >>> result = hl1.intersect_line(hl2)
@@ -2258,7 +2301,7 @@ class Halfline():
                 return None
         
 
-    def _intersect_line(self,line):
+    def intersect_line(self,line):
         """Returns the intersection of this halfline with the supplied line.
         
         :param line: A line.
@@ -2275,15 +2318,17 @@ class Halfline():
         .. code-block:: python
            
            # 2D example
-           >>> hl = Halfline2D(Point2D(0,0), Vector2D(1,0))
-           >>> l = Line2D(Point2D(0,0), Vector2D(0,1))
+           >>> from crossproduct import Point, Vector, Halfline
+           >>> hl = Halfline(Point(0,0), Vector(1,0))
+           >>> l = Line(Point(0,0), Vector(0,1))
            >>> result = hl.intersect_line(l)
            >>> print(result)
-           Point2D(0,0)
+           Point(0,0)
            
            # 3D example
-           >>> hl = Halfline3D(Point3D(0,0,0), Vector3D(1,0,0))
-           >>> l = Line3D(Point3D(0,0,1), Vector3D(1,0,0))
+           >>> from crossproduct import Point, Vector, Halfline
+           >>> hl = Halfline(Point(0,0,0), Vector(1,0,0))
+           >>> l = Line(Point(0,0,1), Vector(1,0,0))
            >>> result = hl.intersect_line(l)
            >>> print(result)
            None
@@ -2303,10 +2348,6 @@ class Halfline():
             else:
                 return None
 
-    def intersect(self,obj):
-        ""
-
-
     @property
     def line(self):
         """Returns the line which the halfline lies on.
@@ -2318,11 +2359,13 @@ class Halfline():
         
         .. code-block:: python
            
+           >>> from crossproduct import Point, Vector, Halfline
            >>> hl= Halfline(Point(0,0), Vector(1,0))
            >>> result = hl.line
            >>> print(result)
            Line(Point(0,0), Vector(1,0))
            
+           >>> from crossproduct import Point, Vector, Halfline
            >>> hl= Halfline(Point(0,0,0), Vector(1,0,0))
            >>> result = hl.line
            >>> print(result)
@@ -2332,6 +2375,26 @@ class Halfline():
         """
         return Line(self.P0,self.vL)
     
+    
+    @property
+    def nD(self):
+        """The number of dimensions of the halfline.
+        
+        :returns: 2 or 3
+        :rtype: int
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> from crossproduct import Point, Vector, Halfline
+            >>> hl = Halfline(Point(0,0,0), Vector(1,0,0))
+            >>> print(l.nD)
+            3
+            
+        """
+        return self.P0.nD
+    
 
     @property
     def P0(self):
@@ -2339,6 +2402,14 @@ class Halfline():
         
         :rtype: Point
         
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> from crossproduct import Point, Vector, Halfline
+            >>> hl = Halfline(Point(0,0,0), Vector(1,0,0))
+            >>> print(hl.P0)
+            Point(0.0,0.0,0.0)
         """
         return self._P0
     
@@ -2352,6 +2423,36 @@ class Halfline():
         :param args: positional arguments to be passed to the Axes.plot call.
         :param kwargs: keyword arguments to be passed to the Axes.plot call.
                    
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> import matplotlib.pyplot as plt
+           >>> from crossproduct import Point, Vector, Halfline
+           >>> fig, ax = plt.subplots()
+           >>> hl=Halfline(Point(0.5,0.5),Vector(1,1))
+           >>> hl.plot(ax)
+           >>> ax.set_xlim(0,1), ax.set_ylim(0,1) 
+           >>> plt.show()
+        
+        .. image:: /_static/halfline_plot_2D.png
+        
+        |
+        
+        .. code-block:: python
+           
+           >>> import matplotlib.pyplot as plt
+           >>> from mpl_toolkits.mplot3d import Axes3D
+           >>> from crossproduct import Point, Vector, Halfline
+           >>> fig = plt.figure()
+           >>> ax = fig.add_subplot(111, projection='3d')
+           >>> hl=Halfline(Point(0.5,0.5,0.5),Vector(1,1,1))
+           >>> hl.plot(ax)
+           >>> ax.set_xlim(0,1), ax.set_ylim(0,1), ax.set_zlim(0,1)
+           >>> plt.show()
+           
+        .. image:: /_static/halfline_plot_3D.png
+        
         """
         xmin,xmax=(float(x) for x in ax.get_xlim())
         ymin,ymax=(float(y) for y in ax.get_ylim())
@@ -2396,10 +2497,11 @@ class Halfline():
         
         .. code-block:: python
         
+            >>> from crossproduct import Point, Vector, Halfline
             >>> hl = Halfline(Point(0,0,0), Vector(1,2,3))
             >>> result = hl.project_2D(0)
             >>> print(result)
-            Line(Point(0,0), Vector(2,3))   
+            Line(Point(0.0,0.0), Vector(2.0,3.0))   
         
         """
         
@@ -2414,7 +2516,25 @@ class Halfline():
                             Vector(self.vL.x,self.vL.y))
         else:
             raise Exception
-                    
+      
+
+    def to_tuple(self):
+        """Returns a tuple representation of the halfline.
+        
+        :returns: The starting point of the halfline and the halfline vector as tuples. 
+        :rtype: tuple
+        
+        .. code-block:: python
+        
+            >>> from crossproduct import Point, Vector, Halfline
+            >>> hl = Halfline(Point(0,0,0), Vector(1,0,0))
+            >>> result = hl.to_tuple()
+            >>> print(result)
+            ((0.0,0.0,0.0), (1.0,0.0,0.0))
+        
+        """
+        return (tuple(self.P0),tuple(self.vL))
+              
     
     @property
     def vL(self):
@@ -2422,6 +2542,14 @@ class Halfline():
         
         :rtype: Vector
         
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> from crossproduct import Point, Vector, Halfline
+            >>> hl = Halfline(Point(0,0,0), Vector(1,0,0))
+            >>> print(l.vL)
+            Vector(1.0,0.0,0.0)
         """
         return self._vL
     

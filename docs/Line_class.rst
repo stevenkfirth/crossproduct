@@ -15,8 +15,10 @@ Line
    ~crossproduct.crossproduct.Line.calculate_t_from_coordinates
    ~crossproduct.crossproduct.Line.contains
    ~crossproduct.crossproduct.Line.distance
-   ~crossproduct.crossproduct.Line.intersect
+   ~crossproduct.crossproduct.Line.intersect_line
    ~crossproduct.crossproduct.Line.is_parallel
+   ~crossproduct.crossproduct.Line.nD
    ~crossproduct.crossproduct.Line.plot
    ~crossproduct.crossproduct.Line.project_2D
+   ~crossproduct.crossproduct.Line.to_tuple
    ~crossproduct.crossproduct.Line.vL
