@@ -7,9 +7,9 @@ Distances between two geometric objects are calculated using 'distance' methods:
 .. code-block:: python
 
    >>> from crossproduct import Point
-   >>> p1 = Point(1,2)
-   >>> p2 = Point(2,2)
-   >>> result = p1.distance(p2)
+   >>> pt1 = Point(1,2)
+   >>> pt2 = Point(2,2)
+   >>> result = pt1.distance(pt2)
    >>> print(result)
    1
 

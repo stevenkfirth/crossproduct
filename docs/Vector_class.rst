@@ -22,11 +22,13 @@ Vector
    ~crossproduct.crossproduct.Vector.is_opposite
    ~crossproduct.crossproduct.Vector.is_perpendicular
    ~crossproduct.crossproduct.Vector.length
+   ~crossproduct.crossproduct.Vector.nD
    ~crossproduct.crossproduct.Vector.normalise
    ~crossproduct.crossproduct.Vector.opposite
    ~crossproduct.crossproduct.Vector.perp_product
    ~crossproduct.crossproduct.Vector.perp_vector
    ~crossproduct.crossproduct.Vector.plot
+   ~crossproduct.crossproduct.Vector.to_tuple
    ~crossproduct.crossproduct.Vector.triple_product
    ~crossproduct.crossproduct.Vector.x
    ~crossproduct.crossproduct.Vector.y

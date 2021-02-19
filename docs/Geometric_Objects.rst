@@ -59,7 +59,7 @@ Geometric objects can be specified as 2D or 3D, as given by the number of coordi
 
    >>> from crossproduct import Point, Line
    >>> pt = Point(1,0)                             # 2D Point
-   >>> line = Line(Point(0,0,0), Vector(1,1,1)     # 3D Line
+   >>> line = Line(Point(0,0,0), Vector(1,1,1))    # 3D Line
    
    
 

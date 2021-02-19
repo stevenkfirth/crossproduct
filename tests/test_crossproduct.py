@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import unittest
+import unittest, math
 
 from crossproduct import Point, Points, Vector, Line, Halfline, Segment, Segments
 from crossproduct import Polyline, Polylines, Plane
@@ -153,6 +153,14 @@ class Test_Point(unittest.TestCase):
 
 
 class Test_Points(unittest.TestCase):
+    ""
+    
+    def test___eq__(self):
+        ""
+        pts1=Points(Point(0,0),Point(1,1))
+        pts2=Points(Point(0,0),Point(1,1))
+        self.assertTrue(pts1==pts2)
+        
     
     def test___init__(self):
         ""
@@ -275,21 +283,21 @@ class Test_Vector(unittest.TestCase):
         self.assertEqual(v1.angle(v1),
                          0)
         self.assertEqual(v1.angle(Vector(0,1)),
-                         90)
+                         math.pi/2)
         self.assertAlmostEqual(v1.angle(Vector(1,1)), 
-                               45)
+                               math.pi/4)
         self.assertAlmostEqual(v1.angle(Vector(-1,0)), 
-                               180)
+                               math.pi)
         
         v1=Vector(1,0,0)
         self.assertEqual(v1.angle(v1),
                          0)
         self.assertEqual(v1.angle(Vector(0,1,0)),
-                         90)
+                         math.pi/2)
         self.assertAlmostEqual(v1.angle(Vector(1,1,0)), 
-                               45)
+                               math.pi/4)
         self.assertAlmostEqual(v1.angle(Vector(-1,0,0)), 
-                               180)
+                               math.pi)
         
     
     
@@ -443,6 +451,256 @@ class Test_Vector(unittest.TestCase):
         v3=Vector(0,0,1)
         self.assertEqual(v1.triple_product(v2,v3),
                          1)
+    
+    
+    
+class Test_Line(unittest.TestCase):
+    
+    def test___eq__(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        l=Line(P0,vL)
+        self.assertTrue(l==Line(P0,vL*2))
+        self.assertTrue(l==Line(P0,vL.opposite))
+        self.assertTrue(l==Line(P0+vL,vL))
+        self.assertFalse(l==Line(P0,vL.perp_vector))
+        self.assertFalse(l==Line(P0+vL.perp_vector,vL))
+        
+        P0,vL=Point(0,0,0),Vector(1,1,1)
+        l=Line(P0,vL)
+        self.assertTrue(l==Line(P0,vL*2))
+        self.assertTrue(l==Line(P0,vL.opposite))
+        self.assertTrue(l==Line(P0+vL,vL))
+        self.assertFalse(l==Line(P0,Vector(1,-1,0)))
+        self.assertFalse(l==Line(P0+Vector(1,-1,0),vL))
+        
+    
+    
+    def test___init__(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        l=Line(P0,vL)
+        self.assertIsInstance(l,
+                              Line)
+        self.assertEqual(l.P0,
+                         P0)
+        self.assertEqual(l.vL,
+                         vL)
+        
+        
+    def test__distance_to_line(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        l=Line(P0,vL)
+        self.assertEqual(l._distance_to_line(l),
+                         0)
+        self.assertEqual(l._distance_to_line(Line(P0+vL.perp_vector,vL)),
+                         vL.length)
+        self.assertEqual(l._distance_to_line(Line(P0,vL.perp_vector)), 
+                         0)
+
+        P0,vL=Point(0,0,0),Vector(1,1,1) 
+        l=Line(P0,vL)
+        self.assertEqual(l._distance_to_line(l),
+                         0)
+        self.assertEqual(l._distance_to_line(Line(P0+Vector(1,-1,0),vL)),
+                         Vector(1,-1,0).length)
+        self.assertEqual(l._distance_to_line(Line(P0,Vector(1,-1,0))), 
+                         0)
+        
+        self.assertEqual(Line(Point(0,0,0),
+                              Vector(1,0,0))._distance_to_line(Line(Point(0,0,1),
+                                                                    Vector(0,1,0))),
+                        1)
+        
+        
+    def test__distance_to_point(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        l=Line(P0,vL)
+        self.assertEqual(l._distance_to_point(P0),
+                         0)
+        self.assertEqual(l._distance_to_point(P0+vL),
+                         0)
+        self.assertEqual(l._distance_to_point(P0+vL.perp_vector),
+                         vL.length)
+                
+
+        P0,vL=Point(0,0,0),Vector(1,1,1) 
+        l=Line(P0,vL)
+        self.assertEqual(l._distance_to_point(P0),
+                         0)
+        self.assertEqual(l._distance_to_point(P0+Vector(1,-1,0)),
+                         Vector(1,-1,0).length)
+            
+
+        
+    def test__intersect_line(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        l=Line(P0,vL)        
+        # collinear
+        self.assertEqual(l._intersect_line(l),
+                         l)        
+        # parallel
+        self.assertEqual(l._intersect_line(Line(P0+vL.perp_vector,vL)),
+                         None)        
+        # skew
+        self.assertEqual(l._intersect_line(Line(P0,vL.perp_vector)),
+                         P0)        
+        # skew - different P0s
+        self.assertEqual(l._intersect_line(Line(P0+vL,vL.perp_vector)),
+                         P0+vL)
+        
+        P0,vL=Point(0,0,0),Vector(1,1,1) 
+        l=Line(P0,vL)
+        # collinear
+        self.assertEqual(l._intersect_line(l),
+                         l)
+        # parallel
+        self.assertEqual(l._intersect_line(Line(P0+Vector(1,-1,0),vL)),
+                         None)
+        #skew
+        self.assertEqual(l._intersect_line(Line(P0,Vector(1,-1,0))),
+                         P0)
+        self.assertEqual(l._intersect_line(Line(P0+vL,Vector(1,-1,0))),
+                         P0+vL)
+        self.assertEqual(l._intersect_line(Line(Point(0,0,1),Vector(1,-1,0))),
+                         None)
+        
+        
+    def test__intersect_line_skew_2D(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        l=Line(P0,vL)
+        self.assertEqual(l._intersect_line_skew_2D(Line(P0,vL.perp_vector)),
+                         P0)
+        self.assertEqual(l._intersect_line_skew_2D(Line(P0+vL,vL.perp_vector)),
+                         P0+vL)
+
+        
+    def test__intersect_line_skew_3D(self):
+        ""
+        P0,vL=Point(0,0,0),Vector(1,1,1)
+        l=Line(P0,vL)
+        self.assertEqual(l._intersect_line_skew_3D(Line(P0,
+                                                        Vector(1,-1,0))),
+                         P0)
+        self.assertEqual(l._intersect_line_skew_3D(Line(Point(0,0,1),
+                                                        Vector(1,-1,0))),
+                         None)
+
+        
+    def test_calculate_point(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        l=Line(P0,vL)
+        self.assertEqual(l.calculate_point(2),
+                         P0+vL*2)
+        
+        P0,vL=Point(0,0,0),Vector(1,1,1)
+        l=Line(P0,vL)
+        self.assertEqual(l.calculate_point(2),
+                         P0+vL*2)
+        
+        
+        
+    def test_calculate_t_from_coordinates(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        l=Line(P0,vL)
+        self.assertEqual(l.calculate_t_from_coordinates(*(P0+vL*2)),
+                         2)
+        self.assertEqual(l.calculate_t_from_coordinates(2,0),
+                         2)
+        
+        
+        
+        P0,vL=Point(0,0,0),Vector(1,1,1) 
+        l=Line(P0,vL)
+        self.assertEqual(l.calculate_t_from_coordinates(*(P0+vL*2)),
+                         2)
+    
+    
+    def test_contains(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        l=Line(P0,vL)
+        
+        # point
+        self.assertTrue(l.contains(P0))
+        self.assertTrue(l.contains(P0+vL))
+        self.assertFalse(l.contains(P0+vL.perp_vector))
+        
+        # # halfline
+        self.assertTrue(l.contains(Halfline(P0,vL)))
+        self.assertTrue(l.contains(Halfline(P0+vL,vL)))
+        self.assertFalse(l.contains(Halfline(P0+vL.perp_vector,vL)))
+        self.assertFalse(l.contains(Halfline(P0,vL.perp_vector)))
+        
+        # segment
+        self.assertTrue(l.contains(Segment(P0,P0+vL)))
+        self.assertTrue(l.contains(Segment(P0,P0+vL*10)))
+        self.assertFalse(l.contains(Segment(P0+vL.perp_vector,P0+vL)))
+        self.assertFalse(l.contains(Segment(P0+vL.perp_vector,P0+vL+vL.perp_vector)))
+    
+        P0,vL=Point(0,0,0),Vector(1,1,1) 
+        l=Line(P0,vL)
+        
+        # point
+        self.assertTrue(l.contains(P0))
+        self.assertTrue(l.contains(P0+vL))
+        self.assertFalse(l.contains(P0+Vector(1,-1,0)))
+        
+        # halfline
+        self.assertTrue(l.contains(Halfline(P0,vL)))
+        self.assertTrue(l.contains(Halfline(P0+vL,vL)))
+        self.assertFalse(l.contains(Halfline(P0+Vector(1,-1,0),vL)))
+        self.assertFalse(l.contains(Halfline(P0,Vector(1,-1,0))))
+        
+        # segment
+        self.assertTrue(l.contains(Segment(P0,P0+vL)))
+        self.assertTrue(l.contains(Segment(P0,P0+vL*10)))
+        self.assertFalse(l.contains(Segment(P0+Vector(1,-1,0),P0+vL)))
+        self.assertFalse(l.contains(Segment(P0+Vector(1,-1,0),P0+vL+Vector(1,-1,0))))
+        
+    
+    
+    
+        
+    
+    def test_is_parallel(self):
+        ""
+        P0,vL=Point(0,0),Vector(1,1) 
+        l=Line(P0,vL)
+        self.assertTrue(l.is_parallel(l))
+        self.assertTrue(l.is_parallel(Line(P0,vL.opposite)))
+        self.assertTrue(l.is_parallel(Line(P0+vL.perp_vector,vL)))
+        
+        P0,vL=Point(0,0,0),Vector(1,1,1) 
+        l=Line(P0,vL)
+        self.assertTrue(l.is_parallel(l))
+        self.assertTrue(l.is_parallel(Line(P0,vL.opposite)))
+        self.assertTrue(l.is_parallel(Line(P0+Vector(1,-1,0),vL)))
+        
+
+    def test_project_2D(self):
+        ""
+        P0,vL=Point(0,0,0),Vector(1,1,1) 
+        l=Line(P0,vL)
+        self.assertEqual(l.project_2D(0),
+                         Line(Point(0,0),Vector(1,1)))
+        self.assertEqual(l.project_2D(1),
+                         Line(Point(0,0),Vector(1,1)))
+        self.assertEqual(l.project_2D(2),
+                         Line(Point(0,0),Vector(1,1)))
+    
+
+
+
+
+
+    
     
     
     

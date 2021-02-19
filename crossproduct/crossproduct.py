@@ -339,9 +339,9 @@ class Point(collections.abc.Sequence):
     
         .. code-block:: python
         
-            >>> from crossproduct import Point
+            >>> from crossproduct import Point, Plane
             >>> pt = Point(2,2)
-            >>> pl = Plane3D(Point(0,0,1), Vector(0,0,1))
+            >>> pl = Plane(Point(0,0,1), Vector(0,0,1))
             >>> result = pt.project_3D(pl, 2)
             >>> print(result)
             Point(2.0,2.0,1.0)   
@@ -392,7 +392,7 @@ class Point(collections.abc.Sequence):
             >>> from crossproduct import Point
             >>> pt = Point(0,1,2)
             >>> print(pt.x)
-            0
+            0.0
             
         """
         return self[0]
@@ -411,7 +411,7 @@ class Point(collections.abc.Sequence):
             >>> from crossproduct import Point
             >>> pt = Point(0,1,2)
             >>> print(pt.y)
-            1
+            1.0
             
         """
         return self[1]
@@ -432,7 +432,7 @@ class Point(collections.abc.Sequence):
             >>> from crossproduct import Point
             >>> pt = Point(0,1,2)
             >>> print(pt.z)
-            2
+            2.0
         
         """
         return self[2]
@@ -442,7 +442,7 @@ class Point(collections.abc.Sequence):
 class Points(collections.abc.MutableSequence):
     """A sequence of points.    
     
-    In crossproduct a Points object is a mutable sequence. 
+    In *crossproduct* a Points object is a mutable sequence. 
     Iterating over a Points object will provide its Point instances.
     Index, append, insert and delete actions are available.
     
@@ -455,7 +455,6 @@ class Points(collections.abc.MutableSequence):
         >>> pts = Points(Point(0,0), Point(1,0))
         >>> print(pts)
         Points(Point(0.0,0.0), Point(1.0,0.0))
-        
         >>> print(pts[1])
         Point(1.0,0.0)
     
@@ -586,17 +585,17 @@ class Points(collections.abc.MutableSequence):
     #     return Points(*points)
     
     
-    def plot(self, ax, *args, **kwargs):
-        """Plots the points on the supplied axes.
+    # def plot(self, ax, *args, **kwargs):
+    #     """Plots the points on the supplied axes.
         
-        :param ax: An 2D or 3D Axes instance.
-        :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
-        :param args: positional arguments to be passed to the Axes.plot call.
-        :param kwargs: keyword arguments to be passed to the Axes.plot call.
+    #     :param ax: An 2D or 3D Axes instance.
+    #     :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
+    #     :param args: positional arguments to be passed to the Axes.plot call.
+    #     :param kwargs: keyword arguments to be passed to the Axes.plot call.
                    
-        """
-        for pt in self:
-            pt.plot(ax,*args,**kwargs)
+    #     """
+    #     for pt in self:
+    #         pt.plot(ax,*args,**kwargs)
     
     
     def remove_points_in_segments(self,segments):
@@ -623,11 +622,6 @@ class Points(collections.abc.MutableSequence):
             if segments.contains(pt):
                 self.remove(pt)
         
-        #points=[pt for pt in self if not segments.contains(pt)]
-        #return Points(*points)
-        
-    
-    
 
 class Vector(collections.abc.Sequence):
     """A vector, as described by xy or xyz coordinates.
@@ -798,11 +792,22 @@ class Vector(collections.abc.Sequence):
         :param vector: A 2D or 3D vector.
         :type vector: Vector
         
-        :return: The angle in degrees.
+        :return: The angle in radians.
         :rtype: float
         
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> from crossproduct import Vector
+           >>> v1=Vector(0,1)
+           >>> v2=Vector(1,1)
+           >>> result=v1.angle(v2)
+           >>> print(result)            # a 45 degree angle
+           0.7853981633974484
+        
         """
-        return math.degrees(math.acos(self.dot(vector)/self.length/vector.length))
+        return math.acos(self.dot(vector)/self.length/vector.length)
         
 
     def cross_product(self,vector):
@@ -810,6 +815,8 @@ class Vector(collections.abc.Sequence):
         
         :param vector: A 3D vector.
         :type vector: Vector
+        
+        :raises ValueError: If the vector is not a 3D vector.
         
         :return: The 3D cross product of the two vectors. 
             This returns a new vector which is perpendicular to 
@@ -825,20 +832,23 @@ class Vector(collections.abc.Sequence):
         .. code-block:: python
            
            >>> from crossproduct import Vector
-           >>> v1 = Vector3D(1,0,0)
-           >>> v2 = Vector3D(0,1,0)
+           >>> v1 = Vector(1,0,0)
+           >>> v2 = Vector(0,1,0)
            >>> result = v1.cross_product(v2)
            >>> print(result)
-           Vector3D(0,0,1)
+           Vector(0,0,1)
         
         .. seealso:: `<https://geomalgorithms.com/vector_products.html#3D-Cross-Product>`_
         
         """
-        (v1,v2,v3),(w1,w2,w3)=list(self),list(vector)
-        return Vector(v2*w3-v3*w2,
-                      v3*w1-v1*w3,
-                      v1*w2-v2*w1)
-
+        if self.nD==3:
+            (v1,v2,v3),(w1,w2,w3)=list(self),list(vector)
+            return Vector(v2*w3-v3*w2,
+                          v3*w1-v1*w3,
+                          v1*w2-v2*w1)
+        else:
+            raise ValueError('"cross_product" method can only be used for a 3D vector.')
+            
 
     def dot(self,vector):
         """Return the dot product of this vector and the supplied vector.
@@ -859,12 +869,6 @@ class Vector(collections.abc.Sequence):
            >>> from crossproduct import Vector
            >>> v1 = Vector(1,0)
            >>> v2 = Vector(0,1)               
-           >>> result = v1.dot(v2)
-           >>> print(result)
-           0
-           
-           >>> v1 = Vector(1,0,0)
-           >>> v2 = Vector(0,1,0)
            >>> result = v1.dot(v2)
            >>> print(result)
            0
@@ -970,20 +974,17 @@ class Vector(collections.abc.Sequence):
            True     
            
            >>> from crossproduct import Vector
-           >>> v1 = Vector3D(1,0,0)
-           >>> v2 = Vector3D(2,0,0)               
+           >>> v1 = Vector(1,0,0)
+           >>> v2 = Vector(2,0,0)               
            >>> result = v1.is_collinear(v2)
            >>> print(result)
            True        
         
-        
         """
-        if len(self)==2:
+        if self.nD==2:
             return math.isclose(self.perp_product(vector), 0, abs_tol=ABS_TOL)
-            #return abs(self.perp_product(vector)) < SMALL_NUM 
-        if len(self)==3:
+        elif self.nD==3:
             return math.isclose(self.cross_product(vector).length, 0, abs_tol=ABS_TOL)
-            #return self.cross_product(vector).length < SMALL_NUM 
         else:
             raise ValueError('"is_collinear" method requires a 2D or 3D vector.')
               
@@ -1054,7 +1055,6 @@ class Vector(collections.abc.Sequence):
         
         """
         return math.isclose(self.dot(vector), 0, abs_tol=ABS_TOL)
-        #return abs(self.dot(vector))<SMALL_NUM
         
     
     @property
@@ -1077,7 +1077,26 @@ class Vector(collections.abc.Sequence):
         
         """
         return sum(c**2 for c in self)**0.5
-        #(self.x**2+self.y**2)**0.5
+    
+    
+    @property
+    def nD(self):
+        """The number of dimensions of the vector.
+        
+        :returns: 2 or 3
+        :rtype: int
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> from crossproduct import Vector
+            >>> v = Vector(1,1)
+            >>> print(v.nD)
+            2
+            
+        """
+        return len(self)
     
     
     @property
@@ -1148,7 +1167,7 @@ class Vector(collections.abc.Sequence):
             If supplied vector is on the right of self, returns <0 (i.e. clockwise).
         :rtype: float
             
-        .. code-block:: python
+        .. rubric:: Code Example
     
         .. code-block:: python
            
@@ -1162,7 +1181,7 @@ class Vector(collections.abc.Sequence):
         .. seealso:: `<https://geomalgorithms.com/vector_products.html#2D-Perp-Product>`_
         
         """
-        if len(self)==2:
+        if self.nD==2:
             return self.perp_vector.dot(vector)
         else:
             raise ValueError('"perp_product" method only applicable for a 2D vector.')
@@ -1191,7 +1210,7 @@ class Vector(collections.abc.Sequence):
         .. seealso:: `<https://geomalgorithms.com/vector_products.html#2D-Perp-Operator>`_
         
         """
-        if len(self)==2:
+        if self.nD==2:
             return Vector(-self.y,self.x)
         else:
             raise ValueError('"perp_vector" method only applicable for a 2D vector.')
@@ -1212,6 +1231,34 @@ class Vector(collections.abc.Sequence):
             Two new defaults are used: the default for 'length_includes_head' 
             is set to True; and the default for 'head_width' is set to 0.5.
         
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> import matplotlib.pyplot as plt
+           >>> from crossproduct import Vector
+           >>> fig, ax = plt.subplots()
+           >>> Vector(1,1).plot(ax)
+           >>> plt.show()
+        
+        .. image:: /_static/vector_plot_2D.png
+        
+        |
+        
+        .. code-block:: python
+           
+           >>> import matplotlib.pyplot as plt
+           >>> from mpl_toolkits.mplot3d import Axes3D
+           >>> from crossproduct import Vector
+           >>> fig = plt.figure()
+           >>> ax = fig.add_subplot(111, projection='3d')
+           >>> Vector(1,1,1).plot(ax)
+           >>> ax.set_xlim(0,1), ax.set_ylim(0,1), ax.set_zlim(0,1)
+           >>> plt.show()
+           
+        .. image:: /_static/vector_plot_3D.png
+        
+        
         """
         start_point=[0 for _ in self]
         try: #2D
@@ -1222,7 +1269,27 @@ class Vector(collections.abc.Sequence):
         except TypeError: #3D
             ax.quiver(*start_point,*self,
                       **kwargs)
+    
+    
+    def to_tuple(self):
+        """Returns a tuple representation of the vector.
         
+        :returns: The coordinates as a tuple. 
+            For a vector, this can also be achieved by creating a 
+            tuple of the vector itself (i.e. :code:`tuple(v)`).
+        :rtype: tuple
+        
+        .. code-block:: python
+        
+            >>> from crossproduct import Vector
+            >>> v = Vector(2,2)
+            >>> result = v.to_tuple()
+            >>> print(result)
+            (2.0,2.0)
+        
+        """
+        return tuple(self)
+    
 
     def triple_product(self,vector1,vector2):
         """Returns the triple product of this vector and 2 supplied vectors.
@@ -1260,7 +1327,16 @@ class Vector(collections.abc.Sequence):
     def x(self):
         """The x coordinate of the vector.
         
-        :rtype: int, float
+        :rtype: float
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> from crossproduct import Vector
+            >>> v = Vector(0,1,2)
+            >>> print(v.x)
+            0.0
         
         """
         return self[0]
@@ -1270,7 +1346,16 @@ class Vector(collections.abc.Sequence):
     def y(self):
         """The y coordinate of the vector.
         
-        :rtype: int, float
+        :rtype: float
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> from crossproduct import Vector
+            >>> v = Vector(0,1,2)
+            >>> print(v.y)
+            1.0
         
         """
         return self[1]
@@ -1282,7 +1367,16 @@ class Vector(collections.abc.Sequence):
         
         :raises IndexError: If vector is a 2D vector.
         
-        :rtype: int, float
+        :rtype: float
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> from crossproduct import Vector
+            >>> v = Vector(0,1,2)
+            >>> print(v.z)
+            2.0
         
         """
         return self[2]
@@ -1290,7 +1384,7 @@ class Vector(collections.abc.Sequence):
     
     
 class Line():
-    """A line, as described by a Point and a Vector
+    """A 2D or 3D line, as described by a point and a vector.
     
     Equation of the line is P(t) = P0 + vL*t where:
     
@@ -1310,17 +1404,19 @@ class Line():
     
     .. code-block:: python
        
+       # 2D example
+       >>> from crossproduct import Point, Vector, Line
        >>> l = Line(Point(0,0), Vector(1,0))
        >>> print(l)
        Line(Point(0,0), Vector(1,0))
        
+       # 3D example
+       >>> from crossproduct import Point, Vector, Line
        >>> l = Line(Point(0,0,0), Vector(1,0,0))
        >>> print(l)
        Line(Point(0,0,0), Vector(1,0,0))
     
-    
     .. seealso:: `<https://geomalgorithms.com/a02-_lines.html>`_
-    
     
     """
     
@@ -1330,10 +1426,11 @@ class Line():
         :param line: A line.
         :type line: Line
         
+        :raises TypeError: If a Line instance is not supplied.
+        
         :return: True if the start point of supplied line lies on line (self),
             and the vL of supplied line is collinear to the vL of line (self); 
             otherwise False.
-            Also returns False if supplied line is not a Line object.
         :rtype: bool
             
         .. rubric:: Code Example
@@ -1341,12 +1438,14 @@ class Line():
         .. code-block:: python
            
            # 2D example
+           >>> from crossproduct import Point, Vector, Line
            >>> l = Line(Point(0,0), Vector(1,0))
            >>> result = l == l
            >>> print(result)
            True
            
            # 3D example
+           >>> from crossproduct import Point, Vector, Line
            >>> l1 = Line(Point(0,0,0), Vector(1,0,0))
            >>> l2 = Line(Point(0,0,0), Vector(-1,0,0))
            >>> result = l1 == l2
@@ -1357,7 +1456,7 @@ class Line():
         if isinstance(line,Line):
             return self.contains(line.P0) and self.vL.is_collinear(line.vL)
         else:
-            return False
+            raise TypeError('Line.__eq__ should be used with a Line instance')
 
 
     def __repr__(self):
@@ -1374,14 +1473,156 @@ class Line():
         self._vL=vL
     
     
+    def _distance_to_line(self,line):
+        """Returns the distance from this line to the supplied line.
+        
+        :param line: A line.
+        :type line: Line
+        
+        :return: The distance between the two lines.
+        :rtype: float
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> from crossproduct import Point, Vector, Line
+           >>> l1 = Line(Point(0,0), Vector(1,0))
+           >>> l2 = Line(Point(0,1), Vector(1,0))
+           >>> result = l1.distance_to_line(l2)
+           >>> print(result)
+           1
+        
+        .. seealso:: `<https://geomalgorithms.com/a07-_distance.html>`_
+        
+        """
+        #2D
+        if self.nD==2:
+        
+            if self.is_parallel(line):
+                return self._distance_to_point(line.P0)
+            else:
+                return 0 # as these are skew infinite 2D lines
+
+        #3D
+        elif self.nD==3: 
+
+            if self.is_parallel(line):
+                    
+                return self._distance_to_point(line.P0)
+            
+            else:
+                
+                w0=self.P0-line.P0
+                u=self.vL
+                v=line.vL
+                a=u.dot(u)
+                b=u.dot(v)
+                c=v.dot(v)
+                d=u.dot(w0)
+                e=v.dot(w0)
+                
+                sc=(b*e-c*d) / (a*c-b**2)
+                tc=(a*e-b*d) / (a*c-b**2)
+                
+                Pc=self.calculate_point(sc)
+                Qc=line.calculate_point(tc)
+                
+                return (Pc-Qc).length
+    
+        else:
+            raise Exception # must be 2D or 3D
+
+
+    
+    def _distance_to_point(self,point):
+        """Returns the distance from this line to the supplied point.
+        
+        :param point: A point.
+        :type point: Point2D or Point3D
+                    
+        :return: The distance from the line to the point. 
+        :rtype: float
+        
+        .. rubric:: Code Example
+        
+        .. code-block:: python
+           
+           # 2D example
+           >>> from crossproduct import Point, Vector, Line
+           >>> l = Line(Point(0,0), Vector(1,0))
+           >>> result = l.distance_to_point(Point(0,10))
+           >>> print(result)
+           10
+           
+           # 3D example
+           >>> from crossproduct import Point, Vector, Line
+           >>> l = Line(Point(0,0,0), Vector(1,0,0))
+           >>> result = l.distance_to_point(Point(10,0,0))
+           >>> print(result)
+           0
+            
+        .. seealso:: `<https://geomalgorithms.com/a02-_lines.html>`_
+            
+        """
+        w=point-self.P0
+        b=w.dot(self.vL) / self.vL.dot(self.vL)
+        ptB=self.P0+self.vL*b
+        return (ptB-point).length
+    
+    
+    def _intersect_line(self,line):
+        """Returns the intersection of this line with the supplied line. 
+        
+        :param line: A line.
+        :type line: Line
+        
+        :return: Returns a line (this line) if lines are collinear. 
+            Returns None (i.e. no intersection) if lines are parallel. 
+            For 2D, returns a point if lines are skew.  
+            For 3D, returns either None or a point if lines are skew. 
+        :rtype: None, Point, Line 
+        
+        .. rubric:: Code Example
+        
+        .. code-block:: python
+           
+           # 2D example
+           >>> from crossproduct import Point, Vector, Line
+           >>> l1 = Line(Point(0,0), Vector(1,0))
+           >>> l2 = Line(Point(0,0), Vector(0,1))
+           >>> result = l.intersect_line(l2)
+           >>> print(result)
+           Point(0,0)
+           
+           # 3D example
+           >>> from crossproduct import Point, Vector, Line
+           >>> l1 = Line(Point(0,0,0), Vector(1,0,0))
+           >>> l2 = Line(Point(0,0,1), Vector(1,0,0))
+           >>> result = l1.intersect_line(l2)
+           >>> print(result)
+           None
+        
+        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
+        
+        """
+        if self==line: # test for collinear lines
+            return self
+        elif self.is_parallel(line): # test for parallel lines
+            return None 
+        else: # a skew line
+            return self._intersect_line_skew(line)
+            
+    
+    
     def _intersect_line_skew(self,skew_line):
         """Returns the point of intersection of this line and the supplied skew line
         """
         #2D
-        if len(self.P0)==2:
+        if self.nD==2:
             return self._intersect_line_skew_2D(skew_line)
         #3D
-        elif len(self.P0)==3:
+        elif self.nD==3:
             return self._intersect_line_skew_3D(skew_line)
         else:
             raise Exception # must be either 2D or 3D
@@ -1457,12 +1698,14 @@ class Line():
         .. code-block:: python    
         
            # 2D example
+           >>> from crossproduct import Point, Vector, Line
            >>> l = Line(Point(0,0), Vector(1,0))
            >>> result = l.calcuate_point(3)
            >>> print(result)
            Point(3,0)
            
            # 3D example
+           >>> from crossproduct import Point, Vector, Line
            >>> l = Line(Point(0,0,0), Vector(1,0,0))
            >>> result = l.calcuate_point(-3)
            >>> print(result)
@@ -1488,11 +1731,13 @@ class Line():
         
         .. code-block:: python
            
+           >>> from crossproduct import Point, Vector, Line
            >>> l = Line(Point(0,0), Vector(1,0))
            >>> result = l.calculate_t_from_point(Point(3,0))
            >>> print(result)
            3
         
+           >>> from crossproduct import Point, Vector, Line
            >>> l = Line(Point(0,0,0), Vector(1,0,0))
            >>> result = l.calculate_t_from_point(Point(3,0,0))
            >>> print(result)
@@ -1522,12 +1767,14 @@ class Line():
         .. code-block:: python
            
            # 2D example
+           >>> from crossproduct import Point, Vector, Line
            >>> l = Line(Point(0,0), Vector(1,0))
            >>> result = Point(2,0) in l
            >>> print(result)
            True
            
            # 3D example
+           >>> from crossproduct import Point, Vector, Line
            >>> l = Line(Point(0,0,0), Vector(1,0,0))
            >>> hl = Halfline(Point(0,0,0), Vector(-1,0,0))
            >>> result = hl in l
@@ -1549,101 +1796,6 @@ class Line():
         else:
             raise TypeError
         
-        
-    def _distance_to_line(self,line):
-        """Returns the distance from this line to the supplied line.
-        
-        :param line: A line.
-        :type line: Line
-        
-        :return: The distance between the two lines.
-        :rtype: float
-        
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-           
-           >>> l1 = Line(Point(0,0), Vector(1,0))
-           >>> l2 = Line(Point(0,1), Vector(1,0))
-           >>> result = l1.distance_to_line(l2)
-           >>> print(result)
-           1
-        
-        .. seealso:: `<https://geomalgorithms.com/a07-_distance.html>`_
-        
-        """
-        #2D
-        if len(self.P0)==2:
-        
-            if self.is_parallel(line):
-                return self.distance_to_point(line.P0)
-            else:
-                return 0 # as these are skew infinite 2D lines
-
-        #3D
-        elif len(self.P0)==3: 
-
-            if self.is_parallel(line):
-                    
-                return self.distance_to_point(line.P0)
-            
-            else:
-                
-                w0=self.P0-line.P0
-                u=self.vL
-                v=line.vL
-                a=u.dot(u)
-                b=u.dot(v)
-                c=v.dot(v)
-                d=u.dot(w0)
-                e=v.dot(w0)
-                
-                sc=(b*e-c*d) / (a*c-b**2)
-                tc=(a*e-b*d) / (a*c-b**2)
-                
-                Pc=self.calculate_point(sc)
-                Qc=line.calculate_point(tc)
-                
-                return (Pc-Qc).length
-    
-        else:
-            raise Exception # must be 2D or 3D
-
-
-    
-    def _distance_to_point(self,point):
-        """Returns the distance from this line to the supplied point.
-        
-        :param point: A point.
-        :type point: Point2D or Point3D
-                    
-        :return: The distance from the line to the point. 
-        :rtype: float
-        
-        .. rubric:: Code Example
-        
-        .. code-block:: python
-           
-           # 2D example
-           >>> l = Line(Point(0,0), Vector(1,0))
-           >>> result = l.distance_to_point(Point(0,10))
-           >>> print(result)
-           10
-           
-           # 3D example
-           >>> l = Line(Point(0,0,0), Vector(1,0,0))
-           >>> result = l.distance_to_point(Point(10,0,0))
-           >>> print(result)
-           0
-            
-        .. seealso:: `<https://geomalgorithms.com/a02-_lines.html>`_
-            
-        """
-        w=point-self.P0
-        b=w.dot(self.vL) / self.vL.dot(self.vL)
-        ptB=self.P0+self.vL*b
-        return (ptB-point).length
-        
     
     def distance(self,obj):
         """Returns the distance to the supplied object.
@@ -1658,6 +1810,7 @@ class Line():
     
         .. code-block:: python
            
+           >>> from crossproduct import Point, Vector, Line
            >>> l = Line(Point(0,0), Vector(1,0))
            >>> result = l.distance(Point(0,10))
            >>> print(result)
@@ -1672,50 +1825,13 @@ class Line():
             raise TypeError('Line.distance does not accept a %s type' % obj.__class__)
     
     
-    def _intersect_line(self,line):
-        """Returns the intersection of this line with the supplied line. 
-        
-        :param line: A line.
-        :type line: Line
-        
-        :return: Returns a line (this line) if lines are collinear. 
-            Returns None (i.e. no intersection) if lines are parallel. 
-            For 2D, returns a point if lines are skew.  
-            For 3D, returns either None or a point if lines are skew. 
-        :rtype: None, Point, Line 
-        
-        .. rubric:: Code Example
-        
-        .. code-block:: python
-           
-           # 2D example
-           >>> l1 = Line(Point(0,0), Vector(1,0))
-           >>> l2 = Line(Point(0,0), Vector(0,1))
-           >>> result = l.intersect_line(l2)
-           >>> print(result)
-           Point(0,0)
-           
-           # 3D example
-           >>> l1 = Line(Point(0,0,0), Vector(1,0,0))
-           >>> l2 = Line(Point(0,0,1), Vector(1,0,0))
-           >>> result = l1.intersect_line(l2)
-           >>> print(result)
-           None
-        
-        .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
-        
-        """
-        if self==line: # test for collinear lines
-            return self
-        elif self.is_parallel(line): # test for parallel lines
-            return None 
-        else: # a skew line
-            return self._intersect_line_skew(line)
-            
-        
     def intersect(self,obj):
         ""
-        
+        if isinstance(obj, Line):
+            return self._intersect_line(obj)
+        else:
+            raise TypeError('Line.intersect does not accept a %s type' % obj.__class__)
+            
     
     def is_parallel(self,line):
         """Tests if this line and the supplied line are parallel. 
@@ -1733,6 +1849,7 @@ class Line():
         .. code-block:: python
            
            # 2D example
+           >>> from crossproduct import Point, Vector, Line
            >>> l1 = Line(Point(0,0), Vector(1,0))
            >>> l2 = Line(Point(0,0), Vector(0,1))
            >>> result = l.is_parallel(l2)
@@ -1740,6 +1857,7 @@ class Line():
            False
            
            # 3D example
+           >>> from crossproduct import Point, Vector, Line
            >>> l1 = Line(Point3D(0,0,0), Vector(1,0,0))
            >>> l2 = Line(Point3D(0,0,1), Vector(2,0,0))
            >>> result = l1.is_parallel(l2)
@@ -1748,6 +1866,26 @@ class Line():
             
         """
         return self.vL.is_collinear(line.vL)
+
+
+    @property
+    def nD(self):
+        """The number of dimensions of the line.
+        
+        :returns: 2 or 3
+        :rtype: int
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> from crossproduct import Point, Vector, Line
+            >>> l = Line(Point(0,0,0), Vector(1,0,0))
+            >>> print(l.nD)
+            3
+            
+        """
+        return self.P0.nD
 
     
     @property
@@ -1801,6 +1939,7 @@ class Line():
     
         .. code-block:: python
         
+            >>> from crossproduct import Point, Vector, Line
             >>> l = Line(Point(0,0,0), Vector(1,2,3))
             >>> result = l.project_2D(0)
             >>> print(result)
@@ -1819,7 +1958,24 @@ class Line():
                         Vector(self.vL.x,self.vL.y))
         else:
             raise ValueError
-                    
+    
+    
+    def to_tuple(self):
+        """Returns a tuple representation of the line.
+        
+        :returns: The starting point of the line and the line vector as tuples. 
+        :rtype: tuple
+        
+        .. code-block:: python
+        
+            >>> from crossproduct import Point, Vector, Line
+            >>> l = Line(Point(0,0,0), Vector(1,0,0))
+            >>> result = l.to_tuple()
+            >>> print(result)
+            ((0.0,0.0,0.0), (1.0,0.0,0.0))
+        
+        """
+        return (tuple(self.P0),tuple(self.vL))
             
     @property
     def vL(self):

@@ -14,7 +14,7 @@ Geometric collection instances are created by providing one or more itmes:
    >>> from crossproduct import Point, Points
    >>> pts = Points(Point(0,0), Point(1,1))
    >>> print(pts)
-   Points(Point(0,0), Point(1,1) 
+   Points(Point(0,0), Point(1,1)) 
 
 The available collection classes are `Points`, `Segments`, `Polylines` and `Polygons`.
 
@@ -30,7 +30,7 @@ Therefore they can be used like a sequence and can be changed in place:
    >>> from crossproduct import Point, Points
    >>> pts = Points(Point(0,0), Point(1,1))
    >>> pts[0] = Point(2,2)
-   Points(Point(2,2), Point(1,1) 
+   Points(Point(2,2), Point(1,1)) 
 
 
 
