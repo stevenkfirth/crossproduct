@@ -2134,10 +2134,9 @@ class Halfline():
         """Tests if the halfline contains the object.
         
         :param obj: A point, halfline or segment.
-        :type obj: Point, Halfline, Segment
+        :type obj: Point, Segment
             
         :return: For point, True if the point lies on the halfline; otherwise False. 
-            For halfline, ... TO DO ...    
             For segment, True if the segment start point and end point are on the halfline; otherwise False
         :rtype: bool
         
@@ -2159,9 +2158,6 @@ class Halfline():
             except ValueError: # t<0
                 return False
             return obj==pt 
-        
-        elif isinstance(obj,Segment):
-            raise Exception('TO DO')
         
         elif isinstance(obj,Segment):
             return self.contains(obj.P0) and self.contains(obj.P1)
@@ -2206,7 +2202,7 @@ class Halfline():
         if c1<=0: # i.e. t<0
             return w.length
         else:
-            return self.line.distance_to_point(point)
+            return self.line._distance_to_point(point)
 
 
     def distance(self,obj):
