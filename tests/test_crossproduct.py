@@ -1329,9 +1329,79 @@ class Test_Segments(unittest.TestCase):
                           1))
 
     
+    def test_contains(self):
+        ""
+        s=Segments(Segment(Point(0,0),Point(1,0)),
+                   Segment(Point(1,0),Point(1,1)))
+        
+        # point
+        self.assertTrue(s.contains(Point(0,0)))
+        self.assertTrue(s.contains(Point(0.5,0)))
+        self.assertFalse(s.contains(Point(-1,0)))
     
     
     
+class Test_Polyline(unittest.TestCase):
+    ""
+    
+    def test___init__(self):
+        ""
+        pl=Polyline(Point(0,0),Point(0,1),Point(1,1))
+        self.assertIsInstance(pl,Polyline)
+        self.assertEqual(pl._points,
+                         [Point(0,0),Point(0,1),Point(1,1)])
+        
+    
+    def test___eq__(self):
+        ""
+        pl=Polyline(Point(0,0),Point(0,1),Point(1,1))
+        self.assertTrue(pl==pl)
+        self.assertTrue(pl==Polyline(Point(1,1),
+                                     Point(0,1),
+                                     Point(0,0)))
+    
+    
+    def test_reverse(self):
+        ""
+        pl=Polyline(Point(0,0),Point(0,1),Point(1,1))
+        self.assertEqual(pl.reverse,
+                         Polyline(Point(1,1),
+                                  Point(0,1),
+                                  Point(0,0)))
+    
+    
+    def test_segments(self):
+        ""
+        pl=Polyline(Point(0,0),Point(0,1),Point(1,1))
+        self.assertEqual(pl.segments,
+                         Segments(Segment(Point(0,0), 
+                                          Point(0,1)), 
+                                  Segment(Point(0,1), 
+                                          Point(1,1))))
+
+
+    def test_to_tuple(self):
+        ""
+        pl=Polyline(Point(0,0),Point(0,1),Point(1,1))
+        self.assertEqual(pl.to_tuple(),
+                         ((0,0),(0,1),(1,1)))
+
+
+
+class Test_Polylines(unittest.TestCase):
+    ""
+    
+    def test___init__(self):
+        ""
+        pls=Polylines(Polyline(Point(0,0),Point(1,0)),
+                      Polyline(Point(1,0),Point(1,1)))
+        self.assertIsInstance(pls,Polylines)
+        self.assertEqual(pls._polylines,
+                         [Polyline(Point(0,0),Point(1,0)),
+                          Polyline(Point(1,0),Point(1,1))])
+
+
+
 if __name__=='__main__':
     
     unittest.main()

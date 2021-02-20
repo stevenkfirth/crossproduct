@@ -3560,7 +3560,7 @@ class Segment():
            ((0.0,0.0,0.0), (1.0,0.0,0.0))
         
         """
-        return (tuple(self.P0),tuple(self.P1))
+        return tuple(self.P0),tuple(self.P1)
 
 
  
@@ -3759,9 +3759,11 @@ class Segments(collections.abc.MutableSequence):
 
 
 class Polyline(collections.abc.Sequence):
-    """A polyline
+    """A 2D or 3D polyline.
     
-    In crossproduct a Polyline object is a immutable sequence. 
+    A polyline is a series of joined segments which are defined as a series of points.
+    
+    In *crossproduct* a Polyline object is a immutable sequence. 
     Iterating over a Polyline will provide its Point instances.
     
     :param points: Argument list of Point instances.
@@ -3770,32 +3772,39 @@ class Polyline(collections.abc.Sequence):
     
     .. code-block:: python
        
+       >>> from crossproduct import Point, Polyline
+       >>> pl = Polyline(Point(0,0), Point(1,0), Point(1,1))
+       >>> print(pl)
+       Polyline(Point(0.0,0.0), Point(1.0,0.0), Point(1.0,1.0))
+       
     """
     
     def __eq__(self,polyline):
         """Tests if this polyline and the supplied polyline are equal.
         
         :param polyline: A polyline.
-        :type polyline: Polyline2D, Polyline3D
+        :type polyline: Polyline
         
         :return: True if the polylines have the same points in the same order, 
             either as supplied or in reverse;
             otherwise False.
         :rtype: bool
         
-        :Example:
+        .. rubric:: Code Example
     
         .. code-block:: python
            
            # 2D example
-           >>> pl = Polyline2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> from crossproduct import Point, Polyline
+           >>> pl = Polyline(Point(0,0), Point(1,0), Point(1,1))
            >>> result = pl == pl
            >>> print(result)
            True
            
            # 3D example
-           >>> pl1 = Polyline3D(Point3D(0,0,0), Point3D(1,0,0))
-           >>> pl2 = Polyline3D(Point3D(0,0,0), Point3D(-1,0,0))
+           >>> from crossproduct import Point, Polyline
+           >>> pl1 = Polyline(Point(0,0,0), Point(1,0,0))
+           >>> pl2 = Polyline(Point(0,0,0), Point(-1,0,0))
            >>> result = pl1 == pl2
            >>> print(result)
            False
@@ -3813,8 +3822,6 @@ class Polyline(collections.abc.Sequence):
             return False
     
 
-    
-    
     def __getitem__(self,index):
         ""
         return self._points[index]
@@ -3822,7 +3829,7 @@ class Polyline(collections.abc.Sequence):
     
     def __init__(self,*points):
         ""
-        self._points=points
+        self._points=list(points)
         
 
     def __len__(self):
@@ -3842,6 +3849,26 @@ class Polyline(collections.abc.Sequence):
     def intersect(self,obj):
         ""
     
+    @property
+    def nD(self):
+        """The number of dimensions of the polyline.
+        
+        :returns: 2 or 3
+        :rtype: int
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> from crossproduct import Point, Polyline
+           >>> pl = Polyline(Point(0,0), Point(1,0), Point(1,1))
+            >>> print(pl.nD)
+            2
+            
+        """
+        return self[0].nD
+    
+    
     def plot(self, ax, *args, **kwargs):
         """Plots the polyline on the supplied axes.
         
@@ -3856,33 +3883,105 @@ class Polyline(collections.abc.Sequence):
     
     
     @property
+    def reverse(self):
+        """Return a polyline with the points reversed.
+        
+        :rtype: Polyline
+        
+        
+        
+        """
+        return Polyline(*self._points[::-1])
+    
+    
+    
+    @property
     def segments(self):
         """Returns a Segments sequence of the segments in the polyline.
         
         :rtype: Segments
         
-        :Example:
+        .. rubric:: Code Example
     
         .. code-block:: python
            
-           >>> pl = Polyline2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+           >>> from crossproduct import Point, Polyline
+           >>> pl = Polyline(Point(0,0), Point(1,0), Point(1,1))
            >>> print(pl.segments)
-           Segments(Segment2D(Point2D(0,0), Point2D(1,0)), 
-                    Segment2D(Point2D(1,0), Point2D(1,1))
+           Segments(Segment(Point(0.0,0.0), Point(1.0,0.0)), 
+                    Segment(Point(1.0,0.0), Point(1.0,1.0))
         
         """
         n=len(self)
         return Segments(*[Segment(self[i],self[i+1]) for i in range(n-1)])
 
 
-class Polylines():
-    """
-    """
-    def __init__(self):
-        ""
+    def to_tuple(self):
+        """Returns a tuple representation of the polyline.
         
+        :returns: The points of the polyline as a tuple of tuples. 
+        :rtype: tuple
+        
+        .. code-block:: python
+        
+           >>> from crossproduct import Point, Polyline
+           >>> pl = Polyline(Point(0,0), Point(1,0), Point(1,1))
+           >>> result = pl.to_tuple()
+           >>> print(result)
+           ((0.0,0.0), (1.0,0.0), (1.0,1.0))
+        
+        """
+        return tuple(tuple(pt) for pt in self)
+    
+
+
+class Polylines(collections.abc.MutableSequence):
+    """A sequence of polylines.    
+    
+    In *crossproduct* a Polylines object is a mutable sequence. 
+    Iterating over a Polylines object will provide its Polyline instances.
+    Index, append, insert and delete actions are available.
+    
+    :param polylines: An argument list of Polyline instances. 
+    
+    
+        
+    """
+    
+    def __delitem__(self,index):
+        ""
+        del self._polylines[index]
+    
+    
+    def __getitem__(self,index):
+        ""
+        return self._polylines[index]
+    
+    
+    def __init__(self,*polylines):
+        ""
+        self._polylines=list(polylines)
+    
+    
+    def __len__(self):
+        ""
+        return len(self._ploylines)
+    
+    
     def __repr__(self):
         ""
+        return 'Polylines(%s)' % ', '.join([str(s) for s in self])
+    
+    
+    def __setitem__(self,index,value):
+        ""
+        self._polylines[index]=value
+    
+    
+    def insert(self,index,value):
+        "(required by abc super class)"
+        return self._polylines.insert(index,value)
+
 
 
 class Plane():

@@ -16,6 +16,7 @@ def is_property_or_function(attr):
 
 
 def get_properties_and_methods(klass):   
+    #print(klass)
     result=[name for (name, value) in inspect.getmembers(klass, is_property_or_function)]
     result=[name for name in result if not (name.startswith('_') and not name.startswith('__'))]
     result.remove('__init__')
