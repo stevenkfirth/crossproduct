@@ -857,6 +857,476 @@ class Test_Halfline(unittest.TestCase):
 
 
 
+class Test_Segment(unittest.TestCase):
+    
+    def test___add__(self):
+        ""
+        P0,P1=Point(0,0), Point(1,1)
+        s=Segment(P0,P1)
+        s1=Segment(Point(1,1), Point(2,2))
+        self.assertEqual(s+s1,
+                         Segment(Point(0,0), Point(2,2)))
+        self.assertEqual(Segment(Point(1,1), Point(1,2))+Segment(Point(1,0), Point(1,1)),
+                         Segment(Point(1.0,0.0), Point(1.0,2.0)))
+
+        
+    def test___eq__(self):
+        ""
+        P0,P1=Point(0,0), Point(1,1)
+        s=Segment(P0,P1)
+        self.assertTrue(s==s)
+        self.assertFalse(Segment(P0,P0+s.line.vL*0.5)==s)
+    
+        P0, P1=Point(0,0,0), Point(1,1,1)
+        s=Segment(P0,P1)
+        self.assertTrue(s==s)
+        self.assertFalse(Segment(P0,P0+s.line.vL*0.5)==s)
+        
+        
+    def test___init__(self):
+        ""
+        P0,P1=Point(0,0), Point(1,1)
+        s=Segment(P0,P1)
+        self.assertIsInstance(s,Segment)
+        self.assertEqual(s.P0,Point(0,0))
+        self.assertEqual(s.P1,Point(1,1))
+
+        P0, P1=Point(0,0,0), Point(1,1,1)
+        s=Segment(P0,P1)
+        self.assertIsInstance(s,Segment)
+        self.assertEqual(s.P0,Point(0,0,0))
+        self.assertEqual(s.P1,Point(1,1,1))
+        
+    
+    def test_calculate_point(self):
+        ""
+        P0,P1=Point(0,0), Point(1,1)
+        s=Segment(P0,P1)
+        self.assertEqual(s.calculate_point(0.5),
+                         P0+s.line.vL*0.5)
+
+        P0, P1=Point(0,0,0), Point(1,1,1)
+        s=Segment(P0,P1)
+        self.assertEqual(s.calculate_point(0.5),
+                         P0+s.line.vL*0.5)
+        
+
+    def test_contains(self):
+        ""
+        P0,P1=Point(0,0), Point(1,1)
+        s=Segment(P0,P1)        
+        # point
+        self.assertTrue(s.contains(P0))
+        self.assertTrue(s.contains(P1))
+        self.assertTrue(s.contains(P0+s.line.vL*0.5)) # segment midpoint
+        self.assertFalse(s.contains(P0+s.line.vL*-0.5)) 
+        self.assertFalse(s.contains(P0+s.line.vL*1.5))         
+        # segment
+        self.assertTrue(s.contains(s))
+        self.assertTrue(s.contains(Segment(P0,P0+s.line.vL*0.5)))
+        self.assertTrue(s.contains(Segment(P0+s.line.vL*0.5,P1)))
+        self.assertFalse(s.contains(Segment(P0+s.line.vL*-0.5,P1)))
+        self.assertFalse(s.contains(Segment(P0,P1+s.line.vL*0.5)))
+        self.assertFalse(s.contains(Segment(P0,P0+s.line.vL.perp_vector)))
+    
+    
+        P0, P1=Point(0,0,0), Point(1,1,1)
+        s=Segment(P0,P1)        
+        # point
+        self.assertTrue(s.contains(P0))
+        self.assertTrue(s.contains(P1))
+        self.assertTrue(s.contains(P0+s.line.vL*0.5)) # segment midpoint
+        self.assertFalse(s.contains(P0+s.line.vL*-0.5)) 
+        self.assertFalse(s.contains(P0+s.line.vL*1.5))         
+        # segment
+        self.assertTrue(s.contains(s))
+        self.assertTrue(s.contains(Segment(P0,P0+s.line.vL*0.5)))
+        self.assertTrue(s.contains(Segment(P0+s.line.vL*0.5,P1)))
+        self.assertFalse(s.contains(Segment(P0+s.line.vL*-0.5,P1)))
+        self.assertFalse(s.contains(Segment(P0,P1+s.line.vL*0.5)))
+        self.assertFalse(s.contains(Segment(P0,P0+Vector(1,-1,0))))
+        
+        
+    def test__distance_to_point(self):
+        ""
+        P0,P1=Point(0,0), Point(1,1)
+        s=Segment(P0,P1)
+        self.assertEqual(s._distance_to_point(Point(-2,0)),
+                         2) 
+        self.assertEqual(s._distance_to_point(Point(2,1)),
+                         1) 
+        self.assertEqual(s._distance_to_point(Point(0,1)),
+                         0.5**0.5) 
+        self.assertEqual(s._distance_to_point(Point(1,0)),
+                         0.5**0.5) 
+        
+        P0, P1=Point(0,0,0), Point(1,1,1)
+        s=Segment(P0,P1)
+        self.assertEqual(s._distance_to_point(Point(-2,0,0)),
+                         2) 
+        self.assertEqual(s._distance_to_point(Point(1,1,2)),
+                         1) 
+        self.assertEqual(s._distance_to_point(Point(0,0,0)),
+                         0) 
+        self.assertEqual(s._distance_to_point(Point(1,-1,0)),
+                         (s.P0-Point(1,-1,0)).length) 
+
+    
+    def test__distance_to_segment(self):
+        ""
+        P0, P1=Point(0,0,0), Point(1,1,1)
+        s=Segment(P0,P1)        
+        self.assertEqual(s._distance_to_segment(s),
+                         0)
+        self.assertEqual(s._distance_to_segment(Segment(P0+Vector(1,-1,0),
+                                                         P1+Vector(1,-1,0))),
+                         Vector(1,-1,0).length)
+        self.assertEqual(s._distance_to_segment(Segment(P0,
+                                                         Point(1,-1,0))), 
+                         0)
+        self.assertEqual(s._distance_to_segment(Segment(Point(-2,-2,-2),
+                                                         Point(-1,-1,-1))),
+                         Vector(1,1,1).length)
+
+        
+    def test_difference_segment(self):
+        ""
+        P0,P1=Point(0,0), Point(1,1)
+        s=Segment(P0,P1)        
+        # no intersection, difference is self
+        self.assertEqual(s.difference_segment(Segment(Point(5,5),Point(6,6))),
+                         Segments(s))        
+        # point intersection, difference is self
+        self.assertEqual(s.difference_segment(Segment(Point(1,1),Point(2,2))),
+                         Segments(s))        
+        # segment intersection, difference is remaining segment part
+        self.assertEqual(s.difference_segment(Segment(Point(0.5,0.5),Point(2,2))),
+                         Segments(Segment(Point(0,0),Point(0.5,0.5)),))
+        # self intersection, difference is None
+        self.assertEqual(s.difference_segment(s),
+                         Segments())        
+        # segment intersection, inside original
+        # segment intersection, difference is remaining segment part
+        self.assertEqual(s.difference_segment(Segment(Point(0.25,0.25),Point(0.75,0.75))),
+                         Segments(Segment(Point(0,0),Point(0.25,0.25)),
+                                  Segment(Point(0.75,0.75),Point(1,1))))        
+        # segment intersection, outside both start and end point
+        self.assertEqual(s.difference_segment(Segment(Point(-1,-1),Point(2,2))),
+                         Segments())
+
+        
+    def test_difference_segments(self):
+        ""        
+        P0,P1=Point(0,0), Point(1,1)
+        s=Segment(P0,P1)        
+        # self intersection - intersection first
+        s1=Segments(Segment(Point(0,0), Point(1,1)), 
+                    Segment(Point(1,1), Point(2,1)),
+                    Segment(Point(4,1), Point(5,1)))
+        self.assertEqual(s.difference_segments(s1),
+                         Segments())        
+        # self intersection - intersection last
+        s1=Segments(Segment(Point(4,1), Point(5,1)), 
+                    Segment(Point(1,1), Point(2,1)),
+                    Segment(Point(0,0), Point(1,1)))
+        self.assertEqual(s.difference_segments(s1),
+                         Segments())                
+        # no intersection
+        s1=Segments(Segment(Point(0,0), Point(1,0)), 
+                    Segment(Point(1,1), Point(2,1)))
+        self.assertEqual(s.difference_segments(s1),
+                         Segments(s))        
+        # mid intersection
+        s1=Segments(Segment(Point(0,0), Point(0.5,0.5)), 
+                    Segment(Point(1,1), Point(2,1)))
+        self.assertEqual(s.difference_segments(s1),
+                         Segments(Segment(Point(0.5,0.5), Point(1,1))))        
+        # full intersection using two segments
+        s1=Segments(Segment(Point(0,0), Point(0.5,0.5)), 
+                    Segment(Point(0.5,0.5), Point(1,1)))
+        self.assertEqual(s.difference_segments(s1),
+                         Segments())        
+        # intersection inside original
+        s1=Segments(Segment(Point(0.25,0.25),Point(0.75,0.75)), 
+                    Segment(Point(1,1), Point(2,2)))
+        self.assertEqual(s.difference_segments(s1),
+                         Segments(Segment(Point(0,0), 
+                                            Point(0.25,0.25)), 
+                                  Segment(Point(0.75,0.75), 
+                                            Point(1,1))))        
+        # intersection inside original
+        s1=Segments(Segment(Point(0.2,0.2),Point(0.4,0.4)), 
+                    Segment(Point(0.6,0.6), Point(0.8,0.8)))
+        self.assertEqual(s.difference_segments(s1),
+                         Segments(Segment(Point(0,0), 
+                                            Point(0.2,0.2)), 
+                                  Segment(Point(0.4,0.4), 
+                                            Point(0.6,0.6)), 
+                                  Segment(Point(0.8,0.8), 
+                                            Point(1.0,1.0))))
+        
+
+    def test_intersect_halfline(self):
+        ""
+        P0,P1=Point(0,0), Point(1,1)
+        s=Segment(P0,P1)        
+        # collinear - same start point
+        self.assertEqual(s.intersect_halfline(Halfline(P0,s.line.vL)),
+                         s)        
+        # collinear - halfline start point is segment end point
+        self.assertEqual(s.intersect_halfline(Halfline(P1,s.line.vL)),
+                         P1)
+        # collinear - halfline start point is segment mid point
+        self.assertEqual(s.intersect_halfline(Halfline(P0+s.line.vL*0.5,
+                                                       s.line.vL)),
+                         Segment(P0+s.line.vL*0.5,P1))
+        self.assertEqual(s.intersect_halfline(Halfline(P0+s.line.vL*0.5,
+                                                       s.line.vL*-1)),
+                         Segment(P0,P0+s.line.vL*0.5))
+
+
+    def test_intersect_line(self):
+        ""
+        P0,P1=Point(0,0), Point(1,1)
+        s=Segment(P0,P1)        
+        # collinear
+        self.assertEqual(s.intersect_line(Line(P0,s.line.vL)),
+                         s)
+        # parallel
+        self.assertEqual(s.intersect_line(Line(P0+s.line.vL.perp_vector,
+                                               s.line.vL)),
+                         None)
+        # skew - same P0s
+        self.assertEqual(s.intersect_line(Line(P0,s.line.vL.perp_vector)),
+                         P0)
+        # skew - different P0s
+        self.assertEqual(s.intersect_line(Line(Point(0.5,0),
+                                               s.line.vL.perp_vector)),
+                         Point(0.25,0.25))
+        # skew - no intersection
+        self.assertEqual(s.intersect_line(Line(P0+s.line.vL*-1,
+                                               s.line.vL.perp_vector)),
+                         None)
+        
+        
+    def test_intersect_segment(self):
+        ""
+        P0,P1=Point(0,0), Point(1,1)
+        s=Segment(P0,P1)
+        # collinear - same segment
+        self.assertEqual(s.intersect_segment(s),
+                         s)
+        # collinear - different start point inside segment
+        self.assertEqual(s.intersect_segment(Segment(P0+s.line.vL*0.5,P1)),
+                         Segment(P0+s.line.vL*0.5,
+                                   P1))
+        # collinear - different start point outside segment
+        self.assertEqual(s.intersect_segment(Segment(P0+s.line.vL*-0.5,P1)),
+                         s)
+        # collinear - different end point inside segment
+        self.assertEqual(s.intersect_segment(Segment(P0,P1+s.line.vL*-0.5)),
+                         Segment(P0,P1+s.line.vL*-0.5))
+        # collinear - different start point outside segment
+        self.assertEqual(s.intersect_segment(Segment(P0,P1+s.line.vL*0.5)),
+                         s)
+        # collinear - start point and end point inside segment
+        self.assertEqual(s.intersect_segment(Segment(P0+s.line.vL*0.25,
+                                                     P1+s.line.vL*-0.25)),
+                         Segment(P0+s.line.vL*0.25,
+                                 P1+s.line.vL*-0.25))
+        # collinear - start point and end point outside segment
+        self.assertEqual(s.intersect_segment(Segment(P0+s.line.vL*-0.25,
+                                                     P1+s.line.vL*0.25)),
+                         s)
+        # collinear - but no intersection
+        self.assertEqual(s.intersect_segment(Segment(P0+s.line.vL*2,
+                                                     P1+s.line.vL*2)),
+                         None)
+        # parallel
+        self.assertEqual(s.intersect_segment(Segment(P0+s.line.vL.perp_vector,
+                                                     P1+s.line.vL.perp_vector)),
+                         None)
+        # skew - intersecting at start point
+        self.assertEqual(s.intersect_segment(Segment(P0,P1+s.line.vL.perp_vector)),
+                         P0)
+        # skew - intersecting at end point
+        self.assertEqual(s.intersect_segment(Segment(P1+s.line.vL.perp_vector*-1,
+                                                     P1+s.line.vL.perp_vector)),
+                         P1)
+        # skew - intersecting at mid points
+        self.assertEqual(s.intersect_segment(Segment(P0+s.line.vL*0.5+s.line.vL.perp_vector*-0.5,
+                                                     P0+s.line.vL*0.5+s.line.vL.perp_vector*0.5)),
+                         P0+s.line.vL*0.5)
+        # skew - no intersection
+        self.assertEqual(s.intersect_segment(Segment(P0+s.line.vL.perp_vector*0.5,
+                                                     P0+s.line.vL.perp_vector*1.5)),
+                         None)
+        
+        s1=Segment(Point(0,0,0), Point(0,1,0))
+        s2=Segment(Point(0,1,0), Point(1,1,0))
+        self.assertEqual(s1.intersect_segment(s2),
+                         Point(0,1,0))
+        
+        
+    def test_line(self):
+        ""
+        P0,P1=Point(0,0), Point(1,1)
+        s=Segment(P0,P1)
+        self.assertEqual(s.line,
+                         Line(P0,s.line.vL))
+        
+        P0, P1=Point(0,0,0), Point(1,1,1)
+        s=Segment(P0,P1)
+        self.assertEqual(s.line,
+                         Line(P0,P1-P0))
+        
+        
+    def test_order(self):
+        ""
+        P0, P1=Point(0,0,0), Point(1,1,1)
+        s=Segment(P0,P1)
+        self.assertEqual(s.order.points,
+                         s.points)
+        
+        s=Segment(P1,P0)
+        self.assertEqual(s.order.points,
+                        Points(Point(0,0,0), Point(1,1,1)))
+
+        
+    # def test_plot(self):
+    #     ""
+    #     if plot:
+    #         P0,P1=Point(0,0), Point(1,1)
+    #         s=Segment(P0,P1)
+    #         fig, ax = plt.subplots()
+    #         s.plot(ax)
+            
+    #     if plot:
+    #         P0, P1=Point(0,0,0), Point(1,1,1)
+    #         s=Segment(P0,P1)
+    #         fig = plt.figure()
+    #         ax = fig.add_subplot(111, projection='3d')
+    #         s.plot(ax)
+        
+    
+    def test_points(self):
+        ""
+        P0,P1=Point(0,0), Point(1,1)
+        s=Segment(P0,P1)
+        self.assertEqual(s.points,
+                         Points(P0,P1))
+        
+        P0, P1=Point(0,0,0), Point(1,1,1)
+        s=Segment(P0,P1)
+        self.assertEqual(s.points,
+                         Points(P0,P1))
+        
+        
+    def test_project_2D(self):
+        ""
+        
+        
+    def test_project_3D(self):
+        ""
+        
+        
+    def reverse(self):
+        ""
+        P0,P1=Point(0,0), Point(1,1)
+        s=Segment(P0,P1)
+        self.assertEqual(s.reverse,
+                         Segment(P1,P0))
+        
+        P0, P1=Point(0,0,0), Point(1,1,1)
+        s=Segment(P0,P1)
+        self.assertEqual(s.reverse,
+                         Segment(P1,P0))
+        
+
+class Test_Segments(unittest.TestCase):
+    ""
+    
+    def test___init__(self):
+        ""
+        s=Segments(Segment(Point(0,0),Point(1,0)),
+                   Segment(Point(1,0),Point(1,1)))
+        self.assertIsInstance(s,Segments)
+        self.assertEqual(s._segments,
+                         list((Segment(Point(0,0),Point(1,0)),
+                               Segment(Point(1,0),Point(1,1)))))
+        
+        
+    def test___eq__(self):
+        ""
+        s=Segments(Segment(Point(0,0),Point(1,0)),
+                   Segment(Point(1,0),Point(1,1)))
+        self.assertTrue(s==s)
+        
+        s1=Segments(Segment(Point(0,0),Point(1,0)),
+                    Segment(Point(1,0),Point(1,1)))
+        s1.append(Segment(Point(1,1),
+                            Point(0,1)))
+        self.assertFalse(s==s1)
+        
+                
+        
+    def test_add_all(self):
+        ""
+        # no additions
+        s=Segments(Segment(Point(0,0),Point(1,0)),
+                   Segment(Point(1,0),Point(1,1)))
+        s.add_all()
+        self.assertEqual(s,
+                         Segments(Segment(Point(0,0),Point(1,0)),
+                                  Segment(Point(1,0),Point(1,1))))
+        # an addition
+        s=Segments(Segment(Point(0,0), Point(1,0)), 
+                   Segment(Point(1,0), Point(2,0)))
+        s.add_all()
+        self.assertEqual(s,
+                         Segments(Segment(Point(0,0), 
+                                            Point(2,0))))
+        # reversed
+        s=Segments(Segment(Point(1,0), Point(2,0)), 
+                   Segment(Point(0,0), Point(1,0)))
+        s.add_all()
+        self.assertEqual(s,
+                         Segments(Segment(Point(0,0), 
+                                            Point(2,0))))
+        # gap
+        s=Segments(Segment(Point(0,0), Point(1,0)), 
+                   Segment(Point(2,0), Point(3,0)))
+        s.add_all()
+        self.assertEqual(s,
+                         Segments(Segment(Point(0,0), Point(1,0)), 
+                                  Segment(Point(2,0), Point(3,0))))
+        # an gap and an addition
+        s=Segments(Segment(Point(0,0), Point(1,0)), 
+                   Segment(Point(2,0), Point(3,0)),
+                   Segment(Point(3,0), Point(4,0)))
+        s.add_all()
+        self.assertEqual(s,
+                         Segments(Segment(Point(0,0), 
+                                            Point(1,0)), 
+                                  Segment(Point(2.0,0.0), 
+                                            Point(4.0,0.0))))
+        
+        
+    def test_add_first(self):
+        ""
+        s=Segments(Segment(Point(0,0),Point(1,0)),
+                   Segment(Point(1,0),Point(1,1)))
+        self.assertEqual(s.add_first(Segment(Point(-1,0), 
+                                             Point(0,0))),
+                         (Segment(Point(-1.0,0.0), 
+                                  Point(1.0,0.0)), 
+                          0))
+        
+        self.assertEqual(s.add_first(Segment(Point(1,1), 
+                                             Point(1,2))),
+                         (Segment(Point(1.0,0.0), 
+                                  Point(1.0,2.0)), 
+                          1))
 
     
     

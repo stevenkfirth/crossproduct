@@ -1709,6 +1709,8 @@ class Line():
         
         :param obj: A point, halfline or segment.
         :type obj: Point, Halfline, Segment
+        
+        :raises TypeError: If supplied object is not supported by this method.
             
         :return:  For point, True if the point lies on the line; otherwise False. 
             For halfline, True if the halfline startpoint is on the line and 
@@ -2135,7 +2137,9 @@ class Halfline():
         
         :param obj: A point, halfline or segment.
         :type obj: Point, Segment
-            
+        
+        :raises TypeError: If supplied object is not supported by this method.
+        
         :return: For point, True if the point lies on the halfline; otherwise False. 
             For segment, True if the segment start point and end point are on the halfline; otherwise False
         :rtype: bool
@@ -2572,13 +2576,14 @@ class Segment():
     
     .. code-block:: python
        
+       >>> from crossproduct import Point, Segment
        >>> s = Segment(Point(0,0), Point(1,0))
        >>> print(s)
-       Segment(Point(0,0), Point(1,0))
+       Segment(Point(0.0,0.0), Point(1.0,0.0))
        
        >>> s = Segment(Point(0,0,0), Point(1,0,0))
        >>> print(s)
-       Segment(Point(0,0,0), Point(1,0,0))
+       Segment(Point(0.0,0.0,0.0), Point(1.0,0.0,0.0))
     
     """
     
@@ -2600,18 +2605,20 @@ class Segment():
         .. code-block:: python
            
            # 2D example
+           >>> from crossproduct import Point, Segment
            >>> s1 = Segment(Point(0,0), Point(1,0))
            >>> s2 = Segment(Point(1,0), Point(2,0))
            >>> result = s1 + s2
            >>> print(result)
-           Segment(Point(0,0), Point(2,0))
+           Segment(Point(0.0,0.0), Point(2.0,0.0))
            
            # 3D example
+           >>> from crossproduct import Point, Segment
            >>> s1 = Segment(Point(1,0,0), Point(0,0,0))
            >>> s2 = Segment(Point(0,0,0), Point(-1,0,0))
            >>> result = s1 + s2
            >>> print(result)
-           Segment(Point(-1,0,0), Point(1,0,0))       
+           Segment(Point(-1.0,0.0,0.0), Point(1.0,0.0,0.0))       
         
         """
         if not self.line==segment.line:
@@ -2629,10 +2636,10 @@ class Segment():
             raise ValueError('To add two segments, they must have a shared start or end point and not overlap')
             
         line=self.line
-        t_values=[line.calculate_t_from_point(self.P0),
-                  line.calculate_t_from_point(self.P1),
-                  line.calculate_t_from_point(segment.P0),
-                  line.calculate_t_from_point(segment.P1)]
+        t_values=[line.calculate_t_from_coordinates(*self.P0),
+                  line.calculate_t_from_coordinates(*self.P1),
+                  line.calculate_t_from_coordinates(*segment.P0),
+                  line.calculate_t_from_coordinates(*segment.P1)]
         return Segment(line.calculate_point(min(t_values)),
                        line.calculate_point(max(t_values)))
     
@@ -2653,12 +2660,14 @@ class Segment():
         .. code-block:: python
            
            # 2D example
+           >>> from crossproduct import Point, Segment
            >>> s = Segment(Point(0,0), Point(1,0))
            >>> result = s == s
            >>> print(result)
            True
            
            # 3D example
+           >>> from crossproduct import Point, Segment
            >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
            >>> s2 = Segment(Point(0,0,0), Point(-1,0,0))
            >>> result = s1 == s2
@@ -2694,208 +2703,6 @@ class Segment():
         return 'Segment(%s, %s)' % (self.P0,self.P1)
 
 
-    def calculate_point(self,t):
-        """Returns a point on the segment for a given t value.
-        
-        :param t: The t value.
-        :type t: float
-        
-        :return: A point on the segment based on the t value.
-        :rtype: Point
-        
-        .. rubric:: Code Example
-        
-        .. code-block:: python    
-        
-           # 2D example
-           >>> s = Segment(Point(0,0), Point(1,0))
-           >>> result = s.calcuate_point(0.5)
-           >>> print(result)
-           Point(0.5,0)
-           
-           # 3D example
-           >>> s = Segment(Point(0,0,0), Point(1,0,0))
-           >>> result = s.calcuate_point(0)
-           >>> print(result)
-           Point(0,0,0)
-                
-        """
-        if ((math.isclose(t, 0, abs_tol=ABS_TOL) or t>0) and
-            (math.isclose(t, 1, abs_tol=ABS_TOL) or t<1)):
-            return self.line.calculate_point(t)
-        else:
-            raise ValueError('For a segment, t must be equal to or between 0 and 1')
-
-
-    def contains(self,obj):
-        """Tests if the segment contains the object.
-        
-        :param obj: A point or segment. 
-        :type obj: Point, Segment
-            
-        :return: For point, True if the point lies on the segment; otherwise False. 
-            For segment, True if the segment start and endpoints are on the segment; otherwise False. 
-        :rtype: bool
-        
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-           
-           # 2D example
-           >>> s = Segment(Point(0,0), Point(1,0))
-           >>> result = Point(2,0) in l
-           >>> print(result)
-           False
-           
-           # 3D example
-           >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
-           >>> s2 = Segment(Point(0,0,0), Point(0.5,0,0))
-           >>> result = s2 in s1
-           >>> print(result)
-           True        
-        
-        """
-        if isinstance(obj,Point):
-            
-            t=self.line.calculate_t_from_coordinates(*obj)
-            try:
-                pt=self.calculate_point(t)  
-            except ValueError: # t<0<1
-                return False
-            return obj==pt 
-        
-        if isinstance(obj,Segment):
-            
-            return self.contains(obj.P0) and self.contains(obj.P1)
-            
-        else:
-            return TypeError()
-
-
-    def difference_segment(self,segment):
-        """Returns the difference of two segments.
-        
-        :param segment: A segment.
-        :type segment: Segment
-            
-        :return: A segments sequence of 0, 1 or 2 segments.
-            Returns an empty segments sequence if the supplied segment is equal to or contains this segment.
-            Returns a segments sequence with this segment if the supplied segment does not intersect this segment.
-            Returns a segments sequence with a new segment if the supplied segment intersects this segment 
-            including either one of the start point or end point.
-            Returns a segment sequence with two new segments if the supplied segment intersects this segment
-            and is contained within it.
-        :rtype: Segments
-        
-        .. rubric:: Code Example
-        
-        .. code-block:: python    
-        
-           # 2D example
-           >>> s1 = Segment(Point(0,0), Point(1,0))
-           >>> s2 = Segment(Point(0.5,0), Point(1,0))
-           >>> result = s1.difference_segment(s2)
-           >>> print(result)
-           Segments(Segment(Point(0,0), Point(0.5,0)))
-           
-           # 3D example
-           >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
-           >>> s2 = Segment(Point(-1,0,0), Point(2,0,0))
-           >>> result = s1.difference_segment(s2)
-           >>> print(result)
-           Segments()               
-        
-        """
-        if segment.contains(self):
-            return Segments()
-        
-        if self.line==segment.line:
-            t0=self.line.calculate_t_from_point(segment.P0)
-            t1=self.line.calculate_t_from_point(segment.P1)
-            #print(self)
-            #print(segment)
-            #print(t0,t1)
-            if t1<t0:
-                t0,t1=t1,t0
-            
-            if t0>=1 or t1<=0:
-                return Segments(self)
-            elif t0>=0 and t1>=1:
-                return Segments(Segment(self.calculate_point(0),
-                                        self.calculate_point(t0)),)
-            elif t0<=0 and t1<=1:
-                return Segments(Segment(self.calculate_point(t1),
-                                        self.calculate_point(1)),)
-            else:
-                return Segments(Segment(self.calculate_point(0),
-                                        self.calculate_point(t0)),
-                                Segment(self.calculate_point(t1),
-                                        self.calculate_point(1)))
-        else:
-            return Segments(self)
-        
-        
-    def difference_segments(self,segments):
-        """Returns the difference between this segment and a segments sequence.
-        
-        :param segments: A segments sequence.
-        :type segments: Segments
-        
-        :return: Any parts of this segment which are not also part of the segments in the sequence.
-        :rtype: Segments
-        
-        .. rubric:: Code Example
-        
-        .. code-block:: python    
-        
-           # 2D example
-           >>> s = Segment(Point(0,0), Point(1,0))
-           >>> sgmts = Segments(Segment(Point(0.2,0), Point(0.8,0))
-           >>> result = s.difference_segments(sgmts)
-           >>> print(result)
-           Segments(Segment(Point(0,0), Point(0.2,0)),
-                    Segment(Point(0.8,0),Point(1,0)))
-           
-           # 3D example
-           >>> s = Segment(Point(0,0,0), Point(1,0,0))
-           >>> sgmts = Segments(Segment(Point(-1,0,0), Point(2,0,0))
-           >>> result = s.difference_segment(sgmts)
-           >>> print(result)
-           Segments()               
-        
-        """
-        def rf(result,segments):
-            if len(segments)==0:
-                return result
-            else:
-                diff=result.difference_segment(segments[0])
-                #print('diff',diff)
-                if len(diff)==0:
-                    return None
-                elif len(diff)==1:
-                    if len(segments)>1:
-                        result=rf(diff[0],segments[1:])
-                    else:
-                        result=diff[0],
-                    return result
-                elif len(diff)==2:
-                    if len(segments)>1:
-                        result=tuple(list(rf(diff[0],segments[1:]))+list(rf(diff[1],segments[1:])))
-                    else:
-                        result=diff[0],diff[1]
-                    return result
-                else:
-                    raise Exception
-                
-        result=self
-        result=rf(result,segments)
-        
-        if result is None:
-            return Segments()
-        else:
-            return Segments(*result)        
-        
-            
     def _distance_to_point(self,point):
         """Returns the distance from the segment to the supplied point.
         
@@ -2910,14 +2717,16 @@ class Segment():
         .. code-block:: python
            
            # 2D example
+           >>> from crossproduct import Point, Segment
            >>> s = Segment(Point(0,0), Point(1,0))
-           >>> result = s.distance_to_point(Point(0,10))
+           >>> result = s._distance_to_point(Point(0,10))
            >>> print(result)
            10
            
            # 3D example
+           >>> from crossproduct import Point, Segment
            >>> s = Segment(Point(0,0,0), Point(1,0,0))
-           >>> result = s.distance_to_point(Point(10,0,0))
+           >>> result = s._distance_to_point(Point(10,0,0))
            >>> print(result)
            9
             
@@ -2934,7 +2743,7 @@ class Segment():
         elif c2<=c1: # i.e. T>0
             return (point-self.P1).length
         else:
-            return self.line.distance_to_point(point)
+            return self.line._distance_to_point(point)
     
     
     def _distance_to_segment(self,segment):
@@ -2950,9 +2759,10 @@ class Segment():
     
         .. code-block:: python
         
+            >>> from crossproduct import Point, Segment
             >>> s1 = Segment(Point(0,0,0), Point(0,0,1))
             >>> s2 = Segment(Point(0,0,2), Point(0,0,3))
-            >>> result= s1.distance_to_segment(s2)
+            >>> result= s1._distance_to_segment(s2)
             >>> print(result)
             1     
         
@@ -3029,6 +2839,218 @@ class Segment():
         return dP.length
 
 
+    def calculate_point(self,t):
+        """Returns a point on the segment for a given t value.
+        
+        :param t: The t value.
+        :type t: float
+        
+        :return: A point on the segment based on the t value.
+        :rtype: Point
+        
+        .. rubric:: Code Example
+        
+        .. code-block:: python    
+        
+           # 2D example
+           >>> from crossproduct import Point, Segment
+           >>> s = Segment(Point(0,0), Point(1,0))
+           >>> result = s.calcuate_point(0.5)
+           >>> print(result)
+           Point(0.5,0.0)
+           
+           # 3D example
+           >>> from crossproduct import Point, Segment
+           >>> s = Segment(Point(0,0,0), Point(1,0,0))
+           >>> result = s.calcuate_point(0)
+           >>> print(result)
+           Point(0.0,0.0,0.0)
+                
+        """
+        if ((math.isclose(t, 0, abs_tol=ABS_TOL) or t>0) and
+            (math.isclose(t, 1, abs_tol=ABS_TOL) or t<1)):
+            return self.line.calculate_point(t)
+        else:
+            raise ValueError('For a segment, t must be equal to or between 0 and 1')
+
+
+    def contains(self,obj):
+        """Tests if the segment contains the object.
+        
+        :param obj: A point or segment. 
+        :type obj: Point, Segment
+        
+        :raises TypeError: If supplied object is not supported by this method.
+        
+        :return: For point, True if the point lies on the segment; otherwise False. 
+            For segment, True if the segment start and endpoints are on the segment; otherwise False. 
+        :rtype: bool
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> from crossproduct import Point, Segment
+           >>> s = Segment(Point(0,0), Point(1,0))
+           >>> result = Point(2,0) in l
+           >>> print(result)
+           False
+           
+           # 3D example
+           >>> from crossproduct import Point, Segment
+           >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
+           >>> s2 = Segment(Point(0,0,0), Point(0.5,0,0))
+           >>> result = s2 in s1
+           >>> print(result)
+           True        
+        
+        """
+        if isinstance(obj,Point):
+            
+            t=self.line.calculate_t_from_coordinates(*obj)
+            try:
+                pt=self.calculate_point(t)  
+            except ValueError: # t<0<1
+                return False
+            return obj==pt 
+        
+        if isinstance(obj,Segment):
+            
+            return self.contains(obj.P0) and self.contains(obj.P1)
+            
+        else:
+            return TypeError()
+
+
+    def difference_segment(self,segment):
+        """Returns the difference of two segments.
+        
+        :param segment: A segment.
+        :type segment: Segment
+            
+        :return: A segments sequence of 0, 1 or 2 segments.
+            Returns an empty segments sequence if the supplied segment is equal to or contains this segment.
+            Returns a segments sequence with this segment if the supplied segment does not intersect this segment.
+            Returns a segments sequence with a new segment if the supplied segment intersects this segment 
+            including either one of the start point or end point.
+            Returns a segment sequence with two new segments if the supplied segment intersects this segment
+            and is contained within it.
+        :rtype: Segments
+        
+        .. rubric:: Code Example
+        
+        .. code-block:: python    
+        
+           # 2D example
+           >>> from crossproduct import Point, Segment
+           >>> s1 = Segment(Point(0,0), Point(1,0))
+           >>> s2 = Segment(Point(0.5,0), Point(1,0))
+           >>> result = s1.difference_segment(s2)
+           >>> print(result)
+           Segments(Segment(Point(0.0,0.0), Point(0.5,0.0)))
+           
+           # 3D example
+           >>> from crossproduct import Point, Segment
+           >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
+           >>> s2 = Segment(Point(-1,0,0), Point(2,0,0))
+           >>> result = s1.difference_segment(s2)
+           >>> print(result)
+           Segments()               
+        
+        """
+        if segment.contains(self):
+            return Segments()
+        
+        if self.line==segment.line:
+            t0=self.line.calculate_t_from_coordinates(*segment.P0)
+            t1=self.line.calculate_t_from_coordinates(*segment.P1)
+            #print(self)
+            #print(segment)
+            #print(t0,t1)
+            if t1<t0:
+                t0,t1=t1,t0
+            
+            if t0>=1 or t1<=0:
+                return Segments(self)
+            elif t0>=0 and t1>=1:
+                return Segments(Segment(self.calculate_point(0),
+                                        self.calculate_point(t0)),)
+            elif t0<=0 and t1<=1:
+                return Segments(Segment(self.calculate_point(t1),
+                                        self.calculate_point(1)),)
+            else:
+                return Segments(Segment(self.calculate_point(0),
+                                        self.calculate_point(t0)),
+                                Segment(self.calculate_point(t1),
+                                        self.calculate_point(1)))
+        else:
+            return Segments(self)
+        
+        
+    def difference_segments(self,segments):
+        """Returns the difference between this segment and a segments sequence.
+        
+        :param segments: A segments sequence.
+        :type segments: Segments
+        
+        :return: Any parts of this segment which are not also part of the segments in the sequence.
+        :rtype: Segments
+        
+        .. rubric:: Code Example
+        
+        .. code-block:: python    
+        
+           # 2D example
+           >>> from crossproduct import Point, Segment
+           >>> s = Segment(Point(0,0), Point(1,0))
+           >>> sgmts = Segments(Segment(Point(0.2,0), Point(0.8,0))
+           >>> result = s.difference_segments(sgmts)
+           >>> print(result)
+           Segments(Segment(Point(0.0,0.0), Point(0.2,0.0)),
+                    Segment(Point(0.8,0.0),Point(1.0,0.0)))
+           
+           # 3D example
+           >>> from crossproduct import Point, Segment
+           >>> s = Segment(Point(0,0,0), Point(1,0,0))
+           >>> sgmts = Segments(Segment(Point(-1,0,0), Point(2,0,0))
+           >>> result = s.difference_segment(sgmts)
+           >>> print(result)
+           Segments()               
+        
+        """
+        def rf(result,segments):
+            if len(segments)==0:
+                return result
+            else:
+                diff=result.difference_segment(segments[0])
+                #print('diff',diff)
+                if len(diff)==0:
+                    return None
+                elif len(diff)==1:
+                    if len(segments)>1:
+                        result=rf(diff[0],segments[1:])
+                    else:
+                        result=diff[0],
+                    return result
+                elif len(diff)==2:
+                    if len(segments)>1:
+                        result=tuple(list(rf(diff[0],segments[1:]))+list(rf(diff[1],segments[1:])))
+                    else:
+                        result=diff[0],diff[1]
+                    return result
+                else:
+                    raise Exception
+                
+        result=self
+        result=rf(result,segments)
+        
+        if result is None:
+            return Segments()
+        else:
+            return Segments(*result)        
+        
+        
     def distance(self,obj):
         """Returns the distance to the supplied object.
         
@@ -3042,7 +3064,18 @@ class Segment():
     
         .. code-block:: python
            
-           >>> 
+           >>> from crossproduct import Point, Segment
+           >>> s = Segment(Point(0,0), Point(1,0))
+           >>> result = s.distance(Point(0,10))
+           >>> print(result)
+           10
+           
+           >>> from crossproduct import Point, Segment
+           >>> s1 = Segment(Point(0,0,0), Point(0,0,1))
+           >>> s2 = Segment(Point(0,0,2), Point(0,0,3))
+           >>> result= s1.distance(s2)
+           >>> print(result)
+           1   
             
         """
         if isinstance(obj, Point):
@@ -3053,11 +3086,11 @@ class Segment():
             raise TypeError('Point.distance does not accept a %s type' % obj.__class__)
 
     
-    def _intersect_halfline(self,halfline):
+    def intersect_halfline(self,halfline):
         """Returns the interesection of this segment and a halfline.
         
         :param halfline: A halfline.
-        :type halfline: HalfLine
+        :type halfline: Halfline
                 
         :return: Returns None for parallel non-collinear segment and halfline.
             Returns None for skew segment and halfline that don't intersect. 
@@ -3071,12 +3104,14 @@ class Segment():
     
         .. code-block:: python
            
+           >>> from crossproduct import Point, Segment
            >>> s = Segment(Point(0,0), Point(1,0))
            >>> hl = Halfine(Point(0,0), Vector(0,1))
            >>> result = s.intersect_halfline(hl)
            >>> print(result)
            Point(0,0)
         
+           >>> from crossproduct import Point, Segment
            >>> s = Segment(Point(0,0,0), Point(1,0,0))
            >>> hl = Halfline(Point(0,0,1), Vector(1,0,0))
            >>> result = s.intersect_halfline(hl)
@@ -3109,7 +3144,7 @@ class Segment():
                 return None
                 
 
-    def _intersect_line(self,line):
+    def intersect_line(self,line):
         """Returns the intersection of this segment with the supplied line.
         
         :param line: A line.
@@ -3126,13 +3161,15 @@ class Segment():
         .. code-block:: python
            
            # 2D example
+           >>> from crossproduct import Point, Segment
            >>> s = Segment(Point(0,0), Point(1,0))
            >>> l = Line(Point(0,0), Vector(0,1))
            >>> result = s.intersect_line(l)
            >>> print(result)
-           Point(0,0)
+           Point(0.0,0.0)
            
            # 3D example
+           >>> from crossproduct import Point, Segment
            >>> s = Segment(Point(0,0,0), Point(1,0,0))
            >>> l = Line(Point(0,0,1), Vector(1,0,0))
            >>> result = s.intersect_line(l)
@@ -3154,7 +3191,7 @@ class Segment():
                 return None
 
 
-    def _intersect_segment(self,segment):
+    def intersect_segment(self,segment):
         """Returns the interesection of this segment and another segment.
         
         :param segment: A segment.
@@ -3172,25 +3209,27 @@ class Segment():
     
         .. code-block:: python
            
+           >>> from crossproduct import Point, Segment
            >>> s1 = Segment(Point(0,0), Point(1,0))
            >>> s2 = Segment(Point(0,0), Point(0,1))
            >>> result = s1.intersect_segment(s2)
            >>> print(result)
-           Point(0,0)
+           Point(0.0,0.0)
            
+           >>> from crossproduct import Point, Segment
            >>> s1 = Segment(Point(0,0,0), Point(1,0,0))
            >>> s2 = Segment(Point(0,0,0), Point(0,1,0))
            >>> result = s1.intersect_segment(s2)
            >>> print(result)
-           Point(0,0,0)
+           Point(0.0,0.0,0.0)
         
         .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
         
         """
         if self.line.contains(segment):
             
-            t0=self.line.calculate_t_from_point(segment.P0)
-            t1=self.line.calculate_t_from_point(segment.P1)
+            t0=self.line.calculate_t_from_coordinates(*segment.P0)
+            t1=self.line.calculate_t_from_coordinates(*segment.P1)
                 
             if t0 > t1: # must have t0 smaller than t1, swap if not
                 t0, t1 = t1, t0 
@@ -3218,9 +3257,6 @@ class Segment():
                 return None
     
     
-    def intersect(self,obj):
-        ""
-    
     @property
     def line(self):
         """Returns the line which the segment lies on.
@@ -3232,20 +3268,42 @@ class Segment():
     
         .. code-block:: python
            
+           >>> from crossproduct import Point, Segment
            >>> s = Segment(Point(0,0), Point(1,0))
            >>> result = s.line
            >>> print(result)
-           Line(Point(0,0), Vector(1,0))
+           Line(Point(0.0,0.0), Vector(1.0,0.0))
            
+           >>> from crossproduct import Point, Segment
            >>> s = Segment(Point(0,0,0), Point(1,0,0))
            >>> result = s.line
            >>> print(result)
-           Line(Point(0,0,0), Vector(1,0,0))
+           Line(Point(0.0,0.0,0.0), Vector(1.0,0.0,0.0))
         
         
         """
         return Line(self.P0,self.P1-self.P0)
         
+    
+    @property
+    def nD(self):
+        """The number of dimensions of the segment.
+        
+        :returns: 2 or 3
+        :rtype: int
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> from crossproduct import Point, Segment
+            >>> s = Segment(Point(0,0,0), Point(1,0,0)))
+            >>> print(s.nD)
+            3
+            
+        """
+        return self.P0.nD
+
 
     @property
     def order(self):
@@ -3260,16 +3318,18 @@ class Segment():
         .. code-block:: python
            
            # 2D example
+           >>> from crossproduct import Point, Segment
            >>> s = Segment(Point(1,0), Point(0,0))
            >>> result = s.order
            >>> print(result)
-           Segment(Point(0,0), Point(1,0))
+           Segment(Point(0.0,0.0), Point(1.0,0.0))
            
            # 3D example
+           >>> from crossproduct import Point, Segment
            >>> s = Segment(Point(0,0,0), Point(1,0,0))
            >>> result = s.order
            >>> print(result)
-           Segment(Point(0,0,0), Point(1,0,0))
+           Segment(Point(0.0,0.0,0.0), Point(1.0,0.0,0.0))
             
         """
         if self.P0 < self.P1 :
@@ -3284,6 +3344,15 @@ class Segment():
         
         :rtype: Point
         
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> from crossproduct import Point, Segment
+            >>> s = Segment(Point(0,0,0), Point(1,0,0)))
+            >>> print(s.P0)
+            Point(0.0,0.0,0.0)
+            
         """
         return self._P0
     
@@ -3294,6 +3363,15 @@ class Segment():
         
         :rtype: Point
         
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> from crossproduct import Point, Segment
+            >>> s = Segment(Point(0,0,0), Point(1,0,0)))
+            >>> print(s.P1)
+            Point(1.0,0.0,0.0)
+            
         """
         return self._P1
         
@@ -3306,6 +3384,36 @@ class Segment():
         
         :param args: positional arguments to be passed to the Axes.plot call.
         :param kwargs: keyword arguments to be passed to the Axes.plot call.
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> import matplotlib.pyplot as plt
+           >>> from crossproduct import Point, Segment
+           >>> fig, ax = plt.subplots()
+           >>> s=Segment(Point(0.5,0.5),Point(1,1))
+           >>> s.plot(ax)
+           >>> ax.set_xlim(0,1), ax.set_ylim(0,1) 
+           >>> plt.show()
+        
+        .. image:: /_static/segment_plot_2D.png
+        
+        |
+        
+        .. code-block:: python
+           
+           >>> import matplotlib.pyplot as plt
+           >>> from mpl_toolkits.mplot3d import Axes3D
+           >>> from crossproduct import Point, Segment
+           >>> fig = plt.figure()
+           >>> ax = fig.add_subplot(111, projection='3d')
+           >>> s=Segment(Point(0.5,0.5,0.5),Point(1,1,1))
+           >>> s.plot(ax)
+           >>> ax.set_xlim(0,1), ax.set_ylim(0,1), ax.set_zlim(0,1)
+           >>> plt.show()
+           
+        .. image:: /_static/segment_plot_3D.png
         
         """
         zipped=zip(self.P0,self.P1)
@@ -3327,10 +3435,11 @@ class Segment():
     
         .. code-block:: python
         
-            >>> s = Segment(Point(0,0,0), Point(1,2,3))
-            >>> result = s.project_2D(0)
-            >>> print(result)
-            Segment(Point(0,0), Point(2,3))   
+           >>> from crossproduct import Point, Segment
+           >>> s = Segment(Point(0,0,0), Point(1,2,3))
+           >>> result = s.project_2D(0)
+           >>> print(result)
+           Segment(Point(0.0,0.0), Point(2.0,3.0))   
         
         """
         
@@ -3365,10 +3474,11 @@ class Segment():
     
         .. code-block:: python
         
-            >>> s = Segment(Point(0,0), Point(1,0))
-            >>> pl = Plane(Point(0,0,1), Vector(0,0,1))
-            >>> result = s.project_3D(pl, 2)
-            Segment(Point(0,0,1),Point(1,0,1))
+           >>> from crossproduct import Point, Segment
+           >>> s = Segment(Point(0,0), Point(1,0))
+           >>> pl = Plane(Point(0,0,1), Vector(0,0,1))
+           >>> result = s.project_3D(pl, 2)
+           Segment(Point(0.0,0.0,1.0),Point(1.0,0.0,1.0))
         
         """
         P0=self.P0.project_3D(plane,coordinate_index)
@@ -3388,16 +3498,18 @@ class Segment():
         .. code-block:: python
            
            # 2D example
-           >>> s = Segment2D(Point2D(1,0), Point2D(0,0))
+           >>> from crossproduct import Point, Segment
+           >>> s = Segment(Point(1,0), Point(0,0))
            >>> result = s.points
            >>> print(result)
-           Points(Point2D(1,0), Point2D(0,0))
+           Points(Point(1.0,0.0), Point(0.0,0.0))
            
            # 3D example
-           >>> s = Segment3D(Point3D(0,0,0), Point3D(1,0,0))
+           >>> from crossproduct import Point, Segment
+           >>> s = Segment(Point(0,0,0), Point(1,0,0))
            >>> result = s.points
            >>> print(result)
-           Points(Point3D(0,0,0), Point3D(1,0,0))
+           Points(Point(0.0,0.0,0.0), Point(1.0,0.0,0.0))
             
     
         """
@@ -3416,12 +3528,14 @@ class Segment():
         .. code-block:: python
            
            # 2D example
+           >>> from crossproduct import Point, Segment
            >>> s = Segment(Point(1,0), Point(0,0))
            >>> result = s.reverse
            >>> print(result)
            Segment(Point(0,0), Point(1,0))
            
            # 3D example
+           >>> from crossproduct import Point, Segment
            >>> s = Segment(Point(0,0,0), Point(1,0,0))
            >>> result = s.reverse
            >>> print(result)
@@ -3430,12 +3544,30 @@ class Segment():
         """
         return Segment(self.P1,self.P0)
  
+    
+    def to_tuple(self):
+        """Returns a tuple representation of the segment.
+        
+        :returns: The start and end points of the segment as tuples. 
+        :rtype: tuple
+        
+        .. code-block:: python
+        
+           >>> from crossproduct import Point, Segment
+           >>> s = Segment(Point(0,0,0), Point(1,0,0))
+           >>> result = s.to_tuple()
+           >>> print(result)
+           ((0.0,0.0,0.0), (1.0,0.0,0.0))
+        
+        """
+        return (tuple(self.P0),tuple(self.P1))
+
 
  
 class Segments(collections.abc.MutableSequence):
     """A sequence of segments.    
     
-    In crossproduct a Segments object is a mutable sequence. 
+    In *crossproduct* a Segments object is a mutable sequence. 
     Iterating over a Segments object will provide its Segment instances.
     Index, append, insert and delete actions are available.
     
@@ -3445,13 +3577,12 @@ class Segments(collections.abc.MutableSequence):
         
     .. code-block:: python
         
-           # 2D example
-           >>> s1 = Segment(Point(0,0), Point(1,0)
-           >>> s2 = Segment(Point(1,0), Point(1,1))
-           >>> sgmts = Segments(s1,s2)
-           >>> print(sgmts)
-           Segments((Segment(Point(0.0,0.0), Point(1.0,0.0)),
-                     Segment(Point(1.0,0.0), Point(1.0,1.0))))
+       >>> s1 = Segment(Point(0,0), Point(1,0)
+       >>> s2 = Segment(Point(1,0), Point(1,1))
+       >>> sgmts = Segments(s1,s2)
+       >>> print(sgmts)
+       Segments((Segment(Point(0.0,0.0), Point(1.0,0.0)),
+                 Segment(Point(1.0,0.0), Point(1.0,1.0))))
         
     """
     
@@ -3609,7 +3740,7 @@ class Segments(collections.abc.MutableSequence):
 
     
     def insert(self,index,value):
-        ""
+        "(required by abc super class)"
         return self._segments.insert(index,value)
 
 
