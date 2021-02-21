@@ -24,3 +24,4 @@ Segments
    ~crossproduct.crossproduct.Segments.pop
    ~crossproduct.crossproduct.Segments.remove
    ~crossproduct.crossproduct.Segments.reverse
+   ~crossproduct.crossproduct.Segments.to_tuple

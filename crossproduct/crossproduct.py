@@ -452,6 +452,7 @@ class Points(collections.abc.MutableSequence):
         
     .. code-block:: python
         
+        >>> from crossproduct import Point, Points
         >>> pts = Points(Point(0,0), Point(1,0))
         >>> print(pts)
         Points(Point(0.0,0.0), Point(1.0,0.0))
@@ -478,6 +479,7 @@ class Points(collections.abc.MutableSequence):
     
         .. code-block:: python
         
+            >>> from crossproduct import Point, Points
             >>> pts1 = Points(Point(0,0), Point(1,0))
             >>> pts2 = Points(Point(0,0), Point(1,0))
             >>> result = pts1 == pts2
@@ -585,17 +587,45 @@ class Points(collections.abc.MutableSequence):
     #     return Points(*points)
     
     
-    # def plot(self, ax, *args, **kwargs):
-    #     """Plots the points on the supplied axes.
+    def plot(self, ax, *args, **kwargs):
+        """Plots the points on the supplied axes.
         
-    #     :param ax: An 2D or 3D Axes instance.
-    #     :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
-    #     :param args: positional arguments to be passed to the Axes.plot call.
-    #     :param kwargs: keyword arguments to be passed to the Axes.plot call.
-                   
-    #     """
-    #     for pt in self:
-    #         pt.plot(ax,*args,**kwargs)
+        :param ax: An 2D or 3D Axes instance.
+        :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
+        :param args: positional arguments to be passed to the Axes.plot call.
+        :param kwargs: keyword arguments to be passed to the Axes.plot call.
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> import matplotlib.pyplot as plt
+           >>> from crossproduct import Point, Points
+           >>> fig, ax = plt.subplots()
+           >>> pts=Points(Point(1,1),Point(2,2))
+           >>> pts.plot(ax,marker='o')
+           >>> plt.show()
+        
+        .. image:: /_static/points_plot_2D.png
+        
+        |
+        
+        .. code-block:: python
+           
+           >>> import matplotlib.pyplot as plt
+           >>> from mpl_toolkits.mplot3d import Axes3D
+           >>> from crossproduct import Point, Points
+           >>> fig = plt.figure()
+           >>> ax = fig.add_subplot(111, projection='3d')
+           >>> pts=Points(Point(1,1,1),Point(2,2,2))
+           >>> pts.plot(ax,marker='o')
+           >>> plt.show()
+           
+        .. image:: /_static/points_plot_3D.png
+        
+        """
+        for pt in self:
+            pt.plot(ax,*args,**kwargs)
     
     
     def remove_points_in_segments(self,segments):
@@ -611,6 +641,7 @@ class Points(collections.abc.MutableSequence):
         
         .. code-block:: python
         
+            >>> from crossproduct import Point, Points
             >>> pts = Points(Point(0,0), Point(1,0))
             >>> segments = Segments(Segment(Point(0,0), Point(0,1)))
             >>> pts.remove_points_in_segments(segments)
@@ -621,6 +652,27 @@ class Points(collections.abc.MutableSequence):
         for pt in self:
             if segments.contains(pt):
                 self.remove(pt)
+        
+        
+    def to_tuple(self):
+        """Returns a tuple representation of the points.
+        
+        :returns: A tuple of the points tuples. 
+        :rtype: tuple
+        
+        .. rubric:: Code Example
+        
+        .. code-block:: python
+        
+            >>> from crossproduct import Point, Points
+            >>> pts = Points(Point(0,0), Point(1,0))
+            >>> result = pts.to_tuple()
+            >>> print(result)
+            ((0.0, 0.0), (1.0, 0.0))
+        
+        """
+        return tuple(tuple(pt) for pt in self)
+
         
 
 class Vector(collections.abc.Sequence):
@@ -3554,10 +3606,10 @@ class Segment():
         .. code-block:: python
         
            >>> from crossproduct import Point, Segment
-           >>> s = Segment(Point(0,0,0), Point(1,0,0))
+           >>> s = Segment(Point(0,0), Point(1,0))
            >>> result = s.to_tuple()
            >>> print(result)
-           ((0.0,0.0,0.0), (1.0,0.0,0.0))
+           ((0.0, 0.0), (1.0, 0.0))
         
         """
         return tuple(self.P0),tuple(self.P1)
@@ -3577,12 +3629,13 @@ class Segments(collections.abc.MutableSequence):
         
     .. code-block:: python
         
-       >>> s1 = Segment(Point(0,0), Point(1,0)
+       >>> from crossproduct import Point, Segment, Segments
+       >>> s1 = Segment(Point(0,0), Point(1,0))
        >>> s2 = Segment(Point(1,0), Point(1,1))
        >>> sgmts = Segments(s1,s2)
        >>> print(sgmts)
-       Segments((Segment(Point(0.0,0.0), Point(1.0,0.0)),
-                 Segment(Point(1.0,0.0), Point(1.0,1.0))))
+       Segments(Segment(Point(0.0,0.0), Point(1.0,0.0)), 
+                Segment(Point(1.0,0.0), Point(1.0,1.0)))
         
     """
     
@@ -3604,6 +3657,13 @@ class Segments(collections.abc.MutableSequence):
     
         .. code-block:: python
         
+           >>> from crossproduct import Point, Segment, Segments
+           >>> s1 = Segment(Point(0,0), Point(1,0))
+           >>> s2 = Segment(Point(1,0), Point(1,1))
+           >>> sgmts = Segments(s1,s2)
+           >>> result = sgmts==sgmts
+           >>> print(result)
+           True
             
         """
         if isinstance(segments,Segments) and self._segments==segments._segments:
@@ -3646,6 +3706,20 @@ class Segments(collections.abc.MutableSequence):
             added together where possible to form new segments.        
         :rtype: Segments
         
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+           >>> from crossproduct import Point, Segment, Segments
+           >>> s1 = Segment(Point(0,0), Point(1,0))
+           >>> s2 = Segment(Point(1,0), Point(1,1))
+           >>> s3 = Segment(Point(1,0), Point(2,0))
+           >>> sgmts = Segments(s1,s2,s3)
+           >>> sgmts.add_all()
+           >>> print(sgmts)
+           Segments(Segment(Point(0.0,0.0), Point(2.0,0.0)), 
+                    Segment(Point(1.0,0.0), Point(1.0,1.0)))
+           
         """
         i=0
         while True:
@@ -3689,18 +3763,20 @@ class Segments(collections.abc.MutableSequence):
         
         :raises ValueError: If no valid additions are found.
         
-        :return: Returns a tuple with the addition result and the index of the segment which was added.
+        :return: Returns a tuple with the addition result and the index of 
+            the segment which was added.
         :rtype: tuple (Segment,int)
         
-        :Example:
+        .. rubric:: Code Example
     
         .. code-block:: python
         
+            >>> from crossproduct import Point, Segment, Segments
             >>> sgmts = Segments(Segment(Point(0,0), Point(1,0)))
             >>> result = sgmts.add_first(Segment(Point(1,0), Point(2,0)))
             >>> print(result)
-            (Segment(Point(0.0,0.0), Point(2.0,0.0)),0)
-        
+            (Segment(Point(0.0,0.0), Point(2.0,0.0)), 0)
+
         """
         for i,s in enumerate(self):
             try:
@@ -3751,11 +3827,61 @@ class Segments(collections.abc.MutableSequence):
         :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
         :param args: positional arguments to be passed to the Axes.plot call.
         :param kwargs: keyword arguments to be passed to the Axes.plot call.
-                   
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> import matplotlib.pyplot as plt
+           >>> from crossproduct import Point, Segment, Segments
+           >>> fig, ax = plt.subplots()
+           >>> sgmts = Segments(Segment(Point(0,0), Point(1,1)),
+                                Segment(Point(0,1), Point(1,0)))
+           >>> sgmts.plot(ax)
+           >>> plt.show()
+        
+        .. image:: /_static/segments_plot_2D.png
+        
+        |
+        
+        .. code-block:: python
+           
+           >>> import matplotlib.pyplot as plt
+           >>> from mpl_toolkits.mplot3d import Axes3D
+           >>> from crossproduct import Point, Segment, Segments
+           >>> fig = plt.figure()
+           >>> ax = fig.add_subplot(111, projection='3d')
+           >>> sgmts = Segments(Segment(Point(0,0,0), Point(1,1,1)),
+                                Segment(Point(0,1,1), Point(1,0,0)))
+           >>> sgmts.plot(ax)
+           >>> plt.show()
+           
+        .. image:: /_static/segments_plot_3D.png
+        
         """
         for sg in self:
             sg.plot(ax,*args,**kwargs)
     
+    
+    def to_tuple(self):
+        """Returns a tuple representation of the segments.
+        
+        :returns: A tuple of the segments tuples. 
+        :rtype: tuple
+        
+        .. rubric:: Code Example
+        
+        .. code-block:: python
+        
+           >>> from crossproduct import Point, Segment, Segments
+           >>> sgmts = Segments(Segment(Point(0,0), Point(1,0)),
+                                Segment(Point(1,0), Point(1,1)))
+           >>> result = sgmts.to_tuple()
+           >>> print(result)
+           (((0.0, 0.0), (1.0, 0.0)), ((1.0, 0.0), (1.0, 1.0)))
+        
+        """
+        return tuple(s.to_tuple() for s in self)
 
 
 class Polyline(collections.abc.Sequence):
@@ -3842,12 +3968,14 @@ class Polyline(collections.abc.Sequence):
         return 'Polyline(%s)' % ','.join([str(pt) for pt in self])
     
     
-    def contains(self,obj):
+    def contains(self,obj): # TO DO OR REMOVE
         """
         """
     
-    def intersect(self,obj):
+    
+    def intersect(self,obj): # TO DO OR REMOVE
         ""
+    
     
     @property
     def nD(self):
@@ -3876,7 +4004,36 @@ class Polyline(collections.abc.Sequence):
         :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
         :param args: positional arguments to be passed to the Axes.plot call.
         :param kwargs: keyword arguments to be passed to the Axes.plot call.
-                   
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> import matplotlib.pyplot as plt
+           >>> from crossproduct import Point, Polyline
+           >>> fig, ax = plt.subplots()
+           >>> pl=Polyline(Point(0,0),Point(0,1),Point(1,1))
+           >>> pl.plot(ax)
+           >>> plt.show()
+        
+        .. image:: /_static/polyline_plot_2D.png
+        
+        |
+        
+        .. code-block:: python
+           
+           >>> import matplotlib.pyplot as plt
+           >>> from mpl_toolkits.mplot3d import Axes3D
+           >>> from crossproduct import Point, Polyline
+           >>> fig = plt.figure()
+           >>> ax = fig.add_subplot(111, projection='3d')
+           >>> pl=Polyline(Point(0,0,0),Point(0,1,1),Point(1,1,1))
+           >>> pl.plot(ax)
+           >>> plt.show()
+           
+        .. image:: /_static/polyline_plot_3D.png
+        
+           
         """
         zipped=zip(*self)
         ax.plot(*zipped,*args,**kwargs)
@@ -3888,11 +4045,18 @@ class Polyline(collections.abc.Sequence):
         
         :rtype: Polyline
         
+        .. rubric:: Code Example
+    
+        .. code-block:: python
         
+           >>> from crossproduct import Point,Polyline
+           >>> pl = Polyline(Point(0,0), Point(1,0), Point(1,1))
+           >>> result = pl.reverse
+           >>> print(result)
+           Polyline(Point(1.0,1.0),Point(1.0,0.0),Point(0.0,0.0))
         
         """
         return Polyline(*self._points[::-1])
-    
     
     
     @property
@@ -4002,9 +4166,10 @@ class Plane():
     
     .. code-block:: python
        
+       >>> from crossproduct import Point, Vector, Plane
        >>> pn = Plane(Point(0,0,0), Vector(0,0,1))
        >>> print(pn)
-       Plane(Point(0,0,0), Vector(0,0,1))
+       Plane(Point(0.0,0.0,0.0), Vector(0.0,0.0,1.0))
 
     .. seealso: `<https://geomalgorithms.com/a04-_planes.html>`_
 
@@ -4038,6 +4203,38 @@ class Plane():
         ""
         return 'Plane(%s, %s)' % (self.P0,self.N)
     
+    
+    def _distance_to_point(self,point):
+        """Returns the distance to the supplied point.
+        
+        :param point: A 3D point.
+        :type point: Point
+        
+        :return: The distance between the plane and the point
+        :rtype: float
+        
+        .. seealso: `<https://geomalgorithms.com/a04-_planes.html>`_
+        
+        """
+        return abs(self.signed_distance_to_point(point))
+    
+    
+    def _intersect_line_skew(self,skew_line):
+        """Returns the intersection of this plane and a skew line.
+        
+        :param skew_line: A 3D line which is skew to the plane.
+        :type skew_line: Line
+        
+        :return: The intersection point.
+        :rtype: Point
+        
+        """
+        n=self.N
+        u=skew_line.vL
+        w=skew_line.P0-self.P0
+        t=-n.dot(w) / n.dot(u)
+        return skew_line.calculate_point(t)
+       
 
     def contains(self,obj):
         """Tests if the plane contains the object.
@@ -4058,22 +4255,7 @@ class Plane():
             return self.contains(obj.P0) and self.N.is_perpendicular(obj.line.vL)
         else:
             raise TypeError
-
-
-    def _distance_to_point(self,point):
-        """Returns the distance to the supplied point.
-        
-        :param point: A 3D point.
-        :type point: Point
-        
-        :return: The distance between the plane and the point
-        :rtype: float
-        
-        .. seealso: `<https://geomalgorithms.com/a04-_planes.html>`_
-        
-        """
-        return abs(self.signed_distance_to_point(point))
-    
+            
     
     def distance(self,obj):
         """Returns the distance to the supplied object.
@@ -4146,24 +4328,7 @@ class Plane():
             return self._intersect_line_skew(line)
             
         
-    def _intersect_line_skew(self,skew_line):
-        """Returns the intersection of this plane and a skew line.
-        
-        :param skew_line: A 3D line which is skew to the plane.
-        :type skew_line: Line
-        
-        :return: The intersection point.
-        :rtype: Point
-        
-        """
-        n=self.N
-        u=skew_line.vL
-        w=skew_line.P0-self.P0
-        t=-n.dot(w) / n.dot(u)
-        return skew_line.calculate_point(t)
-        
-        
-    def _intersect_segment(self,segment):
+    def intersect_segment(self,segment):
         """Returns the intersection of this plane and a segment.
         
         :param segment: A 3D segment.
@@ -4190,7 +4355,7 @@ class Plane():
                 return None
             
             
-    def _intersect_segments(self,segments):
+    def intersect_segments(self,segments):
         """Returns the intersection of this plane and a Segments sequence.
         
         :param segments: A sequence of 3D segments. 
@@ -4217,7 +4382,7 @@ class Plane():
         return ipts,isegments
         
             
-    def _intersect_plane(self,plane):
+    def intersect_plane(self,plane):
         """Returns the intersection of this plane and another plane.
         
         :param plane: A 3D plane.
@@ -4246,8 +4411,26 @@ class Plane():
             return Line(P0,u)
 
 
-    def intersect(self,obj):
-        ""
+    @property
+    def N(self):
+        """The vector normal to the plane.
+        
+        :rtype: Vector
+        
+        """
+        return self._N
+    
+
+    @property
+    def nD(self):
+        """The number of dimensions of the plane.
+        
+        :returns: 2 or 3
+        :rtype: int
+            
+        """
+        return self.P0.nD
+
 
     @property
     def P0(self):
@@ -4262,13 +4445,26 @@ class Plane():
     def plot(self, ax, *args, **kwargs):
         """Plots the polygon on the supplied axes.
         
-        :param ax: An 2D or 3D Axes instance.
-        :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
-        :param args: positional arguments to be passed to the Axes.fill or 
-            Axes.add_collection3d call.
-        :param kwargs: keyword arguments to be passed to the Axes.fill or 
-            Axes.add_collection3d call.
-                   
+        :param ax: An 3D Axes instance.
+        :type ax:  mpl_toolkits.mplot3d.axes3d.Axes3D
+        :param args: positional arguments to be passed to the Axes.add_collection3d call.
+        :param kwargs: keyword arguments to be passed to the Axes.add_collection3d call.
+        
+        .. rubric:: Code Example
+        
+        .. code-block:: python
+           
+           >>> import matplotlib.pyplot as plt
+           >>> from mpl_toolkits.mplot3d import Axes3D
+           >>> from crossproduct import Point, Vector, Plane
+           >>> fig = plt.figure()
+           >>> ax = fig.add_subplot(111, projection='3d')
+           >>> pl=Plane(Point(0.5,0.5,0.5),Vector(0,0,1))
+           >>> pl.plot(ax)
+           >>> plt.show()
+           
+        .. image:: /_static/plane_plot_3D.png
+        
         """
         
         xmin,xmax=(float(x) for x in ax.get_xlim())
@@ -4356,14 +4552,7 @@ class Plane():
         return Point(x,y,z)
     
 
-    @property
-    def N(self):
-        """The vector normal to the plane.
-        
-        :rtype: Vector
-        
-        """
-        return self._N
+    
 
 
     def signed_distance_to_point(self,point):
@@ -4380,6 +4569,24 @@ class Plane():
             
         """
         return self.N.dot(point-self.P0) / self.N.length
+
+
+    def to_tuple(self):
+        """Returns a tuple representation of the plane.
+        
+        :returns: The point and vector of the plane as tuples. 
+        :rtype: tuple
+        
+        .. code-block:: python
+        
+           >>> from crossproduct import Point, Polyline
+           >>> pl = Polyline(Point(0,0), Point(1,0), Point(1,1))
+           >>> result = pl.to_tuple()
+           >>> print(result)
+           ((0.0,0.0), (1.0,0.0), (1.0,1.0))
+        
+        """
+        return tuple(self.P0), tuple(self.N)
 
 
 

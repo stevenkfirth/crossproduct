@@ -14,11 +14,15 @@ Plane
    ~crossproduct.crossproduct.Plane.__eq__
    ~crossproduct.crossproduct.Plane.contains
    ~crossproduct.crossproduct.Plane.distance
-   ~crossproduct.crossproduct.Plane.intersect
    ~crossproduct.crossproduct.Plane.intersect_halfline
    ~crossproduct.crossproduct.Plane.intersect_line
+   ~crossproduct.crossproduct.Plane.intersect_plane
+   ~crossproduct.crossproduct.Plane.intersect_segment
+   ~crossproduct.crossproduct.Plane.intersect_segments
+   ~crossproduct.crossproduct.Plane.nD
    ~crossproduct.crossproduct.Plane.plot
    ~crossproduct.crossproduct.Plane.point_xy
    ~crossproduct.crossproduct.Plane.point_yz
    ~crossproduct.crossproduct.Plane.point_zx
    ~crossproduct.crossproduct.Plane.signed_distance_to_point
+   ~crossproduct.crossproduct.Plane.to_tuple
