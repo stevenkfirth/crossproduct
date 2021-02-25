@@ -3971,7 +3971,14 @@ class Polyline(collections.abc.Sequence):
     def contains(self,obj): # TO DO OR REMOVE
         """
         """
-    
+        if isinstance(obj,Point):
+            
+            return any(s.contains(obj) for s in self.segments)
+            
+        else:
+            raise TypeError
+            
+            
     
     def intersect(self,obj): # TO DO OR REMOVE
         ""
@@ -4117,6 +4124,33 @@ class Polylines(collections.abc.MutableSequence):
         del self._polylines[index]
     
     
+    def __eq__(self,polylines):
+        """Tests if this polylines sequence and the supplied polylines sequence are equal.
+        
+        :param polylines: The polylines sequence to be tested.
+        :type polylines: Polylines
+        
+        :return: True if the polylines items are equal, otherwise False.
+        :rtype: bool
+        
+        :Example:
+    
+        .. code-block:: python
+        
+            >>> pls1 = Polylines(Polyline2D(Point2D(0,0), Point2D(1,0)))  
+            >>> pls2 = Polylines(Polyline2D(Point2D(0,0), Point2D(1,0)))  
+            >>> result = pls1 == pls2
+            >>> print(result)
+            True
+            
+        """
+        if isinstance(polylines,Polylines) and self._polylines==polylines._polylines:
+            return True
+        else:
+            return False
+        
+        
+    
     def __getitem__(self,index):
         ""
         return self._polylines[index]
@@ -4129,7 +4163,7 @@ class Polylines(collections.abc.MutableSequence):
     
     def __len__(self):
         ""
-        return len(self._ploylines)
+        return len(self._polylines)
     
     
     def __repr__(self):
@@ -5304,6 +5338,132 @@ class ConvexSimplePolygon(SimplePolygon):
     Convex
     """
 
+    def intersect_segment(self,segment):
+        """
+        
+        returns Segment or Point or None
+        
+        """
+        x=self.intersect_line(segment.line)
+        if x is None:
+            return None
+        
+        elif isinstance(x,Point):
+            if segment.contains(x):
+                return x
+            else:
+                return None
+            
+        elif isinstance(x,Segment):
+            return segment.intersect_segment(x)
+
+        else:
+            raise Exception
+
+
+
+    def intersect_halfline(self,halfline):
+        """
+        
+        returns Segment or Point or None
+        
+        """
+        x=self.intersect_line(halfline.line)
+        if x is None:
+            return None
+        
+        elif isinstance(x,Point):
+            if halfline.contains(x):
+                return x
+            else:
+                return None
+            
+        elif isinstance(x,Segment):
+            return x.intersect_halfline(halfline)
+
+        else:
+            raise Exception
+        
+
+    def intersect_line(self,line):
+        """
+        
+        returns Segment or Point or None
+        
+        """
+        # if 3D, checks for no-plane-intersection or plane-point intersection
+        if self.nD==3:
+            x=self.plane.intersect_line(line)
+            if x is None:
+                return None
+            elif isinstance(x,Point):
+                return x if self.contains(x) else None
+            
+        # 2D polygon or 3D polygon where the line is on the plane of the polygon
+        pts=set()
+        for s in self.polyline.segments:
+            x=s.intersect_line(line)
+            if x:
+                if isinstance(x,Segment):
+                    return x
+                else:
+                    pts.add(x.to_tuple())
+        if pts:
+            if len(pts)==1:
+                return Point(*tuple(pts)[0])
+            elif len(pts)==2:
+                return Segment(*(Point(*pt) for pt in pts))
+        else:
+            return None
+
+
+    def intersect_polyline(self,polyline):
+        """
+        
+        returns Points, Polylines
+        
+        """
+        pts=Points()
+        pls=Polylines()
+        pl=Polyline()
+        for segment in polyline.segments:
+            x=self.intersect_segment(segment) # returns None, Point, Segment
+            
+            # creates a new current polyline, or extends an existing current polyline
+            if isinstance(x,Segment):
+                if pl:
+                    pl=Polyline(*(list(pl)+[x.P1])) # extends existing current polyline
+                else:
+                    pl=Polyline(x.P0,x.P1) # creates new current polyline
+                    
+            else: # no a segment, so either None or Point
+            
+                # adds current polyline to pls, and resets current polyline
+                if pl:
+                    pls.append(pl) # appends existing polyline to pls
+                    pl=Polyline() # resets existing polyline
+                    
+                # adds point to pts if it is unique
+                if isinstance(x,Point):
+                    if not x in pts:
+                        pts.append(x) # adds unique point to pts
+            
+        # include current polyline if present
+        if pl: pls.append(pl)
+            
+        # remove points that are on the polylines
+        for pt in pts[::-1]: # iterate in reverse as items are being deleted
+            if any(pl.contains(pt) for pl in pls):
+                pts.remove(pt)
+                
+        return pts,pls
+                
+            
+    def intersect_convex_simple_polygon(self):
+        ""
+        
+            
+            
 
 class Triangle(ConvexSimplePolygon):
     """

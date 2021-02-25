@@ -1370,6 +1370,14 @@ class Test_Polyline(unittest.TestCase):
                                      Point(0,0)))
     
     
+    def test_contains(self):
+        ""
+        pl=Polyline(Point(0,0),Point(0,1),Point(1,1))
+        self.assertTrue(pl.contains(Point(0,0)))
+        self.assertTrue(pl.contains(Point(0,0.5)))
+        self.assertFalse(pl.contains(Point(0,2)))
+    
+    
     def test_reverse(self):
         ""
         pl=Polyline(Point(0,0),Point(0,1),Point(1,1))
@@ -1848,6 +1856,130 @@ class Test_SimplePolygon(unittest.TestCase):
     
 class Test_ConvexSimplePolygon(unittest.TestCase):
     ""
+    
+    def _test_intersect_segment(self):
+        ""
+        # 2D
+        pg=ConvexSimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        # internal
+        s=Segment(Point(0.25,0.25),Point(0.75,0.75))
+        self.assertEqual(pg.intersect_segment(s),
+                         s)
+        # half-in, half-out
+        s=Segment(Point(0.5,0.5),Point(1.5,0.5))
+        self.assertEqual(pg.intersect_segment(s),
+                         Segment(Point(0.5,0.5),Point(1,0.5)))
+        
+    
+    def _test_intersect_halfline(self):
+        ""
+        # 2D
+        pg=ConvexSimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        # polygon centre point
+        hl=Halfline(Point(0.5,0.5),Vector(1,1))
+        self.assertEqual(pg.intersect_halfline(hl),
+                         Segment(Point(0.5,0.5), Point(1,1)))
+        # edge centre point
+        hl=Halfline(Point(0.5,0),Vector(1,0))
+        self.assertEqual(pg.intersect_halfline(hl),
+                         Segment(Point(0.5,0), Point(1,0)))
+    
+    
+    def test_intersect_line(self):
+        ""
+        # 2D
+        pg=ConvexSimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        # edge
+        l=Line(Point(0,0),Vector(1,0))
+        self.assertEqual(pg.intersect_line(l),
+                         Segment(Point(0,0), Point(1,0)))
+        # vertex
+        l=Line(Point(0,0),Vector(-1,1))
+        self.assertEqual(pg.intersect_line(l),
+                         Point(0,0))
+        # diagonal
+        l=Line(Point(0,0),Vector(1,1))
+        self.assertEqual(pg.intersect_line(l),
+                         Segment(Point(0,0), Point(1,1)))
+        
+        # no intersection
+        l=Line(Point(-1,0),Vector(-1,1))
+        self.assertEqual(pg.intersect_line(l),
+                         None)
+        
+        # 3D
+        pg=ConvexSimplePolygon(Point(0,0,0),Point(1,0,0),Point(1,1,0),Point(0,1,0))
+        # parallel to and above plane
+        l=Line(Point(0,0,1),Vector(1,0,0))
+        self.assertEqual(pg.intersect_line(l),
+                         None)
+        # intersects plane but doesn't intersect polygon
+        l=Line(Point(2,2,0),Vector(0,0,1))
+        self.assertEqual(pg.intersect_line(l),
+                         None)
+        # intersects plane and intersects polygon
+        l=Line(Point(0,0,0),Vector(0,0,1))
+        self.assertEqual(pg.intersect_line(l),
+                         Point(0,0,0))
+        # on plane, edge
+        l=Line(Point(0,0,0),Vector(1,0,0))
+        self.assertEqual(pg.intersect_line(l),
+                         Segment(Point(0,0,0), Point(1,0,0)))
+    
+    
+    def test_intersect_polyline(self):
+        ""
+        # 2D
+        pg=ConvexSimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        # internal
+        pl=Polyline(Point(0.25,0.25),Point(0.75,0.75))
+        #print(pg.intersect_polyline(pl)); return
+        self.assertEqual(pg.intersect_polyline(pl),
+                         (Points(), 
+                          Polylines(Polyline(Point(0.25,0.25),Point(0.75,0.75)))))
+    
+        # half-in, half-out
+        pl=Polyline(Point(0.5,0.5),Point(1.5,1.5))
+        #print(pg.intersect_polyline(pl)); return
+        self.assertEqual(pg.intersect_polyline(pl),
+                         (Points(), 
+                          Polylines(Polyline(Point(0.5,0.5),Point(1.0,1.0)))))
+    
+        # two adjacent sides
+        pl=Polyline(Point(0,0),Point(1,0),Point(1,1))
+        #print(pg.intersect_polyline(pl)); return
+        self.assertEqual(pg.intersect_polyline(pl),
+                         (Points(), 
+                          Polylines(pl)))
+        
+        # two non-adjacent sides
+        pl=Polyline(Point(0,0),Point(2,0),Point(2,1),Point(0,1))
+        #print(pg.intersect_polyline(pl)); return
+        self.assertEqual(pg.intersect_polyline(pl),
+                         (Points(), 
+                          Polylines(Polyline(Point(0.0,0.0),Point(1.0,0.0)), 
+                                    Polyline(Point(1.0,1.0),Point(0.0,1.0)))))
+        
+        # in-and-out
+        pl=Polyline(Point(0,-0.5),Point(0.5,0.5),Point(1,-0.5))
+        #print(pg.intersect_polyline(pl)); return
+        self.assertEqual(pg.intersect_polyline(pl),
+                         (Points(), 
+                          Polylines(Polyline(Point(0.25,0.0),Point(0.5,0.5),Point(0.75,0.0)))))
+        
+        # in-and-out -- reverse
+        pl=Polyline(Point(1,-0.5),Point(0.5,0.5),Point(0,-0.5))
+        #print(pg.intersect_polyline(pl)); return
+        self.assertEqual(pg.intersect_polyline(pl),
+                         (Points(), 
+                          Polylines(Polyline(Point(0.75,0.0),Point(0.5,0.5),Point(0.25,0.0)))))
+        
+        # partial edge
+        pl=Polyline(Point(0.25,-0.5),Point(0.25,0),Point(0.75,0),Point(0.75,-0.5))
+        #print(pg.intersect_polyline(pl)); return
+        self.assertEqual(pg.intersect_polyline(pl),
+                         (Points(), 
+                          Polylines(Polyline(Point(0.25,0.0),Point(0.75,0.0)))))
     
     
 class Test_Triangle(unittest.TestCase):
