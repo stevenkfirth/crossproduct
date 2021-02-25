@@ -5113,6 +5113,11 @@ class SimplePolygon(Polygon):
     
     """
     
+    def __repr__(self):
+        ""
+        return 'SimplePolygon(%s)' % ','.join([str(pt) for pt in self])
+
+    
     @property
     def area(self):
         """
@@ -5338,6 +5343,11 @@ class ConvexSimplePolygon(SimplePolygon):
     Convex
     """
 
+    def __repr__(self):
+        ""
+        return 'ConvexSimplePolygon(%s)' % ','.join([str(pt) for pt in self])
+
+
     def intersect_segment(self,segment):
         """
         
@@ -5459,8 +5469,79 @@ class ConvexSimplePolygon(SimplePolygon):
         return pts,pls
                 
             
-    def intersect_convex_simple_polygon(self):
-        ""
+    def intersect_convex_simple_polygon(self,polygon):
+        """
+        returns none, point, segment, convex_simple_polygon
+        
+        'polygon' is simple and convex
+        
+        """
+        
+        pts,pls=self.intersect_polyline(polygon.polyline)
+        
+        #print('pls',pls)
+        
+        if pls:
+            
+            if len(pls)==1:
+                pl=pls[0]
+            else:
+                pl=Polyline(*(list(pls[1])+list(pls[0])[1:]))
+            
+            if pl==self.polyline:
+                return self
+            
+            pls2=polygon.intersect_polyline(self.polyline)[1]
+        
+            if len(pls2)==1:
+                pl2=pls2[0]
+            else:
+                pl2=Polyline(*(list(pls2[1])+list(pls2[0])[1:]))
+            
+        
+        
+            print('pl',pl)
+            print('pl2',pl2)
+        
+            if len(pl)==2 and len(pl2)==2:
+                
+                return pl.segments[0] # a segment intersection
+            
+            else:
+                
+                #if pl[0]==pl2[0]: # same start point
+                #    pl2=pl2.reverse
+                 
+                sgmts=pl.segments
+                print(sgmts)
+                for s in pl2.segments:
+                    if not s in pl.segments:
+                        if s.P0==pl[-1]:
+                            pl=Polyline(*(list(pl)+[s.P1]))
+                        elif s.P1==pl[-1]:
+                            pl=Polyline(*(list(pl)+[s.P0]))
+                        elif s.P0==pl[0]:
+                            pl=Polyline(*([s.P1]+list(pl)))
+                        elif s.P1==pl[0]:
+                            pl=Polyline(*([s.P0]+list(pl)))
+                            
+                
+                
+                return ConvexSimplePolygon(*(list(pl)[:-1]))
+            
+        else: # no polylines 
+            
+            if pts:
+                return pts[0] # a point intersection
+            else:
+                return None # no intersection
+            
+        
+        
+        
+        
+        
+        
         
             
             
