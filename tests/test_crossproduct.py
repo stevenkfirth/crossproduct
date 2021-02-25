@@ -1666,6 +1666,122 @@ class Test_Plane(unittest.TestCase):
 class Test_Polygon(unittest.TestCase):
     ""
     
+    def test___eq__(self):
+        ""
+        pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        self.assertTrue(pg==pg)
+        
+        self.assertEqual(pg,
+                         Polygon(Point(0,1),Point(0,0),Point(1,0),Point(1,1)))
+        
+        pg2=Polygon(Point(0,0),Point(1,0),Point(0,1))
+        self.assertFalse(pg==pg2)
+    
+    
+    def test___init__(self):
+        ""
+        pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        self.assertIsInstance(pg,Polygon)
+        self.assertEqual(tuple(pg),
+                         (Point(0,0),Point(1,0),Point(1,1),Point(0,1)))
+        
+        
+    def test___repr__(self):
+        ""
+        pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        self.assertEqual(str(pg),
+                         'Polygon(Point(0.0,0.0),Point(1.0,0.0),Point(1.0,1.0),Point(0.0,1.0))')
+    
+    
+    def test_nD(self):
+        ""
+        pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        self.assertEqual(pg.nD,
+                         2)
+    
+    
+    
+    
+    def test_next_index(self):
+        ""
+        pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        self.assertEqual(pg.next_index(0),
+                         1)
+        self.assertEqual(pg.next_index(3),
+                         0)
+    
+    
+    def test_plane(self):
+        ""
+        pg=Polygon(Point(0,0,0),Point(1,0,0),Point(1,1,0),Point(0,1,0))
+        self.assertEqual(pg.plane,
+                         Plane(Point(0,0,0),Vector(0,0,1),))
+
+    
+    def test_polyline(self):
+        ""
+        pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        self.assertEqual(pg.polyline,
+                         Polyline(Point(0.0,0.0),Point(1.0,0.0),Point(1.0,1.0),Point(0.0,1.0),Point(0.0,0.0)))
+    
+        
+    def test_prevous_index(self):
+        ""
+        pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        self.assertEqual(pg.previous_index(0),
+                         3)
+        self.assertEqual(pg.previous_index(3),
+                         2)
+
+       
+    def test_project_2D(self):
+        ""
+        pg=Polygon(Point(0,0,0),Point(1,0,0),Point(1,1,0),Point(0,1,0))
+        self.assertEqual(pg.project_2D(),
+                         (2,Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))))
+
+
+    def test_project_3D(self):
+        ""
+        pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        self.assertEqual(pg.project_3D(Plane(Point(0,0,0),
+                                             Vector(0,0,1)),
+                                       2),
+                         Polygon(Point(0.0,0.0,0.0),
+                                 Point(1.0,0.0,0.0),
+                                 Point(1.0,1.0,0.0),
+                                 Point(0.0,1.0,0.0)))
+        
+
+    
+        
+    def test_reorder(self):
+        ""
+        pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        self.assertEqual(pg.reorder(1),
+                         Polygon(Point(1,0),
+                                   Point(1,1),
+                                   Point(0,1),
+                                   Point(0,0)))
+        
+        
+    def test_reverse(self):
+        ""
+        pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        self.assertEqual(pg.reverse,
+                         Polygon(Point(0,1),
+                                   Point(1,1),
+                                   Point(1,0),
+                                   Point(0,0)))
+
+
+    def test_to_tuple(self):
+        ""
+        pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        self.assertEqual(pg.to_tuple(),
+                         ((0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)))
+
+    
 class Test_SimplePolygon(unittest.TestCase):
     ""
     

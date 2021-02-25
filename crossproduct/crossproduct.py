@@ -4733,22 +4733,12 @@ class Polygon(collections.abc.Sequence):
     In crossproduct a Polygon object is a immutable sequence. 
     Iterating over a Polygon will provide its Point instances.
     
-    The default polygon is one which is known to be a simple polygon,
-    but it is not known if it is convex or not.
+    This polygon might be self-intersecting, and could be concave or convex.
+    
+    No two adjacent polygon edges should lie on the same line.
     
     :param points: Argument list of the Point instances of the vertices 
         of the polygon, in order. The first point is not repeated at the end. 
-    :type points: Points
-    :param known_convex: True if the polygon is known to be a convex polygon;
-        otherwise False. 
-        Default is False.
-    :type known_convex: bool
-    :param known_simple: True if the polygon is known to be a simple polygon;
-        otherwise False.  
-        A simple polygon is one whose edges do not intersect and whose
-        vertices do not share any common points.
-        Default is True.
-    :type known_simple: bool
     
     .. rubric:: Code Example
 
@@ -4776,12 +4766,12 @@ class Polygon(collections.abc.Sequence):
 
         .. code-block:: python
            
-           # 2D example
-           >>> pg1 = Polygon(Point(0,0), Point(1,0), Point(1,1))
-           >>> pg2 = Polygon(Point(0,0), Point(1,1), Point(1,0))
-           >>> result = pl1 == pl2
-           >>> print(result)
-           True
+            # 2D example
+            >>> pg1 = Polygon(Point(0,0), Point(1,0), Point(1,1))
+            >>> pg2 = Polygon(Point(0,0), Point(1,1), Point(1,0))
+            >>> result = pl1 == pl2
+            >>> print(result)
+            True
             
         """
         if isinstance(polygon,Polygon):
@@ -4803,14 +4793,14 @@ class Polygon(collections.abc.Sequence):
         return self._points[index]
     
    
-    def __init__(self,*points,known_convex=False,known_simple=True):
+    def __init__(self,*points):
         ""
         
         self._points=list(points)
-        self._known_convex=known_convex
-        self._known_simple=known_simple
-        self._triangles=None
-        self._ccw=None
+        # self._known_convex=known_convex
+        # self._known_simple=known_simple
+        # self._triangles=None
+        # self._ccw=None
         
 
     def __len__(self):
@@ -4823,242 +4813,24 @@ class Polygon(collections.abc.Sequence):
         return 'Polygon(%s)' % ','.join([str(pt) for pt in self])
 
 
-    @property
-    def _area_2D(self):
-        """Returns the area of the polygon.
-        
-        :rtype: float
-        
-        :Example:
-    
-        .. code-block:: python
-           
-           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
-           >>> print(pg.area)
-           0.5
-
-        .. seealso:: `<https://geomalgorithms.com/a01-_area.html>`_
-
-        """
-        return abs(self.signed_area)
     
     
     @property
-    def _area_3D(self):
-        """Returns the area of the polygon
+    def nD(self):
+        """The number of dimensions of the polygon.
         
-        :return result:
-        :rtype float:
-
-        .. seealso:: `<https://geomalgorithms.com/a01-_area.html>`_            
-
-        """
-        
-        i,pg=self.project_2D()
-        N=self.plane.N
-        
-        if i==0:
-            return pg.signed_area*(N.length/(N.x))
-        elif i==1:
-            return pg.signed_area*(N.length/(N.y))
-        elif i==2:
-            return pg.signed_area*(N.length/(N.z))
-        else:
-            raise Exception
-    
-    
-    def _contains_2D(self,obj):
-        """Tests if the polygon contains the geometric object.
-        
-        :param obj: A point. 
-        :type obj: Point2D, Point3D
-            
-        :return: For point, True if the point lies inside the polygon 
-            or on a polygon edge; otherwise False.
-        :rtype: bool
-        
-        :Example:
-    
-        .. code-block:: python
-           
-           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
-           >>> result = Point2D(0,0) in pg
-           >>> print(result)
-           True
-            
-        """
-        if isinstance(obj,Point):
-            return self._winding_number(obj) > 0 or obj in self.polyline
-        else:
-            return TypeError
-    
-    
-    def _contains_3D(self,obj):
-        """Tests if the polygon contains the object
-        
-        :param obj: A 3D point. 
-        :type obj: Point3D
-            
-        :return: For point, True if the point lies inside the polygon 
-            or on a polygon edge; otherwise False.
-        :rtype bool:
-            
-        """
-        if isinstance(obj,Point):
-            point=obj
-            if point in self.plane:
-                i,self2D=self.project_2D()
-                point2D=point.project_2D(i)
-                return point2D in self2D
-            else:
-                return False
-        else:
-            raise Exception('Not implemented')
-    
-    
-    def _winding_number(self,point):
-        """Returns the winding number of the point for a 2D polygon.
-        
-        :param point: A 2D point.
-        :type point: Point2D
-        
-        :return: The number of times the polygon segments wind around the point.
-            Note: does not include a point on a top or right hand edge.
+        :returns: 2 or 3
         :rtype: int
         
-        .. seealso:: `<https://geomalgorithms.com/a03-_inclusion.html>`_
-        
-        """
-        wn=0 # the  winding number counter
-        # loop through all edges of the polygon
-        for ps in self.polyline.segments: # edge from V[i] to  V[i+1]
-            if ps.P0.y <= point.y: # start y <= P.y
-                if ps.P1.y > point.y: # an upward crossing
-                    if ps.line.vL.perp_product(point-ps.P1)>0: # P left of  edge
-                        wn+=1
-            else:
-                if ps.P1.y <= point.y: # a downward crossing
-                    if ps.line.vL.perp_product(point-ps.P1)<0: # P right of  edge
-                        wn-=1
-        return wn
-
-    
-    @property
-    def area(self):
-        """
-        """
-        if len(self[0])==2:
-            return self._area_2D
-        elif len(self[0])==3:
-            return self._area_3D
-        else:
-            raise Exception
-
-
-    @property
-    def ccw(self):
-        """An equivalent 2D polygon with points in a counterclockwise orientation
-        
-        :rtype: Polygon2D
-        
-        """
-        if not self._ccw:
-            if self.is_counterclockwise:
-                self._ccw=self
-            else:
-                self._ccw=self.reverse
-        return self._ccw
-    
-    
-    def contains(self,obj):
-        """
-        """
-        if len(self[0])==2:
-            return self._contains_2D(obj)
-        elif len(self[0])==3:
-            return self._contains_3D(obj)
-        else:
-            raise Exception
-
-
-
-
-    @property
-    def is_counterclockwise(self):
-        """Tests if a 2D polygon points are in a counterclockwise direction.
-        
-        :raises ValueError: If the three polygon points being tested
-            all lie on a straight line. 
-        :return: Returns True if the three polygon points centered around the 
-            rightmost lowest point are in a counterclockwise order.
-            Returns False if these polygon points are in a clockwise order.
-        
-        :Example:
+        .. rubric:: Code Example
     
         .. code-block:: python
            
-           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1),Point2D(0,1))
-           >>> print(pg.is_counterclockwise)
-           True        
+           >>> 
         
         """
-        i=self.rightmost_lowest_vertex
-        P0=self[self.previous_index(i)]
-        P1=self[i]
-        P2=self[self.next_index(i)]
-        v0=P1-P0
-        v1=P2-P1
-        result=v0.perp_product(v1)
-        if result>0:
-            return True
-        elif result<0:
-            return False
-        else:
-            raise ValueError
-        
-    
+        return self[0].nD
 
-    @property
-    def known_convex(self):
-        """The known_convex property of the polyline.
-        
-        :return: True if the polygon is known to be a convex polygon.
-            False if it is not known if the polygon is convex or not, 
-            or if it is known that the polygon is a concave polygon.
-        :rtype: bool
-        
-        :Example:
-    
-        .. code-block:: python
-           
-           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1), known_convex=True)
-           >>> print(pg.known_convex)
-           True        
-        
-        """
-        return self._known_convex
-        
-    
-    @property
-    def known_simple(self):
-        """The known_simple property of the polyline.
-        
-        :return: True if the polygon is known to be a simple polygon.
-            False if it is not known if the polygon is simple or not, 
-            or if it is known that the polygon is a non-simple polygon.
-        :rtype: bool
-        
-        :Example:
-    
-        .. code-block:: python
-           
-           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1), known_simple=True)
-           >>> print(pg.known_simple)
-           True        
-        
-        """
-        return self._known_simple
-    
  
     def next_index(self,i):
         """Returns the next point index in the polygon.
@@ -5075,10 +4847,10 @@ class Polygon(collections.abc.Sequence):
     
         .. code-block:: python
            
-           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
-           >>> result = pg.next_index(0)
-           >>> print(result)
-           1
+            >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+            >>> result = pg.next_index(0)
+            >>> print(result)
+            1
         
         """
         n=len(self)
@@ -5096,30 +4868,32 @@ class Polygon(collections.abc.Sequence):
         :rtype: Plane3D
         
         """
-        P0,P1,P2=self[:3]
-        N=(P1-P0).cross_product(P2-P1)
-        return Plane(P0,N)
+        if self.nD==3:
+            P0,P1,P2=self[:3]
+            N=(P1-P0).cross_product(P2-P1)
+            return Plane(P0,N)
+        else:
+            raise ValueError
 
-
-    def plot(self, ax, *args, **kwargs):
-        """Plots the polygon on the supplied axes.
+    # def plot(self, ax, *args, **kwargs):
+    #     """Plots the polygon on the supplied axes.
         
-        :param ax: An 2D or 3D Axes instance.
-        :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
-        :param args: positional arguments to be passed to the Axes.fill or 
-            Axes.add_collection3d call.
-        :param kwargs: keyword arguments to be passed to the Axes.fill or 
-            Axes.add_collection3d call.
+    #     :param ax: An 2D or 3D Axes instance.
+    #     :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
+    #     :param args: positional arguments to be passed to the Axes.fill or 
+    #         Axes.add_collection3d call.
+    #     :param kwargs: keyword arguments to be passed to the Axes.fill or 
+    #         Axes.add_collection3d call.
                    
-        """
-        if len(self[0])==2: #2D
-            zipped=zip(*self)
-            ax.fill(*zipped,*args,**kwargs)
-        elif len(self[0])==3: #3D
-            from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-            verts=[[tuple(pt) for pt in self]]
-            pc=Poly3DCollection(verts,**kwargs)
-            ax.add_collection3d(pc)
+    #     """
+    #     if len(self[0])==2: #2D
+    #         zipped=zip(*self)
+    #         ax.fill(*zipped,*args,**kwargs)
+    #     elif len(self[0])==3: #3D
+    #         from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+    #         verts=[[tuple(pt) for pt in self]]
+    #         pc=Poly3DCollection(verts,**kwargs)
+    #         ax.add_collection3d(pc)
 
 
     @property
@@ -5134,13 +4908,10 @@ class Polygon(collections.abc.Sequence):
     
         .. code-block:: python
            
-           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
-           >>> print(pg.polyline)
-           Polyline2D(Point2D(0,0), Point2D(1,0), Point2D(1,1), Point2D(0,0))
-        
+            
         """
-        closed_points=tuple(list(self) + [self[0]])
-        return Polyline(*closed_points)
+        #closed_points=tuple(list(self) + [self[0]])
+        return Polyline(*(list(self) + [self[0]]))
 
     
     def previous_index(self,i):
@@ -5158,10 +4929,6 @@ class Polygon(collections.abc.Sequence):
     
         .. code-block:: python
            
-           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
-           >>> result = pg.previous_index(0)
-           >>> print(result)
-           2
         
         """
         n=len(self)
@@ -5181,25 +4948,25 @@ class Polygon(collections.abc.Sequence):
         :rtype: tuple
             
         """
-        i=self.plane.N.index_largest_absolute_coordinate
+        if self.nD==3:
         
-        if i==0:
-            pg=Polygon(*[Point(pt.y,pt.z) for pt in self],
-                         known_convex=self.known_convex,
-                         known_simple=self.known_simple)
-        elif i==1:
-            pg=Polygon(*[Point(pt.z,pt.x) for pt in self],
-                         known_convex=self.known_convex,
-                         known_simple=self.known_simple)
-        elif i==2:
-            pg=Polygon(*[Point(pt.x,pt.y) for pt in self],
-                         known_convex=self.known_convex,
-                         known_simple=self.known_simple)
+            i=self.plane.N.index_largest_absolute_coordinate
+            
+            if i==0:
+                pg=self.__class__(*[Point(pt.y,pt.z) for pt in self])
+            elif i==1:
+                pg=self.__class__(*[Point(pt.z,pt.x) for pt in self])
+            elif i==2:
+                pg=self.__class__(*[Point(pt.x,pt.y) for pt in self])
+            else:
+                raise Exception
+                        
+            return i, pg
+        
         else:
-            raise Exception
-                    
-        return i, pg
-    
+            raise ValueError
+        
+        
 
     def project_3D(self,plane,coordinate_index):
         """Projection of 2D polygon on a 3D plane.
@@ -5219,17 +4986,10 @@ class Polygon(collections.abc.Sequence):
     
         .. code-block:: python
            
-           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
-           >>> pl = Plane3D(Point3D(0,0,1), Vector3D(0,0,1))
-           >>> result = pg.project_3D(pl, 2)
-           >>> print(result)
-           Polygon3D(Point3D(0,0,1), Point3D(1,0,1), Point3D(1,1,1))
         
         """
         points=[pt.project_3D(plane,coordinate_index) for pt in self]
-        return Polygon(*points,
-                       known_convex=self.known_convex,
-                       known_simple=self.known_simple)
+        return self.__class__(*points)
         
     
     def reorder(self,i):
@@ -5246,17 +5006,17 @@ class Polygon(collections.abc.Sequence):
     
         .. code-block:: python
            
-           # 2D example
-           >>> pg = Polygon(Point(0,0), Point(1,0), Point(1,1))
-           >>> result = pg.reorder(1)
-           >>> print(result)
-           Polygon(Point(1,0), Point(1,1), Point(0,0))
+            # 2D example
+            >>> pg = Polygon(Point(0,0), Point(1,0), Point(1,1))
+            >>> result = pg.reorder(1)
+            >>> print(result)
+            Polygon(Point(1,0), Point(1,1), Point(0,0))
         
-           # 3D example
-           >>> pg = Polygon(Point(0,0,0), Point(1,0,0), Point(1,1,0))
-           >>> result = pg.reorder(1)
-           >>> print(result)
-           Polygon(Point(1,0,0), Point(1,1,0), Point(0,0,0))
+            # 3D example
+            >>> pg = Polygon(Point(0,0,0), Point(1,0,0), Point(1,1,0))
+            >>> result = pg.reorder(1)
+            >>> print(result)
+            Polygon(Point(1,0,0), Point(1,1,0), Point(0,0,0))
         
         """
         points=[]
@@ -5277,15 +5037,15 @@ class Polygon(collections.abc.Sequence):
     
         .. code-block:: python
            
-           # 2D example
-           >>> pg = Polygon(Point(0,0), Point(1,0), Point(1,1))
-           >>> print(pg.reverse)
-           Polygon(Point(1,1), Point(1,0), Point(0,0))
+            # 2D example
+            >>> pg = Polygon(Point(0,0), Point(1,0), Point(1,1))
+            >>> print(pg.reverse)
+            Polygon(Point(1,1), Point(1,0), Point(0,0))
         
-           # 3D example
-           >>> pg = Polygon(Point(0,0,0), Point(1,0,0), Point(1,1,0))
-           >>> print(pg.reverse)
-           Polygon(Point(1,1,0), Point(1,0,0), Point(0,0,0))
+            # 3D example
+            >>> pg = Polygon(Point(0,0,0), Point(1,0,0), Point(1,1,0))
+            >>> print(pg.reverse)
+            Polygon(Point(1,1,0), Point(1,0,0), Point(0,0,0))
         
         """
         points=[self[i] 
@@ -5293,137 +5053,389 @@ class Polygon(collections.abc.Sequence):
         return Polygon(*points)
 
 
-    @property
-    def rightmost_lowest_vertex(self):
-        """Returns the index of the rightmost lowest point of a 2D polygon.
-        
-        :rtype: int
-        
-        :Example:
     
-        .. code-block:: python
-           
-           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
-           >>> print(pg.rightmost_lowest_vertex)
-           Point2D(1,0)
-        
-        """
-        min_i=0
-        for i in range(1,len(self)):
-            if self[i].y>self[min_i].y:
-                continue
-            if (self[i].y==self[min_i].y) and (self[i].x < self[min_i].x):
-                continue
-            min_i=i
-        return min_i
-    
-
-    @property
-    def signed_area(self):
-        """Returns the signed area of a 2D polygon.
-        
-        :return: Returns a value greater than 0 if polygon points are ordered counterclockwise.
-            Returns a value less than 0 if polygon points are ordered clockwise.
-        :rtype: float
-                
-        :Example:
-    
-        .. code-block:: python
-           
-           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,1), Point2D(1,0))
-           >>> print(pg.signed_area)
-           -0.5
-        
-        .. seealso:: `<https://geomalgorithms.com/a01-_area.html>`_
-        
-        """
-        n=len(self)
-        points=self.polyline
-        if n<3: return 0  # a degenerate polygon
-        a=0
-        for i in range(1,n):
-            a+=points[i].x * (points[i+1].y - points[i-1].y)
-        a+=points[n].x * (points[1].y - points[n-1].y) # wrap-around term
-        return a / 2.0
-
 
     def to_tuple(self):
-        """Returns a tuple of point tuples.
+        """Returns a tuple representation of the polygon.
+        
+        :returns: The points of the polyline as a tuple of tuples. 
+        :rtype: tuple
+        
+        .. code-block:: python
+        
+           >>> 
         
         """
         return tuple(tuple(pt) for pt in self)
+    
 
-
-    def __hash__(self):
-        """
-        """
-        return hash(self.to_tuple())
-
-
+    
 
 class SimplePolygon(Polygon):
     """
+    
+    Simple Polygon
+    Does not intersect
+    Can be concave or convex
+    
     """
     
     
+    # @property
+    # def _area_2D(self):
+    #     """Returns the area of the polygon.
+        
+    #     :rtype: float
+        
+    #     :Example:
+    
+    #     .. code-block:: python
+           
+    #         >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+    #         >>> print(pg.area)
+    #         0.5
+
+    #     .. seealso:: `<https://geomalgorithms.com/a01-_area.html>`_
+
+    #     """
+    #     return abs(self.signed_area)
+    
+    
+    # @property
+    # def _area_3D(self):
+    #     """Returns the area of the polygon
+        
+    #     :return result:
+    #     :rtype float:
+
+    #     .. seealso:: `<https://geomalgorithms.com/a01-_area.html>`_            
+
+    #     """
+        
+    #     i,pg=self.project_2D()
+    #     N=self.plane.N
+        
+    #     if i==0:
+    #         return pg.signed_area*(N.length/(N.x))
+    #     elif i==1:
+    #         return pg.signed_area*(N.length/(N.y))
+    #     elif i==2:
+    #         return pg.signed_area*(N.length/(N.z))
+    #     else:
+    #         raise Exception
+    
+    
+    # def _contains_2D(self,obj):
+    #     """Tests if the polygon contains the geometric object.
+        
+    #     :param obj: A point. 
+    #     :type obj: Point2D, Point3D
+            
+    #     :return: For point, True if the point lies inside the polygon 
+    #         or on a polygon edge; otherwise False.
+    #     :rtype: bool
+        
+    #     :Example:
+    
+    #     .. code-block:: python
+           
+    #         >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+    #         >>> result = Point2D(0,0) in pg
+    #         >>> print(result)
+    #         True
+            
+    #     """
+    #     if isinstance(obj,Point):
+    #         return self._winding_number(obj) > 0 or obj in self.polyline
+    #     else:
+    #         return TypeError
+    
+    
+    # def _contains_3D(self,obj):
+    #     """Tests if the polygon contains the object
+        
+    #     :param obj: A 3D point. 
+    #     :type obj: Point3D
+            
+    #     :return: For point, True if the point lies inside the polygon 
+    #         or on a polygon edge; otherwise False.
+    #     :rtype bool:
+            
+    #     """
+    #     if isinstance(obj,Point):
+    #         point=obj
+    #         if point in self.plane:
+    #             i,self2D=self.project_2D()
+    #             point2D=point.project_2D(i)
+    #             return point2D in self2D
+    #         else:
+    #             return False
+    #     else:
+    #         raise Exception('Not implemented')
+    
+    
+    # def _winding_number(self,point):
+    #     """Returns the winding number of the point for a 2D polygon.
+        
+    #     :param point: A 2D point.
+    #     :type point: Point2D
+        
+    #     :return: The number of times the polygon segments wind around the point.
+    #         Note: does not include a point on a top or right hand edge.
+    #     :rtype: int
+        
+    #     .. seealso:: `<https://geomalgorithms.com/a03-_inclusion.html>`_
+        
+    #     """
+    #     wn=0 # the  winding number counter
+    #     # loop through all edges of the polygon
+    #     for ps in self.polyline.segments: # edge from V[i] to  V[i+1]
+    #         if ps.P0.y <= point.y: # start y <= P.y
+    #             if ps.P1.y > point.y: # an upward crossing
+    #                 if ps.line.vL.perp_product(point-ps.P1)>0: # P left of  edge
+    #                     wn+=1
+    #         else:
+    #             if ps.P1.y <= point.y: # a downward crossing
+    #                 if ps.line.vL.perp_product(point-ps.P1)<0: # P right of  edge
+    #                     wn-=1
+    #     return wn
+
+    
+    # @property
+    # def area(self):
+    #     """
+    #     """
+    #     if len(self[0])==2:
+    #         return self._area_2D
+    #     elif len(self[0])==3:
+    #         return self._area_3D
+    #     else:
+    #         raise Exception
+
+
+    # @property
+    # def ccw(self):
+    #     """An equivalent 2D polygon with points in a counterclockwise orientation
+        
+    #     :rtype: Polygon2D
+        
+    #     """
+    #     if not self._ccw:
+    #         if self.is_counterclockwise:
+    #             self._ccw=self
+    #         else:
+    #             self._ccw=self.reverse
+    #     return self._ccw
+    
+    
+    # def contains(self,obj):
+    #     """
+    #     """
+    #     if len(self[0])==2:
+    #         return self._contains_2D(obj)
+    #     elif len(self[0])==3:
+    #         return self._contains_3D(obj)
+    #     else:
+    #         raise Exception
+
+
+
+
+    # @property
+    # def is_counterclockwise(self):
+    #     """Tests if a 2D polygon points are in a counterclockwise direction.
+        
+    #     :raises ValueError: If the three polygon points being tested
+    #         all lie on a straight line. 
+    #     :return: Returns True if the three polygon points centered around the 
+    #         rightmost lowest point are in a counterclockwise order.
+    #         Returns False if these polygon points are in a clockwise order.
+        
+    #     :Example:
+    
+    #     .. code-block:: python
+           
+    #         >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1),Point2D(0,1))
+    #         >>> print(pg.is_counterclockwise)
+    #         True        
+        
+    #     """
+    #     i=self.rightmost_lowest_vertex
+    #     P0=self[self.previous_index(i)]
+    #     P1=self[i]
+    #     P2=self[self.next_index(i)]
+    #     v0=P1-P0
+    #     v1=P2-P1
+    #     result=v0.perp_product(v1)
+    #     if result>0:
+    #         return True
+    #     elif result<0:
+    #         return False
+    #     else:
+    #         raise ValueError
+        
+    
+
+    # @property
+    # def known_convex(self):
+    #     """The known_convex property of the polyline.
+        
+    #     :return: True if the polygon is known to be a convex polygon.
+    #         False if it is not known if the polygon is convex or not, 
+    #         or if it is known that the polygon is a concave polygon.
+    #     :rtype: bool
+        
+    #     :Example:
+    
+    #     .. code-block:: python
+           
+    #         >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1), known_convex=True)
+    #         >>> print(pg.known_convex)
+    #         True        
+        
+    #     """
+    #     return self._known_convex
+        
+    
+    # @property
+    # def known_simple(self):
+    #     """The known_simple property of the polyline.
+        
+    #     :return: True if the polygon is known to be a simple polygon.
+    #         False if it is not known if the polygon is simple or not, 
+    #         or if it is known that the polygon is a non-simple polygon.
+    #     :rtype: bool
+        
+    #     :Example:
+    
+    #     .. code-block:: python
+           
+    #         >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1), known_simple=True)
+    #         >>> print(pg.known_simple)
+    #         True        
+        
+    #     """
+    #     return self._known_simple
+
+    # @property
+    # def rightmost_lowest_vertex(self):
+    #     """Returns the index of the rightmost lowest point of a 2D polygon.
+        
+    #     :rtype: int
+        
+    #     :Example:
+    
+    #     .. code-block:: python
+           
+    #         >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+    #         >>> print(pg.rightmost_lowest_vertex)
+    #         Point2D(1,0)
+        
+    #     """
+    #     min_i=0
+    #     for i in range(1,len(self)):
+    #         if self[i].y>self[min_i].y:
+    #             continue
+    #         if (self[i].y==self[min_i].y) and (self[i].x < self[min_i].x):
+    #             continue
+    #         min_i=i
+    #     return min_i
+    
+
+    # @property
+    # def signed_area(self):
+    #     """Returns the signed area of a 2D polygon.
+        
+    #     :return: Returns a value greater than 0 if polygon points are ordered counterclockwise.
+    #         Returns a value less than 0 if polygon points are ordered clockwise.
+    #     :rtype: float
+                
+    #     :Example:
+    
+    #     .. code-block:: python
+           
+    #         >>> pg = Polygon2D(Point2D(0,0), Point2D(1,1), Point2D(1,0))
+    #         >>> print(pg.signed_area)
+    #         -0.5
+        
+    #     .. seealso:: `<https://geomalgorithms.com/a01-_area.html>`_
+        
+    #     """
+    #     n=len(self)
+    #     points=self.polyline
+    #     if n<3: return 0  # a degenerate polygon
+    #     a=0
+    #     for i in range(1,n):
+    #         a+=points[i].x * (points[i+1].y - points[i-1].y)
+    #     a+=points[n].x * (points[1].y - points[n-1].y) # wrap-around term
+    #     return a / 2.0
+
+
     def intersect(self,obj):
         ""
     
     
 class ConvexSimplePolygon(SimplePolygon):
     """
+    Simple Polygon
+    Does not intersect
+    Convex
     """
 
 
 class Triangle(ConvexSimplePolygon):
     """
+    Simple Polygon
+    Does not intersect
+    Convex
+    Three sides only
     """
     
     
-    @property
-    def area(self):
-        """Returns the area of the triangle.
+    # @property
+    # def area(self):
+    #     """Returns the area of the triangle.
         
-        :return: The triangle area.
-        :rtype: float
+    #     :return: The triangle area.
+    #     :rtype: float
 
-        """
-        if self.nD==2:
-            return abs(self.signed_area)
-        elif self.nD==3:
-            return 0.5*self.v.cross_product(self.w).length
-        else:
-            return Exception
+    #     """
+    #     if self.nD==2:
+    #         return abs(self.signed_area)
+    #     elif self.nD==3:
+    #         return 0.5*self.v.cross_product(self.w).length
+    #     else:
+    #         return Exception
     
     
-    @property
-    def signed_area(self):
-        """Returns the signed area of the triangle
+    # @property
+    # def signed_area(self):
+    #     """Returns the signed area of the triangle
         
-        :return result:
-            - return value >0 if triangle points are ordered counterclockwise
-            - return value <0 if triangle points are ordered clockwise
-        :rtype float:
+    #     :return result:
+    #         - return value >0 if triangle points are ordered counterclockwise
+    #         - return value <0 if triangle points are ordered clockwise
+    #     :rtype float:
                 
-        """
-        if self.nD==2:
-            return 0.5*(self.v.x*self.w.y-self.w.x*self.v.y)
-        else:
-            return Exception
+    #     """
+    #     if self.nD==2:
+    #         return 0.5*(self.v.x*self.w.y-self.w.x*self.v.y)
+    #     else:
+    #         return Exception
     
     
-    @property
-    def v(self):
-        """
-        """
-        return self[1]-self[0]
+    # @property
+    # def v(self):
+    #     """
+    #     """
+    #     return self[1]-self[0]
         
         
-    @property
-    def w(self):
-        """
-        """
-        return self[2]-self[0]
+    # @property
+    # def w(self):
+    #     """
+    #     """
+    #     return self[2]-self[0]
         
         
     
