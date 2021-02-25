@@ -4185,6 +4185,17 @@ class Plane():
             a point can exist on both planes;
             otherwise False.
         :rtype: bool
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> from crossproduct import Point, Vector, Plane
+           >>> pn1 = Plane(Point(0,0,0), Vector(0,0,1))
+           >>> pn2 = Plane(Point(1,1,0), Vector(0,0,-1))
+           >>> result = pn1==pn2
+           >>> print(result)
+           True
             
         """
         if isinstance(plane,Plane):
@@ -4246,6 +4257,17 @@ class Plane():
         
         :rtype: bool
         
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> from crossproduct import Point, Vector, Plane
+           >>> pn = Plane(Point(0,0,0), Vector(0,0,1))
+           >>> result = pn.contains(Point(1,1,0))
+           >>> print(result)
+           True
+           
+        
         """
         if isinstance(obj,Point):
             return self.N.is_perpendicular(obj-self.P0)
@@ -4270,7 +4292,11 @@ class Plane():
     
         .. code-block:: python
            
-           >>> 
+           >>> from crossproduct import Point, Vector, Plane
+           >>> pn = Plane(Point(0,0,0), Vector(0,0,1))
+           >>> result = pn.distance(Point(1,1,10))
+           >>> print(result)
+           10.0
             
         """
         if isinstance(obj, Point):
@@ -4289,7 +4315,17 @@ class Plane():
             Returns None for skew, non-intersecting plane and halfline.
             Returns halfline for a halfline on the plane.
             Return point for a skew halfline which intersects the plane.
-        :rtype: None, Point3D, Halfline3D
+        :rtype: None, Point, Halfline
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> from crossproduct import Point, Vector, Halfline, Plane
+           >>> pn = Plane(Point(0,0,0), Vector(0,0,1))
+           >>> result = pn.intersect_halfline(Halfline(Point(5,5,0),Vector(1,1,1)))
+           >>> print(result)
+           Point(5.0,5.0,0.0)
         
         .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
             
@@ -4315,7 +4351,17 @@ class Plane():
         :return: Returns None for parallel, non-collinear plane and line.
             Returns a line for a line on the plane.
             Returns a point for a skew line which intersects the plane.
-        :rtype: None, Point3D, Line3D        
+        :rtype: None, Point, Line     
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> from crossproduct import Point, Vector, Line, Plane
+           >>> pn = Plane(Point(0,0,0), Vector(0,0,1))
+           >>> result = pn.intersect_line(Line(Point(5,5,0),Vector(1,1,1)))
+           >>> print(result)
+           Point(5.0,5.0,0.0)
         
         .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
         
@@ -4340,6 +4386,16 @@ class Plane():
             Returns a point for a skew segment which intersects the plane.
         :rtype: None, Point, Segment
         
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> from crossproduct import Point, Vector, Segment, Plane
+           >>> pn = Plane(Point(0,0,0), Vector(0,0,1))
+           >>> result = pn.intersect_segment(Segment(Point(5,5,-1),Point(5,5,1)))
+           >>> print(result)
+           Point(5.0,5.0,0.0)
+        
         .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_
             
         """
@@ -4355,31 +4411,38 @@ class Plane():
                 return None
             
             
-    def intersect_segments(self,segments):
-        """Returns the intersection of this plane and a Segments sequence.
+    # def intersect_segments(self,segments):
+    #     """Returns the intersection of this plane and a Segments sequence.
         
-        :param segments: A sequence of 3D segments. 
-        :type segments: Segments 
+    #     :param segments: A sequence of 3D segments. 
+    #     :type segments: Segments 
         
-        :return: A tuple of intersection points and intersection segments 
-            (Points,Segments)
-        :rtype: tuple
+    #     :return: A tuple of intersection points and intersection segments 
+    #         (Points,Segments)
+    #     :rtype: tuple
         
-        """
-        ipts=Points()
-        isegments=Segments()
-        for s in segments:
-            result=self.intersect_segment(s)
-            if result is None:
-                continue
-            elif isinstance(result,Point):
-                ipts.append(result,unique=True)
-            elif isinstance(result,Segment):
-                isegments.append(result,unique=True)
-            else:
-                raise Exception
-        ipts.remove_points_in_segments(isegments)
-        return ipts,isegments
+    #     .. rubric:: Code Example
+    
+    #     .. code-block:: python
+           
+    #        >>> from crossproduct import Point, Vector, Plane
+        
+        
+    #     """
+    #     ipts=Points()
+    #     isegments=Segments()
+    #     for s in segments:
+    #         result=self.intersect_segment(s)
+    #         if result is None:
+    #             continue
+    #         elif isinstance(result,Point):
+    #             ipts.append(result,unique=True)
+    #         elif isinstance(result,Segment):
+    #             isegments.append(result,unique=True)
+    #         else:
+    #             raise Exception
+    #     ipts.remove_points_in_segments(isegments)
+    #     return ipts,isegments
         
             
     def intersect_plane(self,plane):
@@ -4392,7 +4455,17 @@ class Plane():
             Returns a plane for two coplanar planes.
             Returns a line for non-parallel planes.
         :rtype: None, Line, Plane   
-
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> from crossproduct import Point, Vector, Plane
+           >>> pn = Plane(Point(0,0,0), Vector(0,0,1))
+           >>> result = pn.intersect_plane(Plane(Point(0,0,0), Vector(1,0,0)))
+           >>> print(result)
+           Line(Point(0.0,0.0,0.0), Vector(0.0,1.0,0.0))
+    
         .. seealso:: `<https://geomalgorithms.com/a05-_intersect-1.html>`_         
         
         """
@@ -4417,6 +4490,15 @@ class Plane():
         
         :rtype: Vector
         
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> from crossproduct import Point, Vector, Plane
+           >>> pn = Plane(Point(0,0,0), Vector(0,0,1))
+           >>> print(pn.N)
+           Vector(0.0,0.0,1.0)
+        
         """
         return self._N
     
@@ -4427,7 +4509,16 @@ class Plane():
         
         :returns: 2 or 3
         :rtype: int
-            
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> from crossproduct import Point, Vector, Plane
+           >>> pn = Plane(Point(0,0,0), Vector(0,0,1))
+           >>> print(pn.nD)
+           3
+        
         """
         return self.P0.nD
 
@@ -4437,6 +4528,15 @@ class Plane():
         """The start point of the plane.
         
         :rtype: Point
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> from crossproduct import Point, Vector, Plane
+           >>> pn = Plane(Point(0,0,0), Vector(0,0,1))
+           >>> print(pn.P0)
+           Point(0.0,0.0,0.0)
         
         """
         return self._P0
@@ -4504,6 +4604,16 @@ class Plane():
         
         :rtype: Point
         
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> from crossproduct import Point, Vector, Plane
+           >>> pn = Plane(Point(0,0,0), Vector(1,1,1))
+           >>> result = pn.point_xy(1,1)
+           >>> print(result)
+           Point(1.0,1.0,-2.0)
+        
         """
         try:
             z=self.P0.z-(self.N.x*(x-self.P0.x)+self.N.y*(y-self.P0.y))/self.N.z
@@ -4523,6 +4633,14 @@ class Plane():
         :raises ValueError: If there are no points on the plane with the yz values.
         
         :rtype: Point
+        
+        .. code-block:: python
+           
+           >>> from crossproduct import Point, Vector, Plane
+           >>> pn = Plane(Point(0,0,0), Vector(1,1,1))
+           >>> result = pn.point_yz(1,1)
+           >>> print(result)
+           Point(-2.0,1.0,1.0)
         
         """
         try:
@@ -4544,6 +4662,16 @@ class Plane():
         
         :rtype: Point
         
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> from crossproduct import Point, Vector, Plane
+           >>> pn = Plane(Point(0,0,0), Vector(1,1,1))
+           >>> result = pn.point_zx(1,1)
+           >>> print(result)
+           Point(1.0,-2.0,1.0)
+        
         """
         try:
             y=self.P0.y-(self.N.z*(z-self.P0.z)+self.N.x*(x-self.P0.x))/self.N.y
@@ -4551,9 +4679,6 @@ class Plane():
             raise ValueError('zx points (%s,%s) must exist on the plane.' % (z,x))
         return Point(x,y,z)
     
-
-    
-
 
     def signed_distance_to_point(self,point):
         """Returns the signed distance to the supplied point.
@@ -4566,7 +4691,17 @@ class Plane():
             (the side in the direction of the normal) and is negative for
             the other side.
         :rtype: float
-            
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> from crossproduct import Point, Vector, Line, Plane
+           >>> pn = Plane(Point(0,0,0), Vector(0,0,1))
+           >>> result = pn.signed_distance_to_point(Point(1,1,-1))
+           >>> print(result)
+           -1.0
+           
         """
         return self.N.dot(point-self.P0) / self.N.length
 
@@ -4577,13 +4712,15 @@ class Plane():
         :returns: The point and vector of the plane as tuples. 
         :rtype: tuple
         
+        .. rubric:: Code Example
+    
         .. code-block:: python
-        
-           >>> from crossproduct import Point, Polyline
-           >>> pl = Polyline(Point(0,0), Point(1,0), Point(1,1))
+           
+           >>> from crossproduct import Point, Vector, Plane
+           >>> pn = Plane(Point(0,0,0), Vector(0,0,1))
            >>> result = pl.to_tuple()
            >>> print(result)
-           ((0.0,0.0), (1.0,0.0), (1.0,1.0))
+           ((0.0,0.0,0.0), (0.0,0.0,1.0))
         
         """
         return tuple(self.P0), tuple(self.N)
@@ -4642,7 +4779,7 @@ class Polygon(collections.abc.Sequence):
            # 2D example
            >>> pg1 = Polygon(Point(0,0), Point(1,0), Point(1,1))
            >>> pg2 = Polygon(Point(0,0), Point(1,1), Point(1,0))
-           >>> result = pl1 = pl2
+           >>> result = pl1 == pl2
            >>> print(result)
            True
             
@@ -5237,6 +5374,61 @@ class ConvexSimplePolygon(SimplePolygon):
     """
     """
 
+
+class Triangle(ConvexSimplePolygon):
+    """
+    """
+    
+    
+    @property
+    def area(self):
+        """Returns the area of the triangle.
+        
+        :return: The triangle area.
+        :rtype: float
+
+        """
+        if self.nD==2:
+            return abs(self.signed_area)
+        elif self.nD==3:
+            return 0.5*self.v.cross_product(self.w).length
+        else:
+            return Exception
+    
+    
+    @property
+    def signed_area(self):
+        """Returns the signed area of the triangle
+        
+        :return result:
+            - return value >0 if triangle points are ordered counterclockwise
+            - return value <0 if triangle points are ordered clockwise
+        :rtype float:
+                
+        """
+        if self.nD==2:
+            return 0.5*(self.v.x*self.w.y-self.w.x*self.v.y)
+        else:
+            return Exception
+    
+    
+    @property
+    def v(self):
+        """
+        """
+        return self[1]-self[0]
+        
+        
+    @property
+    def w(self):
+        """
+        """
+        return self[2]-self[0]
+        
+        
+    
+    
+    
 
 
 class Polygons(collections.abc.MutableSequence):

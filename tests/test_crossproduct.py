@@ -1544,30 +1544,30 @@ class Test_Plane(unittest.TestCase):
         
         # segment in plane
         self.assertEqual(pl.intersect_segment(Segment(P0,
-                                                        Point(1,0,0))),
+                                                      Point(1,0,0))),
                          Segment(P0,
-                                   Point(1,0,0)))
+                                 Point(1,0,0)))
             
         # parallel segment not in plane
         self.assertEqual(pl.intersect_segment(Segment(P0+N,
-                                                        Point(1,0,0)+N)),
+                                                      Point(1,0,0)+N)),
                          None)
             
         # perpendicular segment passing through P0
         self.assertEqual(pl.intersect_segment(Segment(P0,
-                                                        P0+N)),
+                                                      P0+N)),
                          P0)
         self.assertEqual(pl.intersect_segment(Segment(P0-N,
-                                                        P0)),
+                                                      P0)),
                          P0)
             
 
         # perpendicular segment not passing through plane
         self.assertEqual(pl.intersect_segment(Segment(P0+N,
-                                                        P0+N*2)),
+                                                      P0+N*2)),
                          None)
         self.assertEqual(pl.intersect_segment(Segment(P0-N,
-                                                        P0-N*2)),
+                                                      P0-N*2)),
                          None)
             
     
@@ -1627,15 +1627,15 @@ class Test_Plane(unittest.TestCase):
                          Line(Point(1,0,0), Vector(0,1,0)))
         
         
-    def test_plot(self):
-        ""
-        P0=Point(0,0,0)
-        N=Vector(1,0,0)
-        pl=Plane(P0,N)
-        import matplotlib.pyplot as plt
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        pl.plot(ax)
+    # def test_plot(self):
+    #     ""
+    #     P0=Point(0,0,0)
+    #     N=Vector(1,0,0)
+    #     pl=Plane(P0,N)
+    #     import matplotlib.pyplot as plt
+    #     fig = plt.figure()
+    #     ax = fig.add_subplot(111, projection='3d')
+    #     pl.plot(ax)
         
         
     def test_point_xy(self):
@@ -1663,6 +1663,22 @@ class Test_Plane(unittest.TestCase):
                          -1)
 
 
+class Test_Polygon(unittest.TestCase):
+    ""
+    
+class Test_SimplePolygon(unittest.TestCase):
+    ""
+    
+    
+class Test_ConvexSimplePolygon(unittest.TestCase):
+    ""
+    
+    
+class Test_Triangle(unittest.TestCase):
+    ""
+    
+    
+    
 
 
 if __name__=='__main__':
