@@ -4,7 +4,7 @@ import unittest, math
 
 from crossproduct import Point, Points, Vector, Line, Halfline, Segment, Segments
 from crossproduct import Polyline, Polylines, Plane
-from crossproduct import Polygon, SimplePolygon, ConvexSimplePolygon
+from crossproduct import Polygon, SimplePolygon, ConvexSimplePolygon, Triangle
 from crossproduct import Polyhedron
 
 class Test_Point(unittest.TestCase):
@@ -1786,6 +1786,66 @@ class Test_SimplePolygon(unittest.TestCase):
     ""
     
     
+    
+    def test_area(self):
+        ""
+        pg=SimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        self.assertEqual(pg.area, # ccw
+                         1)
+        self.assertEqual(pg.reverse.area, # cw
+                         1)
+        
+        pg=SimplePolygon(Point(0,0,0),Point(1,0,0),Point(1,1,0),Point(0,1,0))
+        self.assertEqual(pg.area, # ccw
+                          1)
+        self.assertEqual(pg.reverse.area, # cw
+                          1)
+    
+    
+    def test_contains(self):
+        ""
+        pg=SimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        # Point
+        self.assertTrue(pg.contains(pg[0]))
+        self.assertTrue(pg.contains(pg[1]))
+        self.assertTrue(pg.contains(pg[2]))
+        self.assertTrue(pg.contains(pg[3]))
+        self.assertTrue(pg.contains(Point(0.5,0.5)))
+        
+        pg=SimplePolygon(Point(0,0,0),Point(1,0,0),Point(1,1,0),Point(0,1,0))
+        # Point
+        self.assertTrue(pg.contains(pg[0]))
+        self.assertTrue(pg.contains(Point(0.5,0.5,0)))
+        self.assertFalse(pg.contains(Point(0.5,0.5,1)))
+        
+    
+    
+    def test_signed_area(self):
+        ""
+        pg=SimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        self.assertEqual(pg.signed_area, # ccw
+                         1)
+        self.assertEqual(pg.reverse.signed_area, # cw
+                         -1)
+
+    
+    def test_winding_number(self):
+        ""
+        pg=SimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        self.assertEqual(pg.winding_number(pg[0]),
+                         1)
+        self.assertEqual(pg.winding_number(pg[1]),
+                         0)
+        self.assertEqual(pg.winding_number(pg[2]),
+                         0)
+        self.assertEqual(pg.winding_number(pg[3]),
+                         0) 
+        self.assertEqual(pg.winding_number(Point(-0.5,0.5)),
+                         0)
+        self.assertEqual(pg.winding_number(Point(0.5,0.5)),
+                         1)
+    
+    
 class Test_ConvexSimplePolygon(unittest.TestCase):
     ""
     
@@ -1793,8 +1853,42 @@ class Test_ConvexSimplePolygon(unittest.TestCase):
 class Test_Triangle(unittest.TestCase):
     ""
     
+    def test_area(self):
+        ""
+        t=Triangle(Point(0,0),Point(1,0),Point(1,1))
+        self.assertEqual(t.area,
+                         0.5)
+        self.assertEqual(t.reverse.area,
+                         0.5)
+    
+        t=Triangle(Point(0,0,1),Point(1,0,1),Point(1,1,1))
+        self.assertEqual(t.area,
+                         0.5)
+        
     
     
+    def test_signed_area(self):
+        ""
+        t=Triangle(Point(0,0),Point(1,0),Point(1,1))
+        self.assertEqual(t.signed_area,
+                         0.5)
+        self.assertEqual(t.reverse.signed_area,
+                         -0.5)
+    
+    
+    def test_v(self):
+        ""
+        t=Triangle(Point(0,0),Point(1,0),Point(1,1))
+        self.assertEqual(t.v,
+                         Vector(1,0))
+        
+        
+    def test_w(self):
+        ""
+        t=Triangle(Point(0,0),Point(1,0),Point(1,1))
+        self.assertEqual(t.w,
+                         Vector(1,1))
+        
 
 
 if __name__=='__main__':

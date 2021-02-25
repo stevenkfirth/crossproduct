@@ -39,5 +39,7 @@ from .crossproduct import Plane
 from .crossproduct import Polygon
 from .crossproduct import SimplePolygon
 from .crossproduct import ConvexSimplePolygon
+from .crossproduct import Triangle
 from .crossproduct import Polygons
 from .crossproduct import Polyhedron
+
