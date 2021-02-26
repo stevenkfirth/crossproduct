@@ -5331,6 +5331,27 @@ class SimplePolygon(Polygon):
             raise TypeError
         
         
+    def intersect_halfline(self,halfline):
+        """
+        
+        returns (Points,Segments)
+        
+        """
+        pts,sgmts=self.intersect_line(halfline.line)
+        #print(pts,sgmts)
+        
+        # keep points only if they are on the halfline
+        pts=Points(*(pt for pt in pts if halfline.contains(pt)))
+        
+        sgmts2=Segments()
+        for s in sgmts:
+            y=s.intersect_halfline(halfline) # returns None, Point, Segment
+            if isinstance(y,Segment):
+                sgmts2.append(y)
+        
+        return pts,sgmts2
+    
+        
     def intersect_line(self,line):
         """
         
@@ -5434,8 +5455,6 @@ class SimplePolygon(Polygon):
     
             return pts, sgmts
     
-            
-            
         elif self.nD==3:
             x=self.plane.intersect_line(line)
             if x is None:
@@ -5445,17 +5464,58 @@ class SimplePolygon(Polygon):
                     pts.append(x)
                 return pts, sgmts
             else:
-                pass
-                #TO DO... convert to 2D
+                i,self2D=self.project_2D()
+                line2D=line.project_2D(i)
+                plane=self.plane
+                pts,sgmts=self2D.intersect_line(line2D)
+                return (tuple(pt.project_3D(plane,i) for pt in pts),
+                        tuple(s.project_3D(plane,i) for s in sgmts))
         
         else:
-            
             raise Exception
         
         
-        # 2D polygon or 3D polygon where the line is on the plane of the polygon
+    def intersect_polyline(self,polyline):
+        """
         
-
+        returns (Points, Polylines)
+        
+        """
+        pts=Points()
+        pls=Polylines()
+        pl=Polyline()
+        for segment in polyline.segments:
+            x=self.intersect_segment(segment) # returns None, Point, Segment
+            
+            # creates a new current polyline, or extends an existing current polyline
+            if isinstance(x,Segment):
+                if pl:
+                    pl=Polyline(*(list(pl)+[x.P1])) # extends existing current polyline
+                else:
+                    pl=Polyline(x.P0,x.P1) # creates new current polyline
+                    
+            else: # no a segment, so either None or Point
+            
+                # adds current polyline to pls, and resets current polyline
+                if pl:
+                    pls.append(pl) # appends existing polyline to pls
+                    pl=Polyline() # resets existing polyline
+                    
+                # adds point to pts if it is unique
+                if isinstance(x,Point):
+                    if not x in pts:
+                        pts.append(x) # adds unique point to pts
+            
+        # include current polyline if present
+        if pl: pls.append(pl)
+            
+        # remove points that are on the polylines
+        for pt in pts[::-1]: # iterate in reverse as items are being deleted
+            if any(pl.contains(pt) for pl in pls):
+                pts.remove(pt)
+                
+        return pts,pls
+        
 
     def intersect_segment(self,segment):
         """
@@ -5476,97 +5536,53 @@ class SimplePolygon(Polygon):
                 sgmts2.append(y)
         
         return pts,sgmts2
-        
-
-
-
-    # @property
-    # def ccw(self):
-    #     """An equivalent 2D polygon with points in a counterclockwise orientation
-        
-    #     :rtype: Polygon2D
-        
-    #     """
-    #     if not self._ccw:
-    #         if self.is_counterclockwise:
-    #             self._ccw=self
-    #         else:
-    #             self._ccw=self.reverse
-    #     return self._ccw
     
     
-    # def contains(self,obj):
-    #     """
-    #     """
-    #     if len(self[0])==2:
-    #         return self._contains_2D(obj)
-    #     elif len(self[0])==3:
-    #         return self._contains_3D(obj)
-    #     else:
-    #         raise Exception
-
-
-
-
-    # @property
-    # def is_counterclockwise(self):
-    #     """Tests if a 2D polygon points are in a counterclockwise direction.
+    def intersect_simple_polygon(self,polygon):
+        """
+        returns (Points, Polylines, SimplePolygons)
         
-    #     :raises ValueError: If the three polygon points being tested
-    #         all lie on a straight line. 
-    #     :return: Returns True if the three polygon points centered around the 
-    #         rightmost lowest point are in a counterclockwise order.
-    #         Returns False if these polygon points are in a clockwise order.
+        'polygon' is simple and either convex or concave
         
-    #     :Example:
-    
-    #     .. code-block:: python
-           
-    #         >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1),Point2D(0,1))
-    #         >>> print(pg.is_counterclockwise)
-    #         True        
+        """
+        pts,pls=self.intersect_polyline(polygon.polyline)
         
-    #     """
-    #     i=self.rightmost_lowest_vertex
-    #     P0=self[self.previous_index(i)]
-    #     P1=self[i]
-    #     P2=self[self.next_index(i)]
-    #     v0=P1-P0
-    #     v1=P2-P1
-    #     result=v0.perp_product(v1)
-    #     if result>0:
-    #         return True
-    #     elif result<0:
-    #         return False
-    #     else:
-    #         raise ValueError
+        if pls:
+            
+            pls2=polygon.intersect_polyline(self.polyline)[1]
         
-    
-
-    # @property
-    # def rightmost_lowest_vertex(self):
-    #     """Returns the index of the rightmost lowest point of a 2D polygon.
-        
-    #     :rtype: int
-        
-    #     :Example:
-    
-    #     .. code-block:: python
-           
-    #         >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
-    #         >>> print(pg.rightmost_lowest_vertex)
-    #         Point2D(1,0)
-        
-    #     """
-    #     min_i=0
-    #     for i in range(1,len(self)):
-    #         if self[i].y>self[min_i].y:
-    #             continue
-    #         if (self[i].y==self[min_i].y) and (self[i].x < self[min_i].x):
-    #             continue
-    #         min_i=i
-    #     return min_i
-    
+            x=Polylines(pls[0]) # a list of polylines, starting with the first polyline in the first intersection
+            
+            remaining_polylines=(pls[1:] if len(pls)>1 else []) + list(pls2) # all remaining polylines
+            remaining_segments=[s for pl in remaining_polylines for s in pl.segments] # the segments of all remaining polylines
+            
+            # adds all remaining segments to x - either as unions of existing polylines in x or as new polylines appended to x
+            for s in remaining_segments:        
+                if not x.contains(s): # if segment does not exist in any of the polylines in x           
+                    for pl in x:                
+                        y=pl.union(s)
+                        if y:
+                            pl._points=y._points # in-place change of pl, to a new polyline representing the union with the segment
+                            break             
+                    else: # if segment does not union with any of the polylines in x
+                        x.append(Polyline(*s.points)) # append a new polyline to x
+            
+            x=x.union_self()            
+            
+            ### TO DO ###
+            pl=x[0] # as both polygons are convex, only one polyline should be present in x
+            if len(pl)==2: 
+                return Segment(*pl)
+            else:        
+                return ConvexSimplePolygon(*(list(pl)[:-1]))
+                        
+        else: # no polylines 
+            
+            if pts:
+                return (pts,Polylines(),SimplePolygons()) # points intersection
+            else:
+                return None # no intersection
+            
 
     @property
     def is_counterclockwise(self):
@@ -5682,29 +5698,50 @@ class ConvexSimplePolygon(SimplePolygon):
         return 'ConvexSimplePolygon(%s)' % ','.join([str(pt) for pt in self])
 
 
-    def intersect_segment(self,segment):
+    def intersect_convex_simple_polygon(self,polygon):
         """
+        returns none, point, segment, convex_simple_polygon
         
-        returns Segment or Point or None
+        'polygon' is simple and convex
         
         """
-        x=self.intersect_line(segment.line)
-        if x is None:
-            return None
+        pts,pls=self.intersect_polyline(polygon.polyline)
         
-        elif isinstance(x,Point):
-            if segment.contains(x):
-                return x
-            else:
-                return None
+        if pls:
             
-        elif isinstance(x,Segment):
-            return segment.intersect_segment(x)
-
-        else:
-            raise Exception
-
-
+            pls2=polygon.intersect_polyline(self.polyline)[1]
+        
+            x=Polylines(pls[0]) # a list of polylines, starting with the first polyline in the first intersection
+            
+            remaining_polylines=(pls[1:] if len(pls)>1 else []) + list(pls2) # all remaining polylines
+            remaining_segments=[s for pl in remaining_polylines for s in pl.segments] # the segments of all remaining polylines
+            
+            # adds all remaining segments to x - either as unions of existing polylines in x or as new polylines appended to x
+            for s in remaining_segments:        
+                if not x.contains(s): # if segment does not exist in any of the polylines in x           
+                    for pl in x:                
+                        y=pl.union(s)
+                        if y:
+                            pl._points=y._points # in-place change of pl, to a new polyline representing the union with the segment
+                            break             
+                    else: # if segment does not union with any of the polylines in x
+                        x.append(Polyline(*s.points)) # append a new polyline to x
+            
+            x=x.union_self()            
+            
+            pl=x[0] # as both polygons are convex, only one polyline should be present in x
+            if len(pl)==2: 
+                return Segment(*pl)
+            else:        
+                return ConvexSimplePolygon(*(list(pl)[:-1]))
+                        
+        else: # no polylines 
+            
+            if pts:
+                return pts[0] # a point intersection
+            else:
+                return None # no intersection
+            
 
     def intersect_halfline(self,halfline):
         """
@@ -5764,7 +5801,7 @@ class ConvexSimplePolygon(SimplePolygon):
     def intersect_polyline(self,polyline):
         """
         
-        returns Points, Polylines
+        returns (Points, Polylines)
         
         """
         pts=Points()
@@ -5801,52 +5838,32 @@ class ConvexSimplePolygon(SimplePolygon):
                 pts.remove(pt)
                 
         return pts,pls
-                
             
-    def intersect_convex_simple_polygon(self,polygon):
+
+    def intersect_segment(self,segment):
         """
-        returns none, point, segment, convex_simple_polygon
         
-        'polygon' is simple and convex
+        returns Segment or Point or None
         
         """
-        pts,pls=self.intersect_polyline(polygon.polyline)
+        x=self.intersect_line(segment.line)
+        if x is None:
+            return None
         
-        if pls:
-            
-            pls2=polygon.intersect_polyline(self.polyline)[1]
-        
-            x=Polylines(pls[0]) # a list of polylines, starting with the first polyline in the first intersection
-            
-            remaining_polylines=(pls[1:] if len(pls)>1 else []) + list(pls2) # all remaining polylines
-            remaining_segments=[s for pl in remaining_polylines for s in pl.segments] # the segments of all remaining polylines
-            
-            # adds all remaining segments to x - either as unions of existing polylines in x or as new polylines appended to x
-            for s in remaining_segments:        
-                if not x.contains(s): # if segment does not exist in any of the polylines in x           
-                    for pl in x:                
-                        y=pl.union(s)
-                        if y:
-                            pl._points=y._points # in-place change of pl, to a new polyline representing the union with the segment
-                            break             
-                    else: # if segment does not union with any of the polylines in x
-                        x.append(Polyline(*s.points)) # append a new polyline to x
-            
-            x=x.union_self()            
-            
-            pl=x[0] # as both polygons are convex, only one polyline should be present in x
-            if len(pl)==2: 
-                return Segment(*pl)
-            else:        
-                return ConvexSimplePolygon(*(list(pl)[:-1]))
-                        
-        else: # no polylines 
-            
-            if pts:
-                return pts[0] # a point intersection
+        elif isinstance(x,Point):
+            if segment.contains(x):
+                return x
             else:
-                return None # no intersection
+                return None
             
+        elif isinstance(x,Segment):
+            return segment.intersect_segment(x)
+
+        else:
+            raise Exception
+    
+            
+    
             
 
 class Triangle(ConvexSimplePolygon):
@@ -5960,6 +5977,11 @@ class Polygons(collections.abc.MutableSequence):
         ""
         return self._polygons.insert(index,value)
 
+
+class SimplePolygons(Polygons):
+    """
+    """
+    
 
 
 class Polyhedron(collections.abc.Sequence):

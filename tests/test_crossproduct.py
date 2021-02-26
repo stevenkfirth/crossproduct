@@ -2058,19 +2058,51 @@ class Test_SimplePolygon(unittest.TestCase):
 class Test_ConvexSimplePolygon(unittest.TestCase):
     ""
     
-    def test_intersect_segment(self):
+    def test_intersect_convex_simple_polygon(self):
         ""
         # 2D
         pg=ConvexSimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
-        # internal
-        s=Segment(Point(0.25,0.25),Point(0.75,0.75))
-        self.assertEqual(pg.intersect_segment(s),
-                         s)
-        # half-in, half-out
-        s=Segment(Point(0.5,0.5),Point(1.5,0.5))
-        self.assertEqual(pg.intersect_segment(s),
-                         Segment(Point(0.5,0.5),Point(1,0.5)))
-        
+        # no intersection
+        pg1=ConvexSimplePolygon(Point(0,2),Point(1,2),Point(1,3),Point(0,3))
+        #print(pg.intersect_convex_simple_polygon(pg1)); return
+        self.assertEqual(pg.intersect_convex_simple_polygon(pg1),
+                         None)
+        # point intersection
+        pg1=ConvexSimplePolygon(Point(1,1),Point(2,1),Point(2,2),Point(2,1))
+        #print(pg.intersect_convex_simple_polygon(pg1)); return
+        self.assertEqual(pg.intersect_convex_simple_polygon(pg1),
+                         Point(1,1))
+        # full edge intersection
+        pg1=ConvexSimplePolygon(Point(0,1),Point(1,1),Point(1,2),Point(0,2))
+        #print(pg.intersect_convex_simple_polygon(pg1)); return
+        self.assertEqual(pg.intersect_convex_simple_polygon(pg1),
+                         Segment(Point(0,1),Point(1,1)))
+        # half edge overlap intersection
+        pg1=ConvexSimplePolygon(Point(0.5,1),Point(1.5,1),Point(1.5,2),Point(0.5,2))
+        #print(pg.intersect_convex_simple_polygon(pg1)); return
+        self.assertEqual(pg.intersect_convex_simple_polygon(pg1),
+                         Segment(Point(0.5,1),Point(1,1)))
+        # partial internal edge intersection
+        pg1=ConvexSimplePolygon(Point(0.25,1),Point(0.75,1),Point(0.75,2),Point(0.25,2))
+        #print(pg.intersect_convex_simple_polygon(pg1)); return
+        self.assertEqual(pg.intersect_convex_simple_polygon(pg1),
+                         Segment(Point(0.25,1),Point(0.75,1)))
+        # full intersection
+        pg1=pg
+        #print(pg.intersect_convex_simple_polygon(pg1)); return
+        self.assertEqual(pg.intersect_convex_simple_polygon(pg1),
+                         pg)
+        # half intersection
+        pg1=ConvexSimplePolygon(Point(0.5,0),Point(1.5,0),Point(1.5,1),Point(0.5,1))
+        #print(pg.intersect_convex_simple_polygon(pg1)); return
+        self.assertEqual(pg.intersect_convex_simple_polygon(pg1),
+                         ConvexSimplePolygon(Point(0.5,0),Point(1,0),Point(1,1),Point(0.5,1)))
+        # quater intersection
+        pg1=ConvexSimplePolygon(Point(0.5,0.5),Point(1.5,0.5),Point(1.5,1.5),Point(0.5,1.5))
+        #print(pg.intersect_convex_simple_polygon(pg1)); return
+        self.assertEqual(pg.intersect_convex_simple_polygon(pg1),
+                         ConvexSimplePolygon(Point(0.5,0.5),Point(1,0.5),Point(1,1),Point(0.5,1)))
+    
     
     def test_intersect_halfline(self):
         ""
@@ -2189,53 +2221,22 @@ class Test_ConvexSimplePolygon(unittest.TestCase):
                           Polylines(Polyline(Point(0.5,0.0),Point(1.0,0.0)), 
                                     Polyline(Point(1.0,1.0),Point(0.5,1.0),Point(0.5,0.0)))))
         
-    
-    def test_intersect_convex_simple_polygon(self):
+        
+    def test_intersect_segment(self):
         ""
         # 2D
         pg=ConvexSimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
-        # no intersection
-        pg1=ConvexSimplePolygon(Point(0,2),Point(1,2),Point(1,3),Point(0,3))
-        #print(pg.intersect_convex_simple_polygon(pg1)); return
-        self.assertEqual(pg.intersect_convex_simple_polygon(pg1),
-                         None)
-        # point intersection
-        pg1=ConvexSimplePolygon(Point(1,1),Point(2,1),Point(2,2),Point(2,1))
-        #print(pg.intersect_convex_simple_polygon(pg1)); return
-        self.assertEqual(pg.intersect_convex_simple_polygon(pg1),
-                         Point(1,1))
-        # full edge intersection
-        pg1=ConvexSimplePolygon(Point(0,1),Point(1,1),Point(1,2),Point(0,2))
-        #print(pg.intersect_convex_simple_polygon(pg1)); return
-        self.assertEqual(pg.intersect_convex_simple_polygon(pg1),
-                         Segment(Point(0,1),Point(1,1)))
-        # half edge overlap intersection
-        pg1=ConvexSimplePolygon(Point(0.5,1),Point(1.5,1),Point(1.5,2),Point(0.5,2))
-        #print(pg.intersect_convex_simple_polygon(pg1)); return
-        self.assertEqual(pg.intersect_convex_simple_polygon(pg1),
-                         Segment(Point(0.5,1),Point(1,1)))
-        # partial internal edge intersection
-        pg1=ConvexSimplePolygon(Point(0.25,1),Point(0.75,1),Point(0.75,2),Point(0.25,2))
-        #print(pg.intersect_convex_simple_polygon(pg1)); return
-        self.assertEqual(pg.intersect_convex_simple_polygon(pg1),
-                         Segment(Point(0.25,1),Point(0.75,1)))
-        # full intersection
-        pg1=pg
-        #print(pg.intersect_convex_simple_polygon(pg1)); return
-        self.assertEqual(pg.intersect_convex_simple_polygon(pg1),
-                         pg)
-        # half intersection
-        pg1=ConvexSimplePolygon(Point(0.5,0),Point(1.5,0),Point(1.5,1),Point(0.5,1))
-        #print(pg.intersect_convex_simple_polygon(pg1)); return
-        self.assertEqual(pg.intersect_convex_simple_polygon(pg1),
-                         ConvexSimplePolygon(Point(0.5,0),Point(1,0),Point(1,1),Point(0.5,1)))
-        # quater intersection
-        pg1=ConvexSimplePolygon(Point(0.5,0.5),Point(1.5,0.5),Point(1.5,1.5),Point(0.5,1.5))
-        #print(pg.intersect_convex_simple_polygon(pg1)); return
-        self.assertEqual(pg.intersect_convex_simple_polygon(pg1),
-                         ConvexSimplePolygon(Point(0.5,0.5),Point(1,0.5),Point(1,1),Point(0.5,1)))
+        # internal
+        s=Segment(Point(0.25,0.25),Point(0.75,0.75))
+        self.assertEqual(pg.intersect_segment(s),
+                         s)
+        # half-in, half-out
+        s=Segment(Point(0.5,0.5),Point(1.5,0.5))
+        self.assertEqual(pg.intersect_segment(s),
+                         Segment(Point(0.5,0.5),Point(1,0.5)))
         
-        
+    
+    
     
     
     
