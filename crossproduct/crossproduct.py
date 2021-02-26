@@ -649,7 +649,7 @@ class Points(collections.abc.MutableSequence):
             Points(Point(1.0,0.0))
         
         """
-        for pt in self:
+        for pt in self[::-1]:
             if segments.contains(pt):
                 self.remove(pt)
         
@@ -911,7 +911,7 @@ class Vector(collections.abc.Sequence):
         :returns: The dot product of the two vectors: 
             returns 0 if self and vector are perpendicular; 
             returns >0 if the angle between self and vector is an acute angle (i.e. <90deg); 
-            returns <0 if the angle between seld and vector is an obtuse angle (i.e. >90deg).
+            returns <0 if the angle between self and vector is an obtuse angle (i.e. >90deg).
         :rtype: float
         
         .. rubric:: Code Example
@@ -3809,6 +3809,13 @@ class Segments(collections.abc.MutableSequence):
            False
            
         """
+        if isinstance(obj,Point) or isinstance(obj,Segment):
+            return any(s.contains(obj) for s in self)
+        
+        else:
+            raise TypeError
+        
+        
         for s in self:
             if s.contains(obj):
                 return True
@@ -5162,6 +5169,36 @@ class Polygon(collections.abc.Sequence):
         
     
     @property
+    def rightmost_lowest_vertex(self):
+        """Returns the index of the rightmost lowest point of the polygon.
+        
+        :rtype: int
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon(Point(0,0), Point(1,0), Point(1,1))
+           >>> print(pg.rightmost_lowest_vertex)
+           Point2D(1,0)
+        
+        """
+        if self.nD==2:
+        
+            min_i=0
+            for i in range(1,len(self)):
+                if self[i].y>self[min_i].y:
+                    continue
+                if (self[i].y==self[min_i].y) and (self[i].x < self[min_i].x):
+                    continue
+                min_i=i
+            return min_i
+    
+        else:
+            raise ValueError
+    
+    
+    @property
     def reverse(self):
         """Returns a polygon with the points reversed.
         
@@ -5252,6 +5289,20 @@ class SimplePolygon(Polygon):
             raise ValueError
 
 
+    @property
+    def ccw(self):
+        """An equivalent 2D polygon with points in a counterclockwise orientation
+        
+        :rtype: Polygon
+        
+        """
+        if self.is_counterclockwise:
+            return self
+        else:
+            return self.reverse
+        
+
+
     def contains(self,obj):
         """
         """
@@ -5279,6 +5330,152 @@ class SimplePolygon(Polygon):
             
             raise TypeError
         
+        
+    def intersect_line(self,line):
+        """
+        
+        returns (Points,Segments)
+        
+        """
+        pts=Points()
+        sgmts=Segments()
+        
+        if self.nD==2:
+            
+            pg=self.ccw
+            
+            y=[]   # a list of intersection points which are not on the polygon vertices and intersection segments
+            for s in pg.polyline.segments:
+                x=s.intersect_line(line) # returns None or Point or Segment
+                if x:
+                    if isinstance(x,Point): 
+                        
+                        if not x==s.P1: # ignores point if at the end of the segment - to avoid working with the same point twice if it is a vertex
+                        
+                            # if intersection is a point, there are a number of options:
+                            # - point is on a polygon vertex, but line doesn't enter to leave 
+                            # - point is on a polygon vertex, line enters the polygon
+                            # - point is on a polygon vertex, line leaves the polygon
+                            # - point is in the middle of a polygon edge, line enters the polygon
+                            # - point is in the middle of a polygon edge, line leaves the polygon
+                            
+                            pt=x
+                            if pt in pg: # if point is on a polygon vertex 
+                                i=pg.index(pt)
+                                v0=pt-pg[pg.previous_index(i)]
+                                v1=pg[pg.next_index(i)]-pt
+                            else: # if point is not on a polygon vertex
+                                v0=pt-s.P0
+                                v1=s.P1-pt
+                                
+                            pp0=line.vL.perp_product(v0) # <0 if v0 is on the right of vL
+                            pp1=line.vL.perp_product(v1) # <0 if v1 is on the right of vL
+                
+                            if pp0<0 and pp1<0: # both vectors on the right of line
+                                y.append((pt,'enter',line.calculate_t_from_coordinates(*pt))) # line enters the polygon
+                            if pp0>0 and pp1>0: # both vectors on the left of self
+                                y.append((pt,'leave',line.calculate_t_from_coordinates(*pt))) # line leaves the polygon
+                            else: # line doesn't enter or leave the polygon
+                                if not x in pts:
+                                    pts.append(x) # appends point if unique
+                                    
+                    else: # intersection is a segment
+                        y.append((x,'segment',line.calculate_t_from_coordinates(*x.P0)))
+            
+            #print(y)
+            
+            # reverse segments in y if needed by t values
+            for i,(obj,desc,t) in enumerate(y):
+                if desc=='segment':
+                    t0=line.calculate_t_from_coordinates(*obj.P0)
+                    t1=line.calculate_t_from_coordinates(*obj.P1)
+                    if t1<t0:
+                        new_s=obj.reverse
+                        y[i]=(new_s,'segment',line.calculate_t_from_coordinates(*new_s.P0))
+            
+            # sort items in y by their t values
+            y.sort(key=lambda x:x[2]) # sorts the points and segments in y by their line t-values
+            
+            # merge the enter points, leave points and segments in y
+            for i in range(len(y)-1,0,-1):
+                obj,desc,t=y[i]
+                obj_p,desc_p,t_p=y[i-1]
+                
+                # point, leaving the polygon
+                if desc=='leave':
+                    
+                    if desc_p=='enter':
+                        y[i-1]=(Segment(obj_p,obj),'segment',t_p)
+                        del y[i]
+                    elif desc_p=='segment':
+                        y[i-1]=(Segment(obj_p.P0,obj),'segment',t_p)
+                        del y[i]
+                    
+                elif desc=='segment':
+                    
+                    if desc_p=='enter':
+                        y[i-1]=(Segment(obj_p,obj.P1),'segment',t_p)
+                        del y[i]
+                    elif desc_p=='segment':
+                        segments_midpoint=Point((obj_p.P1.x+obj.P0.x)/2,
+                                                (obj_p.P1.y+obj.P0.y)/2)
+                        if pg.contains(segments_midpoint):
+                            y[i-1]=(Segment(obj_p.P0,obj.P1),'segment',t_p)
+                            del y[i]
+                    
+                else:
+                    raise Exception
+            
+            # add items in y to segments
+            sgmts.extend(x[0] for x in y)
+    
+            # remove any points that already exist in segments
+            pts.remove_points_in_segments(sgmts)
+    
+            return pts, sgmts
+    
+            
+            
+        elif self.nD==3:
+            x=self.plane.intersect_line(line)
+            if x is None:
+                return pts, sgmts
+            elif isinstance(x,Point):
+                if self.contains(x):
+                    pts.append(x)
+                return pts, sgmts
+            else:
+                pass
+                #TO DO... convert to 2D
+        
+        else:
+            
+            raise Exception
+        
+        
+        # 2D polygon or 3D polygon where the line is on the plane of the polygon
+        
+
+
+    def intersect_segment(self,segment):
+        """
+        
+        returns (Points,Segments)
+        
+        """
+        pts,sgmts=self.intersect_line(segment.line)
+        #print(pts,sgmts)
+        
+        # keep points only if they are on the segment
+        pts=Points(*(pt for pt in pts if segment.contains(pt)))
+        
+        sgmts2=Segments()
+        for s in sgmts:
+            y=segment.intersect_segment(s) # returns None, Point, Segment
+            if isinstance(y,Segment):
+                sgmts2.append(y)
+        
+        return pts,sgmts2
         
 
 
@@ -5370,6 +5567,39 @@ class SimplePolygon(Polygon):
     #         min_i=i
     #     return min_i
     
+
+    @property
+    def is_counterclockwise(self):
+        """Tests if the polygon points are in a counterclockwise direction.
+        
+        :raises ValueError: If the three polygon points being tested
+            all lie on a straight line. 
+        :return: Returns True if the three polygon points centered around the 
+            rightmost lowest point are in a counterclockwise order.
+            Returns False if these polygon points are in a clockwise order.
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1),Point2D(0,1))
+           >>> print(pg.is_counterclockwise)
+           True        
+        
+        """
+        i=self.rightmost_lowest_vertex
+        P0=self[self.previous_index(i)]
+        P1=self[i]
+        P2=self[self.next_index(i)]
+        v0=P1-P0
+        v1=P2-P1
+        result=v0.perp_product(v1)
+        if result>0:
+            return True
+        elif result<0:
+            return False
+        else:
+            raise ValueError
 
     @property
     def signed_area(self):

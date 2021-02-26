@@ -1819,7 +1819,12 @@ class Test_Polygon(unittest.TestCase):
                                  Point(0.0,1.0,0.0)))
         
 
-    
+    def test_rightmost_lowest_vertex(self):
+        ""
+        pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        self.assertEqual(pg.rightmost_lowest_vertex, 
+                         1)
+        
         
     def test_reorder(self):
         ""
@@ -1883,9 +1888,147 @@ class Test_SimplePolygon(unittest.TestCase):
         self.assertTrue(pg.contains(pg[0]))
         self.assertTrue(pg.contains(Point(0.5,0.5,0)))
         self.assertFalse(pg.contains(Point(0.5,0.5,1)))
+    
+    
+    def test_ccw(self):
+        ""
+        pg=SimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        self.assertEqual(pg.ccw,
+                         pg)
+        self.assertEqual(pg.reverse.ccw,
+                         pg)
+    
+    
+    def test_intersect_line(self):
+        ""
+        # 2D
+        pg=SimplePolygon(Point(0,0),
+                         Point(1,0),
+                         Point(0.5,0.5),
+                         Point(1,1),
+                         Point(0,1))
+        # no intersection
+        line=Line(Point(-1,0),Vector(0,1))
+        #print(pg.intersect_line(line)); return
+        self.assertEqual(pg.intersect_line(line),
+                         (Points(),
+                          Segments()))
+        # single point intersection
+        line=Line(Point(0,0),Vector(-1,1))
+        #print(pg.intersect_line(line)); return
+        self.assertEqual(pg.intersect_line(line),
+                         (Points(Point(0,0)),
+                          Segments()))
+        # double point intersection
+        line=Line(Point(1,0),Vector(0,1))
+        #print(pg.intersect_line(line)); return
+        self.assertEqual(pg.intersect_line(line),
+                         (Points(Point(1,0),
+                                 Point(1,1)),
+                          Segments()))
+        # edge intersection
+        line=Line(Point(0,1),Vector(1,0))
+        #print(pg.intersect_line(line)); return
+        self.assertEqual(pg.intersect_line(line),
+                         (Points(),
+                          Segments(Segment(Point(1,1),
+                                           Point(0,1)))))
+        # point and edge intersection
+        line=Line(Point(0,0),Vector(1,1))
+        #print(pg.intersect_line(line)); return
+        self.assertEqual(pg.intersect_line(line),
+                         (Points(),
+                          Segments(Segment(Point(0,0),
+                                           Point(1,1)))))
+        # in-out in-out intersection
+        line=Line(Point(0.75,0),Vector(0,1))
+        #print(pg.intersect_line(line)); return
+        self.assertEqual(pg.intersect_line(line),
+                         (Points(),
+                          Segments(Segment(Point(0.75,0),
+                                           Point(0.75,0.25)),
+                                   Segment(Point(0.75,0.75),
+                                           Point(0.75,1)))))
+        # in-out intersection
+        line=Line(Point(0.25,0),Vector(-1,1))
+        #print(pg.intersect_line(line)); return
+        self.assertEqual(pg.intersect_line(line),
+                         (Points(),
+                          Segments(Segment(Point(0.25,0),
+                                           Point(0,0.25)))))
+        # in-out intersection
+        line=Line(Point(0,0.5),Vector(1,0))
+        #print(pg.intersect_line(line)); return
+        self.assertEqual(pg.intersect_line(line),
+                         (Points(),
+                          Segments(Segment(Point(0,0.5),
+                                           Point(0.5,0.5)))))
+    
+        # multi-segemnt plus outward intersection
+        pg=SimplePolygon(Point(0,0),
+                         Point(1,0),
+                         Point(1,1),
+                         Point(2,2),
+                         Point(1,3),
+                         Point(1,4),
+                         Point(0,4))
+        line=Line(Point(1,0),Vector(0,1))
+        #print(pg.intersect_line(line)); return
+        self.assertEqual(pg.intersect_line(line),
+                         (Points(),
+                          Segments(Segment(Point(1,0),
+                                           Point(1,4)))))
         
+        # multi-segemnt plus outward intersection
+        pg=SimplePolygon(Point(0,0),
+                         Point(1,0),
+                         Point(1,1),
+                         Point(0.5,2),
+                         Point(1,3),
+                         Point(1,4),
+                         Point(0,4))
+        line=Line(Point(1,0),Vector(0,1))
+        #print(pg.intersect_line(line)); return
+        self.assertEqual(pg.intersect_line(line),
+                         (Points(),
+                          Segments(Segment(Point(1,0),
+                                           Point(1,1)),
+                                   Segment(Point(1,3),
+                                           Point(1,4)))))
     
-    
+        
+    def test_intersect_segment(self):
+        ""
+        # 2D
+        pg=SimplePolygon(Point(0,0),
+                         Point(1,0),
+                         Point(0.5,0.5),
+                         Point(1,1),
+                         Point(0,1))
+        # internal
+        s=Segment(Point(0.25,0.25),Point(0.75,0.75))
+        #print(pg.intersect_segment(s)); return
+        self.assertEqual(pg.intersect_segment(s),
+                         (Points(),
+                          Segments(s)))
+        #return
+        # half-in, half-out
+        s=Segment(Point(0,0.5),Point(1,0.5))
+        #print(pg.intersect_segment(s)); return
+        self.assertEqual(pg.intersect_segment(s),
+                         (Points(),
+                          Segments(Segment(Point(0,0.5),Point(0.5,0.5)))))
+        
+        
+        
+        
+    def test_is_counterclockwise(self):
+        ""
+        pg=SimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        self.assertTrue(pg.is_counterclockwise)
+        self.assertFalse(pg.reverse.is_counterclockwise)
+        
+        
     def test_signed_area(self):
         ""
         pg=SimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
