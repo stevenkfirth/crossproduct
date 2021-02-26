@@ -3968,10 +3968,27 @@ class Polyline(collections.abc.Sequence):
         return 'Polyline(%s)' % ','.join([str(pt) for pt in self])
     
     
-    def contains(self,obj): # TO DO OR REMOVE
+    def contains(self,obj): 
+        """Tests if the polyline contains the object.
+        
+        :param obj: A point or segment. 
+        :type obj: Point, Segment
+        
+        :raises TypeError: If supplied object is not supported by this method.
+        
+        :return: For point, True if the point lies on the polyline; otherwise False. 
+            For segment, True if the segment start and endpoints are on a segment of the polyline; otherwise False. 
+            Note: A polyline only contains a segment if that segment is wholly contained by a single segment of the polyline.
+        :rtype: bool
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> from crossproduct import Point, Polyline
+           
         """
-        """
-        if isinstance(obj,Point):
+        if isinstance(obj,Point) or isinstance(obj,Segment):
             
             return any(s.contains(obj) for s in self.segments)
             
@@ -4104,7 +4121,45 @@ class Polyline(collections.abc.Sequence):
         """
         return tuple(tuple(pt) for pt in self)
     
+    
+    def union(self,obj):
+        """Returns the union of this polyline and the supplied object.
+        
+        :param obj: A geometric object.
+        :type obj: Segment, Polyline
+        
+        :returns: For segment, if the segment starts or ends at either the 
+            start or end point of the polyline, then a new polyline with
+            the segment added on is returned.
+            For polyline, if the polyline starts or ends at either the 
+            start or end point of the polyline, then a new polyline with
+            the polyline added on is returned.
+            Otherwise, returns None.
+        
+        :rtype: Polyline
+        
+        """
+        if isinstance(obj,Segment) or isinstance(obj,Polyline):    
+            try:
+                obj_pts=list(obj.points) # if a segment
+            except AttributeError:
+                obj_pts=list(obj) # if a polyline
+                
+            if obj_pts[0]==self[-1]:
+                return Polyline(*(list(self)+obj_pts[1:]))
+            elif obj_pts[-1]==self[-1]:
+                return Polyline(*(list(self)+obj_pts[:-1][::-1]))
+            elif obj_pts[0]==self[0]:
+                return Polyline(*(obj_pts[1:][::-1]+list(self)))
+            elif obj_pts[-1]==self[0]:
+                return Polyline(*(obj_pts[:-1]+list(self)))
+            else:
+                return None
 
+        else:
+            raise TypeError
+            
+            
 
 class Polylines(collections.abc.MutableSequence):
     """A sequence of polylines.    
@@ -4176,10 +4231,56 @@ class Polylines(collections.abc.MutableSequence):
         self._polylines[index]=value
     
     
+    def contains(self,obj): 
+        """Tests if the polylines contains the object.
+        
+        :param obj: A point or segment. 
+        :type obj: Point, Segment
+        
+        :raises TypeError: If supplied object is not supported by this method.
+        
+        :return: For point, True if the point lies on one or more of the polylines; otherwise False. 
+            For segment, True if the segment start and endpoints are on a segment of one or more of the polyline; otherwise False. 
+            Note: A polyline only contains a segment if that segment is wholly contained by a single segment of a polyline.
+        :rtype: bool
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           >>> from crossproduct import Point, Polyline
+           
+        """
+        if isinstance(obj,Point) or isinstance(obj,Segment):
+            
+            return any(pl.contains(obj) for pl in self)
+        
+        else:
+            raise TypeError
+            
+    
+    
     def insert(self,index,value):
         "(required by abc super class)"
         return self._polylines.insert(index,value)
 
+
+    def union_self(self):
+        """Returns a new Polylines object containing the unions of the polylines where possible.
+        
+        
+        :rtype: Polylines
+        
+        """
+        x=Polylines(*self)
+        for i in range(len(x)-1,-1,-1): # loops through offsets of x in reverse, as end items may be deleted
+            for pl in x[:i]: # loops through each polyline up to the ith polyline
+                y=pl.union(x[i])
+                if y: 
+                    pl._points=y._points # in-place change of pl, to a new polyline representing the union with the segment
+                    del x[i] 
+                    break
+        return x
 
 
 class Plane():
@@ -5102,6 +5203,9 @@ class Polygon(collections.abc.Sequence):
         """
         return tuple(tuple(pt) for pt in self)
     
+    
+                        
+    
 
 
 class SimplePolygon(Polygon):
@@ -5476,73 +5580,42 @@ class ConvexSimplePolygon(SimplePolygon):
         'polygon' is simple and convex
         
         """
-        
         pts,pls=self.intersect_polyline(polygon.polyline)
-        
-        #print('pls',pls)
         
         if pls:
             
-            if len(pls)==1:
-                pl=pls[0]
-            else:
-                pl=Polyline(*(list(pls[1])+list(pls[0])[1:]))
-            
-            if pl==self.polyline:
-                return self
-            
             pls2=polygon.intersect_polyline(self.polyline)[1]
         
-            if len(pls2)==1:
-                pl2=pls2[0]
-            else:
-                pl2=Polyline(*(list(pls2[1])+list(pls2[0])[1:]))
+            x=Polylines(pls[0]) # a list of polylines, starting with the first polyline in the first intersection
             
-        
-        
-            print('pl',pl)
-            print('pl2',pl2)
-        
-            if len(pl)==2 and len(pl2)==2:
-                
-                return pl.segments[0] # a segment intersection
+            remaining_polylines=(pls[1:] if len(pls)>1 else []) + list(pls2) # all remaining polylines
+            remaining_segments=[s for pl in remaining_polylines for s in pl.segments] # the segments of all remaining polylines
             
-            else:
-                
-                #if pl[0]==pl2[0]: # same start point
-                #    pl2=pl2.reverse
-                 
-                sgmts=pl.segments
-                print(sgmts)
-                for s in pl2.segments:
-                    if not s in pl.segments:
-                        if s.P0==pl[-1]:
-                            pl=Polyline(*(list(pl)+[s.P1]))
-                        elif s.P1==pl[-1]:
-                            pl=Polyline(*(list(pl)+[s.P0]))
-                        elif s.P0==pl[0]:
-                            pl=Polyline(*([s.P1]+list(pl)))
-                        elif s.P1==pl[0]:
-                            pl=Polyline(*([s.P0]+list(pl)))
-                            
-                
-                
+            # adds all remaining segments to x - either as unions of existing polylines in x or as new polylines appended to x
+            for s in remaining_segments:        
+                if not x.contains(s): # if segment does not exist in any of the polylines in x           
+                    for pl in x:                
+                        y=pl.union(s)
+                        if y:
+                            pl._points=y._points # in-place change of pl, to a new polyline representing the union with the segment
+                            break             
+                    else: # if segment does not union with any of the polylines in x
+                        x.append(Polyline(*s.points)) # append a new polyline to x
+            
+            x=x.union_self()            
+            
+            pl=x[0] # as both polygons are convex, only one polyline should be present in x
+            if len(pl)==2: 
+                return Segment(*pl)
+            else:        
                 return ConvexSimplePolygon(*(list(pl)[:-1]))
-            
+                        
         else: # no polylines 
             
             if pts:
                 return pts[0] # a point intersection
             else:
                 return None # no intersection
-            
-        
-        
-        
-        
-        
-        
-        
             
             
 
