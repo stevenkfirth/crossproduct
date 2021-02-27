@@ -3962,6 +3962,51 @@ class Polyline(collections.abc.Sequence):
         return 'Polyline(%s)' % ','.join([str(pt) for pt in self])
     
     
+    def add_segments(self):
+        """Returns a polyline with any adjacent segments added together if possible.
+        
+        :return polyline:
+            - looks at the segments of the polyline
+            - if any two adjacent segments can be added together, then these
+                are replaced by a single segment
+            - if a closed polyline, the first and last segments are also added together if possible
+        :rtype Polyline:
+            
+        """
+        sgmts=self.segments
+        for i in range(len(sgmts)-1,0,-1):
+            try:
+                sgmts[i-1]=sgmts[i-1]+sgmts[i]
+                del sgmts[i]
+            except ValueError:
+                pass
+            
+        # if a closed polyline, will add together the first and last segment
+        try:
+            sgmts[-1]=sgmts[-1]+sgmts[0]
+            del sgmts[0]
+        except ValueError:
+            pass
+            
+        return Polyline(*([s.P0 for s in sgmts]+[sgmts[-1].P1]))
+        
+        #### old version below ...
+        
+        points=list(self)
+        n=len(points)
+        i=1
+        while i<n-1:
+            v=points[i]-points[i-1]
+            w=points[i+1]-points[i]
+            if v.is_codirectional(w):
+                points.pop(i)
+                n=len(points)
+            else:
+                i+=1
+            
+        return self.__class__(*points)
+    
+    
     def contains(self,obj): 
         """Tests if the polyline contains the object.
         
@@ -4225,7 +4270,7 @@ class Polylines(collections.abc.MutableSequence):
 
 
     def add_all(self):
-        """Adds together the segments in the sequence where possible.
+        """Adds together the polylines in the sequence where possible.
         
         :returns: Nothing, as changes are made in-place.
         :rtype: None
@@ -5736,6 +5781,8 @@ class ConvexSimplePolygon(SimplePolygon):
         
         returns Polylines
         
+        note, if no intersection a different (but equivalent) polyline may be returned.
+        
         """
         pls=Polylines()
         for segment in polyline.segments:
@@ -5984,20 +6031,29 @@ class ConvexSimplePolygon(SimplePolygon):
         
         """
         pls=self.difference_polyline(polygon.polyline)
-        print(pls)
+        #print(pls)
         
         if len(pls)==0:
             return self # no difference, so these are the same polygon
         
-        elif pls[0]==self.polyline:
+        elif Polygon(*(pls[0][:-1]))==polygon:
             return None # polygons do not intersect (or have only point intersection), 
                         # so union is None
             
         else:
+            
+            # adds the segments of the intersecting polygon if they are contained in both union polygons
+            x=self.intersect_convex_simple_polygon(polygon)
+            if isinstance(x,ConvexSimplePolygon):
+                for s in x.polyline.segments:
+                    if self.polyline.contains(s) and polygon.polyline.contains(s):
+                        pls.append(Polyline(s.P0,s.P1))
+            
             pl2=polygon.difference_polyline(self.polyline)[0]
             pls.append(pl2)
             pls.add_all()
             pl=pls[0] # as both polygons are convex, only one polyline should be present in pls
+            pl=pl.add_segments()
             return ConvexSimplePolygon(*(list(pl)[:-1]))
         
 
