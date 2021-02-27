@@ -2982,12 +2982,15 @@ class Segment():
         :type segment: Segment
             
         :return: A segments sequence of 0, 1 or 2 segments.
-            Returns an empty segments sequence if the supplied segment is equal to or contains this segment.
-            Returns a segments sequence with this segment if the supplied segment does not intersect this segment.
-            Returns a segments sequence with a new segment if the supplied segment intersects this segment 
-            including either one of the start point or end point.
-            Returns a segment sequence with two new segments if the supplied segment intersects this segment
-            and is contained within it.
+            Returns an empty segments sequence if the supplied segment is equal 
+                to or contains this segment.
+            Returns a segments sequence with this segment if the supplied segment 
+                does not intersect this segment or has point intersection only.
+            Returns a segments sequence with a new segment if the supplied segment 
+                has segment intersection with this segment 
+                including either one of the start point or end point.
+            Returns a segment sequence with two new segments if the supplied segment 
+                has segment intersection with this segment and is contained within it.
         :rtype: Segments
         
         .. rubric:: Code Example
@@ -3698,7 +3701,7 @@ class Segments(collections.abc.MutableSequence):
     
     
     def add_all(self):
-        """Adds together the segments in the sequence where possible
+        """Adds together the segments in the sequence where possible.
         
         :returns: None, as changes are made in place.
         
@@ -3721,72 +3724,16 @@ class Segments(collections.abc.MutableSequence):
                     Segment(Point(1.0,0.0), Point(1.0,1.0)))
            
         """
-        i=0
-        while True:
-            try:
-                s=self[i]
-            except IndexError:
-                break
-            try:
-                new_s,index=Segments(*self[i+1:]).add_first(s)
-                self[i]=new_s
-                del self[i+1+index]
-            except ValueError:
-                i+=1
+        for i in range(len(self)-1,-1,-1): 
+            for s in self[:i]: # loops through each segment up to the ith segment
+                try:
+                    new_s=s+self[i]
+                    s._P0,s._P1=new_s.P0,new_s.P1 # in-place change of s
+                    del self[i] 
+                    break
+                except ValueError:
+                    pass
         
-        
-        # segments=[s for s in self]
-        # i=0
-        
-        # while True:
-        #     try:
-        #         s=segments[i]
-        #     except IndexError:
-        #         break
-        #     try:
-        #         new_s,index=Segments(*segments[i+1:]).add_first(s)
-        #         #print(new_s,index)
-        #         segments[i]=new_s
-        #         segments.pop(i+index+1)
-        #     except ValueError:
-        #         i+=1
-        
-        # return Segments(*segments)
-    
-    
-    def add_first(self,segment):
-        """Adds the first available segment to the supplied segment.
-        
-        This iterates through the segments in the Segments sequence. 
-        When the first segment which can be added to the supplied segment is found,
-        the result of this addition is returned along with its index.
-        
-        :raises ValueError: If no valid additions are found.
-        
-        :return: Returns a tuple with the addition result and the index of 
-            the segment which was added.
-        :rtype: tuple (Segment,int)
-        
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-        
-            >>> from crossproduct import Point, Segment, Segments
-            >>> sgmts = Segments(Segment(Point(0,0), Point(1,0)))
-            >>> result = sgmts.add_first(Segment(Point(1,0), Point(2,0)))
-            >>> print(result)
-            (Segment(Point(0.0,0.0), Point(2.0,0.0)), 0)
-
-        """
-        for i,s in enumerate(self):
-            try:
-                result=segment+s
-                return result,i
-            except ValueError:
-                pass
-            
-        raise ValueError
-
     
     def contains(self,obj):
         """Tests if the segments sequence contains the object.
@@ -3911,6 +3858,46 @@ class Polyline(collections.abc.Sequence):
        Polyline(Point(0.0,0.0), Point(1.0,0.0), Point(1.0,1.0))
        
     """
+    
+    def __add__(self,obj):
+        """Returns the addition of this polyline and the supplied object.
+        
+        :param obj: A geometric object.
+        :type obj: Segment, Polyline
+        
+        :raise ValueError: If objects do have a shared start/end point.
+        
+        :returns: For segment, if the segment starts or ends at either the 
+            start or end point of the polyline, then a new polyline with
+            the segment added on is returned.
+            For polyline, if the polyline starts or ends at either the 
+            start or end point of the polyline, then a new polyline with
+            the polyline added on is returned.
+            Otherwise, returns None.
+        
+        :rtype: Polyline
+        
+        """
+        if isinstance(obj,Segment) or isinstance(obj,Polyline):    
+            try:
+                obj_pts=list(obj.points) # if a segment
+            except AttributeError:
+                obj_pts=list(obj) # if a polyline
+                
+            if obj_pts[0]==self[-1]:
+                return Polyline(*(list(self)+obj_pts[1:]))
+            elif obj_pts[-1]==self[-1]:
+                return Polyline(*(list(self)+obj_pts[:-1][::-1]))
+            elif obj_pts[0]==self[0]:
+                return Polyline(*(obj_pts[1:][::-1]+list(self)))
+            elif obj_pts[-1]==self[0]:
+                return Polyline(*(obj_pts[:-1]+list(self)))
+            else:
+                raise ValueError('To add an object to a Polyline, they must have a shared start or end point ')
+
+        else:
+            raise TypeError
+    
     
     def __eq__(self,polyline):
         """Tests if this polyline and the supplied polyline are equal.
@@ -4129,42 +4116,7 @@ class Polyline(collections.abc.Sequence):
         return tuple(tuple(pt) for pt in self)
     
     
-    def union(self,obj):
-        """Returns the union of this polyline and the supplied object.
-        
-        :param obj: A geometric object.
-        :type obj: Segment, Polyline
-        
-        :returns: For segment, if the segment starts or ends at either the 
-            start or end point of the polyline, then a new polyline with
-            the segment added on is returned.
-            For polyline, if the polyline starts or ends at either the 
-            start or end point of the polyline, then a new polyline with
-            the polyline added on is returned.
-            Otherwise, returns None.
-        
-        :rtype: Polyline
-        
-        """
-        if isinstance(obj,Segment) or isinstance(obj,Polyline):    
-            try:
-                obj_pts=list(obj.points) # if a segment
-            except AttributeError:
-                obj_pts=list(obj) # if a polyline
-                
-            if obj_pts[0]==self[-1]:
-                return Polyline(*(list(self)+obj_pts[1:]))
-            elif obj_pts[-1]==self[-1]:
-                return Polyline(*(list(self)+obj_pts[:-1][::-1]))
-            elif obj_pts[0]==self[0]:
-                return Polyline(*(obj_pts[1:][::-1]+list(self)))
-            elif obj_pts[-1]==self[0]:
-                return Polyline(*(obj_pts[:-1]+list(self)))
-            else:
-                return None
-
-        else:
-            raise TypeError
+    
             
             
 
@@ -4272,22 +4224,23 @@ class Polylines(collections.abc.MutableSequence):
         return self._polylines.insert(index,value)
 
 
-    def union_self(self):
-        """Returns a new Polylines object containing the unions of the polylines where possible.
+    def add_all(self):
+        """Adds together the segments in the sequence where possible.
         
-        
-        :rtype: Polylines
+        :returns: Nothing, as changes are made in-place.
+        :rtype: None
         
         """
-        x=Polylines(*self)
-        for i in range(len(x)-1,-1,-1): # loops through offsets of x in reverse, as end items may be deleted
-            for pl in x[:i]: # loops through each polyline up to the ith polyline
-                y=pl.union(x[i])
-                if y: 
+        for i in range(len(self)-1,-1,-1): # loops through offsets of x in reverse, as end items may be deleted
+            for pl in self[:i]: # loops through each polyline up to the ith polyline
+                try:
+                    y=pl+self[i]
                     pl._points=y._points # in-place change of pl, to a new polyline representing the union with the segment
-                    del x[i] 
+                    del self[i] 
                     break
-        return x
+                except ValueError:
+                    pass
+    
 
 
 class Plane():
@@ -5651,6 +5604,86 @@ class SimplePolygon(Polygon):
             return ValueError
         
 
+    
+    
+    
+    @property
+    def triangles(self):
+        """Returns a Polygon sequence of triangles which when combined have 
+            the same shape as the polygon.
+        
+        :rtype: Triangles
+        
+        """
+        def _first_triangle(polygon):
+            """Finds the first triangle in the polygon
+            
+            :param polygon: A 2D polygon which is counterclockwise.
+            
+            :rtype: tuple (triangle,remaining_polygon)
+            
+            """
+            
+            for i in range(len(polygon)):
+                #print(i)
+                
+                pg=polygon.reorder(i)
+                            
+                triangle=Triangle(*pg[0:3])
+                
+                if triangle.is_counterclockwise:
+                    
+                    inside_point=False
+                    remaining_points=pg[3:]
+                    for pt in remaining_points:
+                        if pt in triangle:
+                            inside_point=True
+                    
+                    if not inside_point:
+                    
+                        points=list(pg)
+                        points.pop(1)
+                        
+                        # merge any codirectional segments
+                        pl=Polyline(*points)
+                        #print(pl)
+                        sgmts=pl.segments
+                        #print(sgmts)
+                        sgmts.add_all()
+                        
+                        pts=[s.P0 for s in sgmts]+[sgmts[-1].P1]
+                        
+                        return triangle, Polygon(*pts)
+                
+            raise Exception
+        
+        
+        triangles=Triangles()
+        
+        # project to 2D if needed
+        if self.nD==2:
+            pg=self
+        elif self.nD==3:
+            coordinate_index,pg=self.project_2D
+        
+        # orientate the 2D polygon counterclockwise
+        pg=pg.ccw
+        
+        n=len(pg)
+        while n>2: # keep looping if pg has more than two points
+        
+            t,pg=_first_triangle(pg)
+            triangles.append(t)
+            n=len(pg)
+            
+        # project to 3D if needed
+        if self.nD==2:
+            return triangles
+        elif self.nD==3:
+            triangles=Triangles(*(t.project_3D(self.plane, coordinate_index) 
+                                  for t in triangles))
+            
+            
 
     def winding_number(self,point):
         """Returns the winding number of the point for a 2D polygon.
@@ -5698,6 +5731,34 @@ class ConvexSimplePolygon(SimplePolygon):
         return 'ConvexSimplePolygon(%s)' % ','.join([str(pt) for pt in self])
 
 
+    def difference_polyline(self,polyline):
+        """
+        
+        returns Polylines
+        
+        """
+        pls=Polylines()
+        for segment in polyline.segments:
+            x=self.difference_segment(segment) # Segments
+            for s in x:
+                pls.append(Polyline(s.P0,s.P1))
+        pls.add_all()
+        return pls
+
+
+    def difference_segment(self,segment):
+        """
+        
+        returns Segments
+        
+        """
+        x=self.intersect_segment(segment) # returns None, Point or Segment
+        if isinstance(x,Segment):
+            return segment.difference_segment(x)
+        else:
+            return Segments(segment)
+
+
     def intersect_convex_simple_polygon(self,polygon):
         """
         returns none, point, segment, convex_simple_polygon
@@ -5705,6 +5766,34 @@ class ConvexSimplePolygon(SimplePolygon):
         'polygon' is simple and convex
         
         """
+        pts,pls=self.intersect_polyline(polygon.polyline)
+        
+        if pls:
+            pl2=polygon.intersect_polyline(self.polyline)[1][0]
+            
+            # add pl2 segments to pls
+            for s in pl2.segments: # loop through segments in pl2
+                if not pls.contains(s): # if segment is not contained by pls
+                    pls.append(Polyline(s.P0,s.P1)) # append segment as a new polyline to pls
+                    
+            pls.add_all()
+            pl=pls[0] # as both polygons are convex, only one polyline should be present in pls
+            
+            if len(pl)==2: 
+                return Segment(*pl)
+            else:        
+                return ConvexSimplePolygon(*(list(pl)[:-1]))
+        
+        else: # no polylines 
+            
+            if pts:
+                return pts[0] # a point intersection
+            else:
+                return None # no intersection
+        
+        
+        ################# old version below
+        
         pts,pls=self.intersect_polyline(polygon.polyline)
         
         if pls:
@@ -5719,15 +5808,17 @@ class ConvexSimplePolygon(SimplePolygon):
             # adds all remaining segments to x - either as unions of existing polylines in x or as new polylines appended to x
             for s in remaining_segments:        
                 if not x.contains(s): # if segment does not exist in any of the polylines in x           
-                    for pl in x:                
-                        y=pl.union(s)
-                        if y:
-                            pl._points=y._points # in-place change of pl, to a new polyline representing the union with the segment
-                            break             
+                    for pl in x:
+                        try:
+                            y=pl+s
+                            pl._points=y._points # in-place change of pl, to a new polyline representing the addition with the segment
+                            break    
+                        except ValueError:
+                            pass
                     else: # if segment does not union with any of the polylines in x
                         x.append(Polyline(*s.points)) # append a new polyline to x
             
-            x=x.union_self()            
+            x.add_all()            
             
             pl=x[0] # as both polygons are convex, only one polyline should be present in x
             if len(pl)==2: 
@@ -5806,6 +5897,28 @@ class ConvexSimplePolygon(SimplePolygon):
         """
         pts=Points()
         pls=Polylines()
+        
+        for segment in polyline.segments:
+            x=self.intersect_segment(segment) # returns None, Point, Segment
+            if isinstance(x,Segment):
+                pls.append(Polyline(x.P0,x.P1))
+            elif isinstance(x,Point):
+                if not x in pts:
+                    pts.append(x)
+            
+        pls.add_all()
+        
+        # remove points that are on the polylines
+        for pt in pts[::-1]: # iterate in reverse as items are being deleted
+            if any(pl.contains(pt) for pl in pls):
+                pts.remove(pt)
+        
+        return pts,pls
+    
+        ################# different version below
+
+        pts=Points()
+        pls=Polylines()
         pl=Polyline()
         for segment in polyline.segments:
             x=self.intersect_segment(segment) # returns None, Point, Segment
@@ -5863,8 +5976,30 @@ class ConvexSimplePolygon(SimplePolygon):
             raise Exception
     
             
-    
+    def union_convex_simple_polygon(self,polygon):
+        """
+        returns None, SimpleConvexPolygon
+        
+        'polygon' is simple and convex
+        
+        """
+        pls=self.difference_polyline(polygon.polyline)
+        print(pls)
+        
+        if len(pls)==0:
+            return self # no difference, so these are the same polygon
+        
+        elif pls[0]==self.polyline:
+            return None # polygons do not intersect (or have only point intersection), 
+                        # so union is None
             
+        else:
+            pl2=polygon.difference_polyline(self.polyline)[0]
+            pls.append(pl2)
+            pls.add_all()
+            pl=pls[0] # as both polygons are convex, only one polyline should be present in pls
+            return ConvexSimplePolygon(*(list(pl)[:-1]))
+        
 
 class Triangle(ConvexSimplePolygon):
     """
@@ -5874,6 +6009,9 @@ class Triangle(ConvexSimplePolygon):
     Three sides only
     """
     
+    def __repr__(self):
+        ""
+        return 'Triangle(%s)' % ','.join([str(pt) for pt in self])
     
     @property
     def area(self):
@@ -5946,6 +6084,28 @@ class Polygons(collections.abc.MutableSequence):
     def __delitem__(self,index):
         ""
         del self._polygons[index]
+
+
+    def __eq__(self,polygons):
+        """Tests if this polygons sequence and the supplied polygons sequence are equal.
+        
+        :param polygons: The polygons sequence to be tested.
+        :type polygons: Polygons
+        
+        :return: True if the polygons items are equal, otherwise False.
+        :rtype: bool
+        
+        :Example:
+    
+        .. code-block:: python
+        
+           
+            
+        """
+        if isinstance(polygons,self.__class__) and self._polygons==polygons._polygons:
+            return True
+        else:
+            return False
     
    
     def __getitem__(self,index):
@@ -5978,10 +6138,32 @@ class Polygons(collections.abc.MutableSequence):
         return self._polygons.insert(index,value)
 
 
+    
+        
+
+
 class SimplePolygons(Polygons):
     """
     """
+    def __repr__(self):
+        ""
+        return 'SimplePolygons(%s)' % ', '.join([str(pg) for pg in self])
     
+    
+class ConvexSimplePolygons(SimplePolygons):
+    """
+    """
+    def __repr__(self):
+        ""
+        return 'ConvexSimplePolygons(%s)' % ', '.join([str(pg) for pg in self])
+    
+    
+class Triangles(ConvexSimplePolygons):
+    """
+    """
+    def __repr__(self):
+        ""
+        return 'Triangles(%s)' % ', '.join([str(pg) for pg in self])
 
 
 class Polyhedron(collections.abc.Sequence):

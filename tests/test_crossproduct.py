@@ -4,7 +4,7 @@ import unittest, math
 
 from crossproduct import Point, Points, Vector, Line, Halfline, Segment, Segments
 from crossproduct import Polyline, Polylines, Plane
-from crossproduct import Polygon, SimplePolygon, ConvexSimplePolygon, Triangle
+from crossproduct import Polygon, SimplePolygon, ConvexSimplePolygon, Triangle, Triangles
 from crossproduct import Polyhedron
 
 class Test_Point(unittest.TestCase):
@@ -1311,23 +1311,6 @@ class Test_Segments(unittest.TestCase):
                                   Segment(Point(2.0,0.0), 
                                             Point(4.0,0.0))))
         
-        
-    def test_add_first(self):
-        ""
-        s=Segments(Segment(Point(0,0),Point(1,0)),
-                   Segment(Point(1,0),Point(1,1)))
-        self.assertEqual(s.add_first(Segment(Point(-1,0), 
-                                             Point(0,0))),
-                         (Segment(Point(-1.0,0.0), 
-                                  Point(1.0,0.0)), 
-                          0))
-        
-        self.assertEqual(s.add_first(Segment(Point(1,1), 
-                                             Point(1,2))),
-                         (Segment(Point(1.0,0.0), 
-                                  Point(1.0,2.0)), 
-                          1))
-
     
     def test_contains(self):
         ""
@@ -1352,6 +1335,35 @@ class Test_Segments(unittest.TestCase):
     
 class Test_Polyline(unittest.TestCase):
     ""
+    
+    def test___add__(self):
+        ""
+        pl=Polyline(Point(0,0),Point(0,1),Point(1,1))
+        # no union
+        self.assertRaises(ValueError,
+                          pl.__add__,Segment(Point(2,0),Point(2,1)))
+        # segment union at start
+        self.assertEqual(pl+Segment(Point(-1,0),Point(0,0)),
+                         Polyline(Point(-1,0),Point(0,0),Point(0,1),Point(1,1)))
+        self.assertEqual(pl+Segment(Point(0,0),Point(-1,0)),
+                         Polyline(Point(-1,0),Point(0,0),Point(0,1),Point(1,1)))
+        # segment union at end
+        self.assertEqual(pl+Segment(Point(1,1),Point(2,2)),
+                         Polyline(Point(0,0),Point(0,1),Point(1,1),Point(2,2)))
+        self.assertEqual(pl+Segment(Point(2,2),Point(1,1)),
+                         Polyline(Point(0,0),Point(0,1),Point(1,1),Point(2,2)))
+        # polyline union at start
+        pl1=Polyline(Point(-1,-1),Point(-1,0),Point(0,0))
+        self.assertEqual(pl+pl1,
+                         Polyline(Point(-1,-1),Point(-1,0),Point(0,0),Point(0,1),Point(1,1)))
+        self.assertEqual(pl+pl1.reverse,
+                         Polyline(Point(-1,-1),Point(-1,0),Point(0,0),Point(0,1),Point(1,1)))
+        # polyline union at end
+        pl1=Polyline(Point(1,1),Point(2,2),Point(2,3))
+        self.assertEqual(pl+pl1,
+                         Polyline(Point(0,0),Point(0,1),Point(1,1),Point(2,2),Point(2,3)))
+        self.assertEqual(pl+pl1.reverse,
+                         Polyline(Point(0,0),Point(0,1),Point(1,1),Point(2,2),Point(2,3)))
     
     def test___init__(self):
         ""
@@ -1408,34 +1420,7 @@ class Test_Polyline(unittest.TestCase):
                          ((0,0),(0,1),(1,1)))
 
 
-    def test_union(self):
-        ""
-        pl=Polyline(Point(0,0),Point(0,1),Point(1,1))
-        # no union
-        self.assertEqual(pl.union(Segment(Point(2,0),Point(2,1))),
-                         None)
-        # segment union at start
-        self.assertEqual(pl.union(Segment(Point(-1,0),Point(0,0))),
-                         Polyline(Point(-1,0),Point(0,0),Point(0,1),Point(1,1)))
-        self.assertEqual(pl.union(Segment(Point(0,0),Point(-1,0))),
-                         Polyline(Point(-1,0),Point(0,0),Point(0,1),Point(1,1)))
-        # segment union at end
-        self.assertEqual(pl.union(Segment(Point(1,1),Point(2,2))),
-                         Polyline(Point(0,0),Point(0,1),Point(1,1),Point(2,2)))
-        self.assertEqual(pl.union(Segment(Point(2,2),Point(1,1))),
-                         Polyline(Point(0,0),Point(0,1),Point(1,1),Point(2,2)))
-        # polyline union at start
-        pl1=Polyline(Point(-1,-1),Point(-1,0),Point(0,0))
-        self.assertEqual(pl.union(pl1),
-                         Polyline(Point(-1,-1),Point(-1,0),Point(0,0),Point(0,1),Point(1,1)))
-        self.assertEqual(pl.union(pl1.reverse),
-                         Polyline(Point(-1,-1),Point(-1,0),Point(0,0),Point(0,1),Point(1,1)))
-        # polyline union at end
-        pl1=Polyline(Point(1,1),Point(2,2),Point(2,3))
-        self.assertEqual(pl.union(pl1),
-                         Polyline(Point(0,0),Point(0,1),Point(1,1),Point(2,2),Point(2,3)))
-        self.assertEqual(pl.union(pl1.reverse),
-                         Polyline(Point(0,0),Point(0,1),Point(1,1),Point(2,2),Point(2,3)))
+    
         
         
 
@@ -1453,6 +1438,17 @@ class Test_Polylines(unittest.TestCase):
                           Polyline(Point(1,0),Point(1,1))])
 
 
+    def test_add_all(self):
+        ""
+        pls=Polylines(Polyline(Point(0,0),Point(1,0)),
+                      Polyline(Point(1,0),Point(1,1)))
+        pls.add_all()
+        self.assertEqual(pls,
+                         Polylines(Polyline(Point(0,0),
+                                            Point(1,0),
+                                            Point(1,1))))
+    
+
     def test_contains(self):
         ""
         pls=Polylines(Polyline(Point(0,0),Point(0,1),Point(1,1)))
@@ -1465,15 +1461,7 @@ class Test_Polylines(unittest.TestCase):
         self.assertFalse(pls.contains(Segment(Point(0,0),Point(0,-1))))
     
 
-    def test_union_self(self):
-        ""
-        pls=Polylines(Polyline(Point(0,0),Point(1,0)),
-                      Polyline(Point(1,0),Point(1,1)))
-        self.assertEqual(pls.union_self(),
-                         Polylines(Polyline(Point(0,0),
-                                            Point(1,0),
-                                            Point(1,1))))
-        
+    
 
 
 
@@ -2037,7 +2025,35 @@ class Test_SimplePolygon(unittest.TestCase):
         self.assertEqual(pg.reverse.signed_area, # cw
                          -1)
 
+
+    def test_triangles(self):
+        ""
+        # convex polygon
+        pg=SimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        #print(pg.triangles); return
+        self.assertEqual(pg.triangles,
+                         Triangles(Triangle(Point(0,0),
+                                            Point(1,0),
+                                            Point(1,1)), 
+                                   Triangle(Point(0,0),
+                                            Point(1,1),
+                                            Point(0,1))))
+        # concave polygon
+        pg=SimplePolygon(Point(0,0),
+                         Point(2,0),
+                         Point(1,1),
+                         Point(2,2),
+                         Point(0,2))
+        #print(pg.triangles); return
+        self.assertEqual(pg.triangles,
+                         Triangles(Triangle(Point(0,0),
+                                            Point(2,0),
+                                            Point(1,1)), 
+                                   Triangle(Point(0,0),
+                                            Point(2,2),
+                                            Point(0,2))))
     
+
     def test_winding_number(self):
         ""
         pg=SimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
@@ -2057,6 +2073,81 @@ class Test_SimplePolygon(unittest.TestCase):
     
 class Test_ConvexSimplePolygon(unittest.TestCase):
     ""
+    
+    def test_difference_segment(self):
+        ""
+        # 2D
+        pg=ConvexSimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        # internal
+        s=Segment(Point(0.25,0.25),Point(0.75,0.75))
+        self.assertEqual(pg.difference_segment(s),
+                         Segments())
+        # half-in, half-out
+        s=Segment(Point(0.5,0.5),Point(1.5,0.5))
+        self.assertEqual(pg.difference_segment(s),
+                         Segments(Segment(Point(1,0.5),Point(1.5,0.5))))
+        
+        
+    def test_difference_polyline(self):
+        ""
+        # 2D
+        pg=ConvexSimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        # internal
+        pl=Polyline(Point(0.25,0.25),Point(0.75,0.75))
+        #print(pg.difference_polyline(pl)); return
+        self.assertEqual(pg.difference_polyline(pl),
+                         Polylines())
+    
+        # half-in, half-out
+        pl=Polyline(Point(0.5,0.5),Point(1.5,1.5))
+        #print(pg.difference_polyline(pl)); return
+        self.assertEqual(pg.difference_polyline(pl),
+                         Polylines(Polyline(Point(1.0,1.0),Point(1.5,1.5))))
+    
+        # two adjacent sides
+        pl=Polyline(Point(0,0),Point(1,0),Point(1,1))
+        #print(pg.difference_polyline(pl)); return
+        self.assertEqual(pg.difference_polyline(pl),
+                         Polylines())
+        
+        # two non-adjacent sides
+        pl=Polyline(Point(0,0),Point(2,0),Point(2,1),Point(0,1))
+        #print(pg.difference_polyline(pl)); return
+        self.assertEqual(pg.difference_polyline(pl),
+                         Polylines(Polyline(Point(1.0,0.0),
+                                            Point(2.0,0.0),
+                                            Point(2.0,1.0),
+                                            Point(1.0,1.0))))
+        
+        # in-and-out
+        pl=Polyline(Point(0,-0.5),Point(0.5,0.5),Point(1,-0.5))
+        #print(pg.difference_polyline(pl)); return
+        self.assertEqual(pg.difference_polyline(pl),
+                         Polylines(Polyline(Point(0.0,-0.5),Point(0.25,0.0)), 
+                                   Polyline(Point(0.75,0.0),Point(1.0,-0.5))))
+        
+        # in-and-out -- reverse
+        pl=Polyline(Point(1,-0.5),Point(0.5,0.5),Point(0,-0.5))
+        #print(pg.difference_polyline(pl)); return
+        self.assertEqual(pg.difference_polyline(pl),
+                         Polylines(Polyline(Point(1.0,-0.5),Point(0.75,0.0)), 
+                                   Polyline(Point(0.25,0.0),Point(0.0,-0.5))))
+        
+        # partial edge
+        pl=Polyline(Point(0.25,-0.5),Point(0.25,0),Point(0.75,0),Point(0.75,-0.5))
+        #print(pg.difference_polyline(pl)); return
+        self.assertEqual(pg.difference_polyline(pl),
+                         Polylines(Polyline(Point(0.25,-0.5),Point(0.25,0.0)), 
+                                   Polyline(Point(0.75,0.0),Point(0.75,-0.5))))
+        # half difference
+        pl=Polyline(Point(0.5,0),Point(1.5,0),Point(1.5,1),Point(0.5,1),Point(0.5,0))
+        #print(pg.difference_polyline(pl)); return
+        self.assertEqual(pg.difference_polyline(pl),
+                         Polylines(Polyline(Point(1.0,0.0),
+                                            Point(1.5,0.0),
+                                            Point(1.5,1.0),
+                                            Point(1.0,1.0))))
+    
     
     def test_intersect_convex_simple_polygon(self):
         ""
@@ -2218,8 +2309,10 @@ class Test_ConvexSimplePolygon(unittest.TestCase):
         #print(pg.intersect_polyline(pl)); return
         self.assertEqual(pg.intersect_polyline(pl),
                          (Points(), 
-                          Polylines(Polyline(Point(0.5,0.0),Point(1.0,0.0)), 
-                                    Polyline(Point(1.0,1.0),Point(0.5,1.0),Point(0.5,0.0)))))
+                          Polylines(Polyline(Point(1.0,1.0),
+                                             Point(0.5,1.0),
+                                             Point(0.5,0.0),
+                                             Point(1.0,0.0)))))
         
         
     def test_intersect_segment(self):
@@ -2236,8 +2329,50 @@ class Test_ConvexSimplePolygon(unittest.TestCase):
                          Segment(Point(0.5,0.5),Point(1,0.5)))
         
     
-    
-    
+    def test_union_convex_simple_polygon(self):
+        ""
+        #2D
+        pg=ConvexSimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        # no intersection
+        pg1=ConvexSimplePolygon(Point(0,2),Point(1,2),Point(1,3),Point(0,3))
+        print(pg.union_convex_simple_polygon(pg1)); return
+        self.assertEqual(pg.union_convex_simple_polygon(pg1),
+                         None)
+        # point intersection
+        pg1=ConvexSimplePolygon(Point(1,1),Point(2,1),Point(2,2),Point(2,1))
+        print(pg.union_convex_simple_polygon(pg1)); return
+        self.assertEqual(pg.union_convex_simple_polygon(pg1),
+                         Point(1,1))
+        # full edge intersection
+        pg1=ConvexSimplePolygon(Point(0,1),Point(1,1),Point(1,2),Point(0,2))
+        print(pg.union_convex_simple_polygon(pg1)); return
+        self.assertEqual(pg.union_convex_simple_polygon(pg1),
+                         Segment(Point(0,1),Point(1,1)))
+        # half edge overlap intersection
+        pg1=ConvexSimplePolygon(Point(0.5,1),Point(1.5,1),Point(1.5,2),Point(0.5,2))
+        print(pg.union_convex_simple_polygon(pg1)); return
+        self.assertEqual(pg.union_convex_simple_polygon(pg1),
+                         Segment(Point(0.5,1),Point(1,1)))
+        # partial internal edge intersection
+        pg1=ConvexSimplePolygon(Point(0.25,1),Point(0.75,1),Point(0.75,2),Point(0.25,2))
+        print(pg.union_convex_simple_polygon(pg1)); return
+        self.assertEqual(pg.union_convex_simple_polygon(pg1),
+                         Segment(Point(0.25,1),Point(0.75,1)))
+        # full intersection
+        pg1=pg
+        print(pg.union_convex_simple_polygon(pg1)); return
+        self.assertEqual(pg.union_convex_simple_polygon(pg1),
+                         pg)
+        # half intersection
+        pg1=ConvexSimplePolygon(Point(0.5,0),Point(1.5,0),Point(1.5,1),Point(0.5,1))
+        print(pg.union_convex_simple_polygon(pg1)); return
+        self.assertEqual(pg.union_convex_simple_polygon(pg1),
+                         ConvexSimplePolygon(Point(0.5,0),Point(1,0),Point(1,1),Point(0.5,1)))
+        # quater intersection
+        pg1=ConvexSimplePolygon(Point(0.5,0.5),Point(1.5,0.5),Point(1.5,1.5),Point(0.5,1.5))
+        print(pg.union_convex_simple_polygon(pg1)); return
+        self.assertEqual(pg.union_convex_simple_polygon(pg1),
+                         ConvexSimplePolygon(Point(0.5,0.5),Point(1,0.5),Point(1,1),Point(0.5,1)))
     
     
 class Test_Triangle(unittest.TestCase):

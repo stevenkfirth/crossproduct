@@ -12,19 +12,7 @@
 # // Users of this code must verify correctness for their application.
 
 
-#from .halfline import Halfline2D, Halfline3D
-#from .line import Line
-#from .plane import Plane3D
-#from .plane_volume import PlaneVolume3D
-#from .point import Point
-#from .points import Points
-#from .polyline import Polyline2D, Polyline3D
-#from .polylines import Polylines
-#from .polygon import Polygon2D, Polygon3D
-#from .polygons import Polygons
-#from .segment import Segment2D, Segment3D
-#from .segments import Segments
-#from .vector import Vector
+
 
 from .crossproduct import Point
 from .crossproduct import Vector
@@ -41,6 +29,7 @@ from .crossproduct import SimplePolygon
 from .crossproduct import ConvexSimplePolygon
 from .crossproduct import Triangle
 from .crossproduct import Polygons
+from .crossproduct import Triangles
 from .crossproduct import SimplePolygons
 from .crossproduct import Polyhedron
 
