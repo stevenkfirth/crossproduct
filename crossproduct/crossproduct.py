@@ -559,32 +559,31 @@ class Points(collections.abc.MutableSequence):
     #     return Points(*points)
     
     
-    # def project_3D(self,plane,coordinate_index):
-    #     """Projection of 2D points on a 3D plane.
+    def project_3D(self,plane,coordinate_index):
+        """Projection of 2D points on a 3D plane.
         
-    #     :param plane: The plane for the projection
-    #     :type plane: Plane3D
-    #     :param coordinate_index: The index of the coordinate which was ignored 
-    #         to create the 2D projection. For example, coordinate_index=0
-    #         means that the x-coordinate was ignored and this point
-    #         was originally projected onto the yz plane.
-    #     :type coordinate_index: int
+        :param plane: The plane for the projection
+        :type plane: Plane3D
+        :param coordinate_index: The index of the coordinate which was ignored 
+            to create the 2D projection. For example, coordinate_index=0
+            means that the x-coordinate was ignored and this point
+            was originally projected onto the yz plane.
+        :type coordinate_index: int
         
-    #     :return: Sequence of 3D points which have been projected from 2D points.
-    #     :rtype: Points
+        :return: Sequence of 3D points which have been projected from 2D points.
+        :rtype: Points
                
-    #     :Example:
+        :Example:
     
-    #     .. code-block:: python
+        .. code-block:: python
         
-    #         >>> pt = Points(Point2D(2,2))
-    #         >>> pl = Plane3D(Point3D(0,0,1), Vector3D(0,0,1))
-    #         >>> result = pts.project_3D(pl, 2)
-    #         Points(Point3D(2,2,1))
+            >>> pt = Points(Point2D(2,2))
+            >>> pl = Plane3D(Point3D(0,0,1), Vector3D(0,0,1))
+            >>> result = pts.project_3D(pl, 2)
+            Points(Point3D(2,2,1))
         
-    #     """
-    #     points=[pt.project_3D(plane,coordinate_index) for pt in self]
-    #     return Points(*points)
+        """
+        return Points(*(pt.project_3D(plane,coordinate_index) for pt in self))
     
     
     def plot(self, ax, *args, **kwargs):
@@ -4011,12 +4010,13 @@ class Polyline(collections.abc.Sequence):
         """Tests if the polyline contains the object.
         
         :param obj: A point or segment. 
-        :type obj: Point, Segment
+        :type obj: Point, Segment, Polyline
         
         :raises TypeError: If supplied object is not supported by this method.
         
         :return: For point, True if the point lies on the polyline; otherwise False. 
             For segment, True if the segment start and endpoints are on a segment of the polyline; otherwise False. 
+            For polyline, True if all segments of the supplied polyline are contained in the polygon; othewise False.
             Note: A polyline only contains a segment if that segment is wholly contained by a single segment of the polyline.
         :rtype: bool
         
@@ -4031,13 +4031,84 @@ class Polyline(collections.abc.Sequence):
             
             return any(s.contains(obj) for s in self.segments)
             
+        elif isinstance(obj,Polyline):
+            
+            return all(self.contains(s) for s in obj.segments)
+        
         else:
             raise TypeError
             
             
+            
+    def difference_polyline(self,polyline):
+        """
+        
+        returns Polylines
+        
+        """
+        pls=Polylines()
+        for s in self.segments:
+            x=s.difference_segments(polyline.segments) # returns Segments
+            if x:
+                for s1 in x: pls.append(Polyline(s1.P0,s1.P1))
+        pls.add_all
+        return pls
+        
     
-    def intersect(self,obj): # TO DO OR REMOVE
-        ""
+    def difference_segment(self,segment): 
+        """
+        
+        returns Polylines
+        
+        """
+        pls=Polylines()
+        for s in self.segments:
+            x=s.difference_segment(segment) # returns Segments
+            if x:
+                for s1 in x: pls.append(Polyline(s1.P0,s1.P1))
+        pls.add_all
+        return pls
+        
+        
+    def intersect_polyline(self,polyline):
+        """
+        
+        returns (Points,Polylines)
+        
+        """
+        pts=Points()
+        pls=Polylines()
+        for s in polyline.segments:
+            x,y=self.intersect_segment(s) # returns (Points,Polylines)
+            for pt in x:
+                if not pt in pts:
+                    pts.append(pt)
+            pls.extend(y)
+        pls.add_all()
+        pts.remove_points_in_segments(pls.segments)
+        
+        return pts,pls
+        
+    
+    def intersect_segment(self,segment):
+        """
+        
+        returns (Points,Polylines)
+        
+        """
+        pts=Points()
+        pls=Polylines()
+        for s in self.segments:
+            x=s.intersect_segment(segment)
+            if isinstance(x,Point):
+                if not x in pts:
+                    pts.append(x)
+            elif isinstance(x,Segment):
+                pls.append(Polyline(x.P0,x.P1))
+        pls.add_all()
+        pts.remove_points_in_segments(pls.segments)
+        
+        return pts,pls
     
     
     @property
@@ -4257,7 +4328,7 @@ class Polylines(collections.abc.MutableSequence):
         """Tests if the polylines contains the object.
         
         :param obj: A point or segment. 
-        :type obj: Point, Segment
+        :type obj: Point, Segment, Polyline
         
         :raises TypeError: If supplied object is not supported by this method.
         
@@ -4273,7 +4344,7 @@ class Polylines(collections.abc.MutableSequence):
            >>> from crossproduct import Point, Polyline
            
         """
-        if isinstance(obj,Point) or isinstance(obj,Segment):
+        if isinstance(obj,Point) or isinstance(obj,Segment) or isinstance(obj,Polyline):
             
             return any(pl.contains(obj) for pl in self)
         
@@ -4284,6 +4355,12 @@ class Polylines(collections.abc.MutableSequence):
     def insert(self,index,value):
         "(required by abc super class)"
         return self._polylines.insert(index,value)
+
+
+    def project_3D(self,plane,coordinate_index):
+        """
+        """
+        return Polylines(*(pl.project_3D(plane,coordinate_index) for pl in self))
 
 
     @property
@@ -5282,6 +5359,44 @@ class SimplePolygon(Polygon):
     
     """
     
+    def __add__(self,polygon):
+        """
+        Addition of two simple polygons
+        
+        2D only
+        
+        The two polygons should share a single polyline intersection only
+        Assumes the polygons do not overlap (doesn't test for this)
+        
+        Addition is then the union of these two polygons
+        
+        
+        """
+        if self.nD==2:
+            
+            pls=Polylines()
+            
+            a,b=self.polyline.intersect_polyline(polygon.polyline)
+            
+            if not len(b)==1:
+                raise ValueError
+            
+            x=self.polyline.difference_polyline(b[0]) # returns Polylines
+            y=polygon.polyline.difference_polyline(b[0]) # returns Polylines
+            
+            pls.extend(x)
+            pls.extend(y)
+            pls.add_all()
+            assert len(pls)==1
+            pl=pls[0]
+            pl=pl.add_segments()
+            
+            return SimplePolygon(*(pl[:-1]))
+            
+        else:
+            raise ValueError
+    
+    
     def __repr__(self):
         ""
         return 'SimplePolygon(%s)' % ','.join([str(pt) for pt in self])
@@ -5411,7 +5526,7 @@ class SimplePolygon(Polygon):
     
         return pts, sgmts
         
-        #### old version below
+        ################ old version below
         
         pts=Points()
         sgmts=Segments()
@@ -5603,14 +5718,87 @@ class SimplePolygon(Polygon):
         pts=Points()
         pls=Polylines()
         pgs=SimplePolygons()
-        
+
         if self.nD==2:
-            pg=self
+        
+            #print('start')    
+        
+            for t1 in self.triangles:
+                for t2 in polygon.triangles:
+                    x=t1.intersect_convex_simple_polygon(t2) # return None, Point, Segment, or ConvexSimplePolygon
+                    if isinstance(x,Point):
+                        if not x in pts:
+                            pts.append(x)
+                    elif isinstance(x,Segment):
+                        pl=Polyline(x.P0,x.P1)
+                        if not pl in pls:
+                            pls.append(pl)
+                    elif isinstance(x,ConvexSimplePolygon):
+                        pgs.append(x)
+                
+            #print(pts,pls,pgs)
+                
+            # removes polyline if it is contained in a polygon polyline
+            pg_polylines=Polylines(*(pg.polyline for pg in pgs))
+            #print(pg_polylines)
+            for i in range(len(pls)-1,-1,-1):
+                #print(pls[i])
+                if pg_polylines.contains(pls[i]):
+                    del pls[i]
             
+            pgs.add_all()
+            pls.add_all()
+            pts.remove_points_in_segments(pls.segments)
+                
+            return pts,pls,pgs
+        
+                
         elif self.nD==3:
-            i,pg=self.project_2D
             
+            a=self.plane.intersect_plane(polygon.plane) # returns None or Line or Plane
             
+            if a is None: # polygon planes do not intersect
+                return pts,pls,pgs
+            
+            elif isinstance(a,Plane): # polygons lie on the same plane
+                
+                i,self_2D=self.project_2D()
+                i1,polygon_2D=polygon.project_2D()
+                assert i==i1
+                pts,pls,pgs=self_2D.intersect_simple_polygon(polygon_2D)
+                return (pts.project_3D(self.plane,i),
+                        pls.project_3D(self.plane,i),
+                        pgs.project_3D(self.plane,i))
+                
+            elif isinstance(a,Line): # the intersection of the two polygon planes as a line
+                
+                pts_x,sgmts_x=self.intersect_line(a) # returns (Points,Segments)
+                pts_y,sgmts_y=polygon.intersect_line(a) # returns (Points,Segments)
+                
+                #print(pts_x,sgmts_x)
+                #print(pts_y,sgmts_y)
+                
+                for pt in pts_x:
+                    if pt in pts_y or sgmts_y.contains(pt):
+                        if not pt in pts:
+                            pts.append(pt)
+                for pt in pts_y:
+                    if sgmts_x.contains(pt):
+                        if not pt in pts:
+                            pts.append(pt)
+                for sx in sgmts_x:
+                    for sy in sgmts_y:
+                        z=sx.intersect_segment(sy) # returns None, Point, Segment
+                        if isinstance(z,Point):
+                            if not z in pts:
+                                pts.append(z)
+                        if isinstance(z,Segment):
+                            pls.append(Polyline(z.P0,z.P1))
+                        
+                pls.add_all()
+                pts.remove_points_in_segments(pls.segments)
+                
+                return pts, pls, pgs
         
         
         
@@ -5740,13 +5928,16 @@ class SimplePolygon(Polygon):
             raise Exception
         
         
+        #if len(self)==3:
+        #    return Triangles(Triangle(*self))
+        
         triangles=Triangles()
         
         # project to 2D if needed
         if self.nD==2:
             pg=self
         elif self.nD==3:
-            coordinate_index,pg=self.project_2D
+            coordinate_index,pg=self.project_2D()
         
         # orientate the 2D polygon counterclockwise
         pg=pg.ccw
@@ -5764,6 +5955,7 @@ class SimplePolygon(Polygon):
         elif self.nD==3:
             triangles=Triangles(*(t.project_3D(self.plane, coordinate_index) 
                                   for t in triangles))
+            return triangles
             
             
 
@@ -6128,7 +6320,7 @@ class ConvexSimplePolygon(SimplePolygon):
             
     def union_convex_simple_polygon(self,polygon):
         """
-        returns None, SimpleConvexPolygon
+        returns None, SimplePolygon
         
         'polygon' is simple and convex
         
@@ -6161,7 +6353,7 @@ class ConvexSimplePolygon(SimplePolygon):
                 pls.add_all()
                 pl=pls[0] # as both polygons are convex, only one polyline should be present in pls
                 pl=pl.add_segments()
-                return ConvexSimplePolygon(*(list(pl)[:-1]))
+                return SimplePolygon(*(list(pl)[:-1]))
             
         elif self.nD==3:
             
@@ -6330,6 +6522,32 @@ class SimplePolygons(Polygons):
         return 'SimplePolygons(%s)' % ', '.join([str(pg) for pg in self])
     
     
+    def add_all(self):
+        """Adds the polygons if possible
+        
+        Assumes the polygons do not overlap (doesn't test for this)
+        
+        in-place change
+        
+        """
+        for i in range(len(self)-1,-1,-1): # loops through offsets of x in reverse, as end items may be deleted
+            for pg in self[:i]: # loops through each polygon up to the ith polygon
+                try:
+                    y=pg+self[i]
+                    pg._points=y._points # in-place change of csp, to a new polygon representing the union 
+                    del self[i] 
+                    break
+                except ValueError:
+                    pass
+
+
+    def project_3D(self,plane,coordinate_index):
+        """
+        """
+        return self.__class__(*(pg.project_3D(plane,coordinate_index) for pg in self))
+
+
+    
 class ConvexSimplePolygons(SimplePolygons):
     """
     """
@@ -6338,19 +6556,19 @@ class ConvexSimplePolygons(SimplePolygons):
         return 'ConvexSimplePolygons(%s)' % ', '.join([str(pg) for pg in self])
     
     
-    def union_all(self):
-        """Unions the polygons if possible
+    # def union_all(self):
+    #     """Unions the polygons if possible
         
-        in-place change
+    #     in-place change
         
-        """
-        for i in range(len(self)-1,-1,-1): # loops through offsets of x in reverse, as end items may be deleted
-            for csp in self[:i]: # loops through each polygon up to the ith polygon
-                y=csp.union_convex_simple_polygon(self[i])
-                if y:
-                    csp._points=y._points # in-place change of csp, to a new polygon representing the union 
-                    del self[i] 
-                    break
+    #     """
+    #     for i in range(len(self)-1,-1,-1): # loops through offsets of x in reverse, as end items may be deleted
+    #         for csp in self[:i]: # loops through each polygon up to the ith polygon
+    #             y=csp.union_convex_simple_polygon(self[i])
+    #             if y:
+    #                 csp._points=y._points # in-place change of csp, to a new polygon representing the union 
+    #                 del self[i] 
+    #                 break
                 
     
     
