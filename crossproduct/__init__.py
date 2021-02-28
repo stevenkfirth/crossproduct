@@ -31,5 +31,6 @@ from .crossproduct import Triangle
 from .crossproduct import Polygons
 from .crossproduct import Triangles
 from .crossproduct import SimplePolygons
+from .crossproduct import ConvexSimplePolygons
 from .crossproduct import Polyhedron
 
