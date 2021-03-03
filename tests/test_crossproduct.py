@@ -5,7 +5,9 @@ import unittest, math
 from crossproduct import Point, Points, Vector, Line, Halfline, Segment, Segments
 from crossproduct import Polyline, Polylines, Plane
 from crossproduct import Polygon, SimplePolygon, ConvexSimplePolygon, Triangle, Triangles
-from crossproduct import Polyhedron, ConvexSimplePolygons, SimplePolygons
+from crossproduct import ConvexSimplePolygons, SimplePolygons
+from crossproduct import Polyhedron, ConvexPolyhedron, Tetrahedron
+
 
 class Test_Point(unittest.TestCase):
     ""
@@ -2065,6 +2067,16 @@ class Test_SimplePolygon(unittest.TestCase):
         self.assertTrue(pg.contains(Point(0.5,0.5,0)))
         self.assertFalse(pg.contains(Point(0.5,0.5,1)))
     
+        # 
+        pg=ConvexSimplePolygon(Point(0.0,0.0),Point(1.0,0.0),Point(1.0,1.0),Point(0.0,1.0))
+        pt=Point(1.0,0.5)
+        self.assertTrue(pg.polyline.contains(pt))
+        
+        #
+        pg=ConvexSimplePolygon(Point(1,0,0),Point(1,1,0),Point(1,1,1),Point(1,0,1))
+        pt=Point(1.0,1.0,0.5)
+        self.assertTrue(pg.polyline.contains(pt))
+    
     
     def test_ccw(self):
         ""
@@ -2252,7 +2264,7 @@ class Test_SimplePolygon(unittest.TestCase):
                                                        Point(1,0),
                                                        Point(1,1),
                                                        Point(0.5,1)))))
-        # quater intersection
+        # quarter intersection
         pg1=SimplePolygon(Point(0.5,0.5),Point(1.5,0.5),Point(1.5,1.5),Point(0.5,1.5))
         #print(pg.intersect_simple_polygon(pg1)); return
         self.assertEqual(pg.intersect_simple_polygon(pg1),
@@ -2267,7 +2279,7 @@ class Test_SimplePolygon(unittest.TestCase):
         # 3D
         pg=SimplePolygon(Point(0,0,0),Point(1,0,0),Point(1,1,0),Point(0,1,0))
         # in-plane half intersection
-        pg1=SimplePolygon(Point(0.5,0,0),Point(1.5,0,0),Point(1.5,1,0),Point(0.5,1,1))
+        pg1=SimplePolygon(Point(0.5,0,0),Point(1.5,0,0),Point(1.5,1,0),Point(0.5,1,0))
         #print(pg.intersect_simple_polygon(pg1)); return
         self.assertEqual(pg.intersect_simple_polygon(pg1),
                          (Points(), 
@@ -2327,6 +2339,9 @@ class Test_SimplePolygon(unittest.TestCase):
                           SimplePolygons()))
         
         
+        
+        
+        
     def test_is_counterclockwise(self):
         ""
         pg=SimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
@@ -2369,6 +2384,19 @@ class Test_SimplePolygon(unittest.TestCase):
                                    Triangle(Point(0,0),
                                             Point(2,2),
                                             Point(0,2))))
+    
+    
+        # another concave polygon
+        pg=SimplePolygon(Point(0.5,0),
+                         Point(2,0),
+                         Point(2,1),
+                         Point(0.5,1),
+                         Point(1.5,0.5))
+        #print(pg.triangles); return
+        self.assertEqual(pg.triangles,
+                         Triangles(Triangle(Point(2.0,1.0),Point(0.5,1.0),Point(1.5,0.5)), 
+                                   Triangle(Point(1.5,0.5),Point(0.5,0.0),Point(2.0,0.0)), 
+                                   Triangle(Point(1.5,0.5),Point(2.0,0.0),Point(2.0,1.0))))
     
 
     def test_winding_number(self):
@@ -2625,6 +2653,14 @@ class Test_ConvexSimplePolygon(unittest.TestCase):
                          Segment(Point(0,0,0), Point(1,0,0)))
     
     
+        # 
+        pg=ConvexSimplePolygon(Point(1,0,0),Point(1,1,0),Point(1,1,1),Point(1,0,1))
+        l=Line(Point(0.5,0.5,0),Vector(1,1,1))
+        # print(pg.intersect_line(l)); return
+        self.assertEqual(pg.intersect_line(l),
+                         Point(1,1,0.5))
+    
+    
     def test_intersect_plane(self):
         ""
         pg=ConvexSimplePolygon(Point(0,0,0),Point(1,0,0),Point(1,1,0),Point(0,1,0))
@@ -2852,6 +2888,18 @@ class Test_Triangle(unittest.TestCase):
 class Test_ConvexSimplePolygons(unittest.TestCase):
     ""
     
+    def test_intersect_line(self):
+        ""
+        pg=ConvexSimplePolygon(Point(0,0),Point(1,0),Point(1,1))
+        pg1=ConvexSimplePolygon(Point(2,0),Point(1,0),Point(1,1))
+        pgs=ConvexSimplePolygons(pg,pg1)
+        l=Line(Point(0,0),Vector(1,0))
+        #print(pgs.intersect_line(l)); return
+        self.assertEqual(pgs.intersect_line(l),
+                         (Points(), 
+                          Segments(Segment(Point(0.0,0.0), Point(1.0,0.0)), 
+                                   Segment(Point(2.0,0.0), Point(1.0,0.0)))))
+    
     # def test_union_all(self):
     #     ""
     #     pg=ConvexSimplePolygon(Point(0,0),Point(1,0),Point(1,1))
@@ -2866,7 +2914,124 @@ class Test_ConvexSimplePolygons(unittest.TestCase):
     
     
     
-
+class Test_Polyhedron(unittest.TestCase):
+    ""
+    
+    def test___eq__(self):
+        ""
+        pgs=(SimplePolygon(Point(0,0,0),Point(1,0,0),Point(1,1,0),Point(0,1,0)),  # bottom
+             SimplePolygon(Point(0,0,1),Point(1,0,1),Point(1,1,1),Point(0,1,1)),  # top
+             SimplePolygon(Point(0,0,0),Point(1,0,0),Point(1,0,1),Point(0,0,1)),  # side1
+             SimplePolygon(Point(1,0,0),Point(1,1,0),Point(1,1,1),Point(1,0,1)),  # side 2
+             SimplePolygon(Point(1,1,0),Point(0,1,0),Point(0,1,1),Point(1,1,1)),  # side 3
+             SimplePolygon(Point(0,1,0),Point(0,0,0),Point(0,0,1),Point(0,1,1)),  # side 4
+            )
+        ph=Polyhedron(*pgs)
+        self.assertTrue(ph==ph)
+        ph1=Polyhedron(*(pgs[::-1]))
+        self.assertTrue(ph==ph1)
+        pgs2=(SimplePolygon(Point(0,0,0),Point(1,0,0),Point(1,1,0),Point(0,1,0)),  # bottom
+              SimplePolygon(Point(0,0,2),Point(1,0,2),Point(1,1,2),Point(0,1,2)),  # top
+              SimplePolygon(Point(0,0,0),Point(1,0,0),Point(1,0,2),Point(0,0,2)),  # side1
+              SimplePolygon(Point(1,0,0),Point(1,1,0),Point(1,1,2),Point(1,0,2)),  # side 2
+              SimplePolygon(Point(1,1,0),Point(0,1,0),Point(0,1,2),Point(1,1,2)),  # side 3
+              SimplePolygon(Point(0,1,0),Point(0,0,0),Point(0,0,2),Point(0,1,2)),  # side 4
+             )
+        ph2=Polyhedron(*pgs2)
+        self.assertFalse(ph==ph2)
+        
+        
+        
+    def test___init__(self):
+        ""
+        pgs=(SimplePolygon(Point(0,0,0),Point(1,0,0),Point(1,1,0),Point(0,1,0)),  # bottom
+             SimplePolygon(Point(0,0,1),Point(1,0,1),Point(1,1,1),Point(0,1,1)),  # top
+             SimplePolygon(Point(0,0,0),Point(1,0,0),Point(1,0,1),Point(0,0,1)),  # side1
+             SimplePolygon(Point(1,0,0),Point(1,1,0),Point(1,1,1),Point(1,0,1)),  # side 2
+             SimplePolygon(Point(1,1,0),Point(0,1,0),Point(0,1,1),Point(1,1,1)),  # side 3
+             SimplePolygon(Point(0,1,0),Point(0,0,0),Point(0,0,1),Point(0,1,1)),  # side 4
+            )
+        ph=Polyhedron(*pgs)
+        self.assertIsInstance(ph,Polyhedron)
+        self.assertEqual(len(ph),
+                         6)
+        
+    
+class Test_ConvexPolyhedron(unittest.TestCase):
+    ""
+    
+    def test_contains(self):
+        ""
+        pgs=(SimplePolygon(Point(0,0,0),Point(1,0,0),Point(1,1,0),Point(0,1,0)),  # bottom
+             SimplePolygon(Point(0,0,1),Point(1,0,1),Point(1,1,1),Point(0,1,1)),  # top
+             SimplePolygon(Point(0,0,0),Point(1,0,0),Point(1,0,1),Point(0,0,1)),  # side1
+             SimplePolygon(Point(1,0,0),Point(1,1,0),Point(1,1,1),Point(1,0,1)),  # side 2
+             SimplePolygon(Point(1,1,0),Point(0,1,0),Point(0,1,1),Point(1,1,1)),  # side 3
+             SimplePolygon(Point(0,1,0),Point(0,0,0),Point(0,0,1),Point(0,1,1)),  # side 4
+            )
+        ph=ConvexPolyhedron(*pgs)
+        # point
+        self.assertTrue(ph.contains(Point(0,0,0)))
+        self.assertFalse(ph.contains(Point(-1,0,0)))
+        self.assertTrue(ph.contains(Point(0.5,0,0)))
+        self.assertTrue(ph.contains(Point(1,1,0)))
+        self.assertTrue(ph.contains(Point(0.5,0.5,0)))
+        self.assertTrue(ph.contains(Point(0.5,0.5,0.5)))
+    
+    
+    def test_intersect_line(self):
+        ""
+        pgs=(SimplePolygon(Point(0,0,0),Point(1,0,0),Point(1,1,0),Point(0,1,0)),  # bottom
+             SimplePolygon(Point(0,0,1),Point(1,0,1),Point(1,1,1),Point(0,1,1)),  # top
+             SimplePolygon(Point(0,0,0),Point(1,0,0),Point(1,0,1),Point(0,0,1)),  # side1
+             SimplePolygon(Point(1,0,0),Point(1,1,0),Point(1,1,1),Point(1,0,1)),  # side 2
+             SimplePolygon(Point(1,1,0),Point(0,1,0),Point(0,1,1),Point(1,1,1)),  # side 3
+             SimplePolygon(Point(0,1,0),Point(0,0,0),Point(0,0,1),Point(0,1,1)),  # side 4
+            )
+        ph=ConvexPolyhedron(*pgs)
+        # no intersection
+        l=Line(Point(-1,-1,0),Vector(0,0,1))
+        #print(ph.intersect_line(l)); return
+        self.assertEqual(ph.intersect_line(l),
+                         None)
+        # point intersection
+        l=Line(Point(0,0,0),Vector(1,-1,0))
+        #print(ph.intersect_line(l)); return
+        self.assertEqual(ph.intersect_line(l),
+                         Point(0,0,0))
+        # edge intersection
+        l=Line(Point(0,0,0),Vector(1,0,0))
+        #print(ph.intersect_line(l)); return
+        self.assertEqual(ph.intersect_line(l),
+                         Segment(Point(0,0,0), Point(1,0,0)))
+        # side internal intersection through vertices
+        l=Line(Point(0,0,0),Vector(1,1,0))
+        #print(ph.intersect_line(l)); return
+        self.assertEqual(ph.intersect_line(l),
+                         Segment(Point(0,0,0), Point(1,1,0)))
+        # internal intersection through vertices
+        l=Line(Point(0,0,0),Vector(1,1,1))
+        #print(ph.intersect_line(l)); return
+        self.assertEqual(ph.intersect_line(l),
+                         Segment(Point(0,0,0), Point(1,1,1)))
+        
+        # 
+        l=Line(Point(0.5,0.5,0),Vector(1,1,1))
+        #print(ph.intersect_line(l)); return
+    
+class Test_Tetrahedron(unittest.TestCase):
+    ""
+    
+    def test___init__(self):
+        ""
+        triangles=(Triangle(Point(0,0,0),Point(1,1,0),Point(0,1,0)),
+           Triangle(Point(0,0,0),Point(1,1,0),Point(0,1,1)),
+           Triangle(Point(1,1,0),Point(0,1,0),Point(0,1,1)),
+           Triangle(Point(0,1,0),Point(0,0,0),Point(0,1,1)),
+          )
+        th=Tetrahedron(*triangles)
+        self.assertEqual(len(th),
+                         4)
 
 
 if __name__=='__main__':

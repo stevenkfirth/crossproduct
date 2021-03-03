@@ -4357,6 +4357,13 @@ class Polylines(collections.abc.MutableSequence):
         return self._polylines.insert(index,value)
 
 
+    def plot(self,ax,*args,**kwargs):
+        ""
+        for pl in self:
+            pl.plot(ax,*args,**kwargs)
+    
+
+
     def project_3D(self,plane,coordinate_index):
         """
         """
@@ -5142,6 +5149,10 @@ class Polygon(collections.abc.Sequence):
     #         pc=Poly3DCollection(verts,**kwargs)
     #         ax.add_collection3d(pc)
 
+    def plot(self,ax,**kwargs):
+        ""
+        self.polyline.plot(ax,**kwargs)
+
 
     @property
     def polyline(self):
@@ -5454,7 +5465,7 @@ class SimplePolygon(Polygon):
             
             if self.nD==2:
                 
-                return self.winding_number(obj) > 0 or obj in self.polyline
+                return self.winding_number(obj) > 0 or self.polyline.contains(obj)
                 
             elif self.nD==3:
 
@@ -5895,7 +5906,7 @@ class SimplePolygon(Polygon):
             """
             
             for i in range(len(polygon)):
-                #print(i)
+                #print('i',i)
                 
                 pg=polygon.reorder(i)
                             
@@ -5906,7 +5917,7 @@ class SimplePolygon(Polygon):
                     inside_point=False
                     remaining_points=pg[3:]
                     for pt in remaining_points:
-                        if pt in triangle:
+                        if triangle.contains(pt):
                             inside_point=True
                     
                     if not inside_point:
@@ -5923,6 +5934,7 @@ class SimplePolygon(Polygon):
                         
                         pts=[s.P0 for s in sgmts]+[sgmts[-1].P1]
                         
+                        #print('triangle',triangle)
                         return triangle, Polygon(*pts)
                 
             raise Exception
@@ -6189,9 +6201,11 @@ class ConvexSimplePolygon(SimplePolygon):
         # if 3D, checks for no-plane-intersection or plane-point intersection
         if self.nD==3:
             x=self.plane.intersect_line(line)
+            #print(x)
             if x is None:
                 return None
             elif isinstance(x,Point):
+                #print(self.contains(x))
                 return x if self.contains(x) else None
             
         # 2D polygon or 3D polygon where the line is on the plane of the polygon
@@ -6510,7 +6524,10 @@ class Polygons(collections.abc.MutableSequence):
         return self._polygons.insert(index,value)
 
 
-    
+    def plot(self,ax,*args,**kwargs):
+        ""
+        for pg in self:
+            pg.plot(ax,*args,**kwargs)
         
 
 
@@ -6556,6 +6573,32 @@ class ConvexSimplePolygons(SimplePolygons):
         return 'ConvexSimplePolygons(%s)' % ', '.join([str(pg) for pg in self])
     
     
+    def intersect_line(self,line):
+        """
+        returns (Points,Segments)
+        
+        segments are not added together.
+        
+        """
+        pts=Points()
+        sgmts=Segments()
+        for pg in self:
+            x=pg.intersect_line(line)
+            #print(x)
+            if isinstance(x,Point):
+                if not x in pts:
+                    pts.append(x)
+            elif isinstance(x,Segment):
+                sgmts.append(x)
+        #print(pts,sgmts)
+        pts.remove_points_in_segments(sgmts)
+        
+        return pts, sgmts
+                
+                
+                
+            
+    
     # def union_all(self):
     #     """Unions the polygons if possible
         
@@ -6582,6 +6625,9 @@ class Triangles(ConvexSimplePolygons):
 
 class Polyhedron(collections.abc.Sequence):
     """A polyhedron. 
+    
+    3D object
+    Bounded by simple polygons
     
     In crossproduct a Polyhedron object is a immutable sequence. 
     Iterating over a Polyhedron will provide its Polygon instances.
@@ -6619,19 +6665,7 @@ class Polyhedron(collections.abc.Sequence):
                 
                 return False
             
-            for pg in self:
-                
-                for pg1 in polyhedron:
-                    
-                    if pg==pg1:
-                        
-                        break
-            
-                else:
-                    
-                    return False
-            
-            return True
+            return all(pg in self for pg in polyhedron)
             
         else:
             return False
@@ -6645,7 +6679,7 @@ class Polyhedron(collections.abc.Sequence):
     def __init__(self,*polygons):
         ""
         
-        self._polygons=tuple(polygons)
+        self._polygons=list(polygons)
         
 
     def __len__(self):
@@ -6657,3 +6691,100 @@ class Polyhedron(collections.abc.Sequence):
         ""
         return 'Polyhedron(%s)' % ','.join([str(pg) for pg in self])
 
+
+    @property
+    def nD(self):
+        ""
+        return 3
+    
+
+    def plot(self,ax,*args,**kwargs):
+        ""
+        for pg in self:
+            pg.plot(ax,*args,**kwargs)
+            
+            
+            
+class ConvexPolyhedron(Polyhedron):
+    ""
+    
+    def __repr__(self):
+        ""
+        return 'ConvexPolyhedron(%s)' % ','.join([str(pg) for pg in self])
+    
+    
+    def contains(self,obj):
+        """
+        
+        
+        """
+    
+        if isinstance(obj,Point):
+            
+            l=Line(obj,Vector(1,1,1))
+            x=self.intersect_line(l)
+            #print(x)
+            if x is None:
+                return False
+            elif isinstance(x,Point) and any(obj in pg for pg in self):
+                return True
+            elif isinstance(x,Segment) and x.contains(obj):
+                return True
+            else:
+                return False
+    
+    
+    def intersect_halfline(self,halfline):
+        """
+        
+        returns Segment or Point or None
+        
+        """
+        x=self.intersect_line(halfline.line)
+        if x is None:
+            return None
+        
+        elif isinstance(x,Point):
+            if halfline.contains(x):
+                return x
+            else:
+                return None
+            
+        elif isinstance(x,Segment):
+            return x.intersect_halfline(halfline)
+
+        else:
+            raise Exception
+            
+    
+    def intersect_line(self,line):
+        """
+        
+        returns None, Point, Segment
+        
+        """
+        pgs=ConvexSimplePolygons(*(ConvexSimplePolygon(*pg) for pg in self))
+        #print(pgs)
+        pts,sgmts=pgs.intersect_line(line)
+        #print(pts,sgmts)
+        if len(pts)==0 and len(sgmts)==0:
+            return None
+        elif len(sgmts)>0:
+            return sgmts[0]
+        elif len(pts)==1:
+            return pts[0]
+        elif len(pts)==2:
+            return Segment(*pts)
+        else:
+            raise Exception
+        
+    
+    
+    
+class Tetrahedron(ConvexPolyhedron):
+    ""
+    
+    def __repr__(self):
+        ""
+        return 'Tetrahedron(%s)' % ','.join([str(pg) for pg in self])
+    
