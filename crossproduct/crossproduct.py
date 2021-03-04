@@ -6715,8 +6715,6 @@ class ConvexPolyhedron(Polyhedron):
     
     def contains(self,obj):
         """
-        
-        
         """
     
         if isinstance(obj,Point):
@@ -6732,29 +6730,6 @@ class ConvexPolyhedron(Polyhedron):
                 return True
             else:
                 return False
-    
-    
-    def intersect_halfline(self,halfline):
-        """
-        
-        returns Segment or Point or None
-        
-        """
-        x=self.intersect_line(halfline.line)
-        if x is None:
-            return None
-        
-        elif isinstance(x,Point):
-            if halfline.contains(x):
-                return x
-            else:
-                return None
-            
-        elif isinstance(x,Segment):
-            return x.intersect_halfline(halfline)
-
-        else:
-            raise Exception
             
     
     def intersect_line(self,line):
@@ -6780,11 +6755,58 @@ class ConvexPolyhedron(Polyhedron):
         
     
     
-    
 class Tetrahedron(ConvexPolyhedron):
     ""
     
     def __repr__(self):
         ""
         return 'Tetrahedron(%s)' % ','.join([str(pg) for pg in self])
+    
+    
+    @property
+    def P0(self):
+        ""
+        return self[0][0]
+    
+    
+    @property
+    def v0(self):
+        ""
+        return self[0][1]-self[0][0]
+    
+    
+    @property
+    def v1(self):
+        ""
+        return self[0][2]-self[0][0]
+    
+    
+    @property
+    def v2(self):
+        ""
+        return self.vertices[3]-self[0][0]
+    
+    
+    @property
+    def vertices(self):
+        ""
+        pts=Points(*self[0])
+        for pt in self[1]:
+            if not pt in pts:
+                pts.append(pt)
+        return pts
+    
+    
+    @property
+    def volume(self):
+        ""
+        return (self.v0.dot(self.v1.cross_product(self.v2)))/6.0
+    
+    
+    
+    
+    
+    
+    
+    
     

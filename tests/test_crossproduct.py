@@ -3018,6 +3018,10 @@ class Test_ConvexPolyhedron(unittest.TestCase):
         # 
         l=Line(Point(0.5,0.5,0),Vector(1,1,1))
         #print(ph.intersect_line(l)); return
+        self.assertEqual(ph.intersect_line(l),
+                         Segment(Point(0.5,0.5,0.0), Point(1.0,1.0,0.5)))
+    
+    
     
 class Test_Tetrahedron(unittest.TestCase):
     ""
@@ -3025,13 +3029,91 @@ class Test_Tetrahedron(unittest.TestCase):
     def test___init__(self):
         ""
         triangles=(Triangle(Point(0,0,0),Point(1,1,0),Point(0,1,0)),
-           Triangle(Point(0,0,0),Point(1,1,0),Point(0,1,1)),
-           Triangle(Point(1,1,0),Point(0,1,0),Point(0,1,1)),
-           Triangle(Point(0,1,0),Point(0,0,0),Point(0,1,1)),
-          )
+                   Triangle(Point(0,0,0),Point(1,1,0),Point(0,1,1)),
+                   Triangle(Point(1,1,0),Point(0,1,0),Point(0,1,1)),
+                   Triangle(Point(0,1,0),Point(0,0,0),Point(0,1,1)),
+                   ) 
         th=Tetrahedron(*triangles)
         self.assertEqual(len(th),
                          4)
+        
+        
+    def test_P0(self):
+        ""
+        triangles=(Triangle(Point(0,0,0),Point(1,1,0),Point(0,1,0)),
+                   Triangle(Point(0,0,0),Point(1,1,0),Point(0,1,1)),
+                   Triangle(Point(1,1,0),Point(0,1,0),Point(0,1,1)),
+                   Triangle(Point(0,1,0),Point(0,0,0),Point(0,1,1)),
+                   )
+        th=Tetrahedron(*triangles)
+        #print(th.P0)
+        self.assertEqual(th.P0,
+                         Point(0,0,0))
+        
+    def test_v0(self):
+        ""
+        triangles=(Triangle(Point(0,0,0),Point(1,1,0),Point(0,1,0)),
+                   Triangle(Point(0,0,0),Point(1,1,0),Point(0,1,1)),
+                   Triangle(Point(1,1,0),Point(0,1,0),Point(0,1,1)),
+                   Triangle(Point(0,1,0),Point(0,0,0),Point(0,1,1)),
+                   )
+        th=Tetrahedron(*triangles)
+        self.assertEqual(th.v0,
+                         Vector(1,1,0))
+        
+        
+    def test_v1(self):
+        ""
+        triangles=(Triangle(Point(0,0,0),Point(1,1,0),Point(0,1,0)),
+                   Triangle(Point(0,0,0),Point(1,1,0),Point(0,1,1)),
+                   Triangle(Point(1,1,0),Point(0,1,0),Point(0,1,1)),
+                   Triangle(Point(0,1,0),Point(0,0,0),Point(0,1,1)),
+                   )
+        th=Tetrahedron(*triangles)
+        self.assertEqual(th.v1,
+                         Vector(0,1,0))
+        
+        
+    def test_v2(self):
+        ""
+        triangles=(Triangle(Point(0,0,0),Point(1,1,0),Point(0,1,0)),
+                   Triangle(Point(0,0,0),Point(1,1,0),Point(0,1,1)),
+                   Triangle(Point(1,1,0),Point(0,1,0),Point(0,1,1)),
+                   Triangle(Point(0,1,0),Point(0,0,0),Point(0,1,1)),
+                   )
+        th=Tetrahedron(*triangles)
+        self.assertEqual(th.v2,
+                         Vector(0,1,1))
+        
+
+    def test_vertices(self):
+        ""
+        triangles=(Triangle(Point(0,0,0),Point(1,1,0),Point(0,1,0)),
+                   Triangle(Point(0,0,0),Point(1,1,0),Point(0,1,1)),
+                   Triangle(Point(1,1,0),Point(0,1,0),Point(0,1,1)),
+                   Triangle(Point(0,1,0),Point(0,0,0),Point(0,1,1)),
+                   )
+        th=Tetrahedron(*triangles)
+        #print(th.vertices); return
+        self.assertEqual(th.vertices,
+                         Points(Point(0.0,0.0,0.0), 
+                                Point(1.0,1.0,0.0), 
+                                Point(0.0,1.0,0.0), 
+                                Point(0.0,1.0,1.0)))
+
+
+    def test_volume(self):
+        ""
+        triangles=(Triangle(Point(0,0,0),Point(1,1,0),Point(0,1,0)),
+                   Triangle(Point(0,0,0),Point(1,1,0),Point(0,1,1)),
+                   Triangle(Point(1,1,0),Point(0,1,0),Point(0,1,1)),
+                   Triangle(Point(0,1,0),Point(0,0,0),Point(0,1,1)),
+                   )
+        th=Tetrahedron(*triangles)
+        #print(th.volume); return
+        self.assertEqual(th.volume,
+                         0.16666666666666666)
+
 
 
 if __name__=='__main__':
