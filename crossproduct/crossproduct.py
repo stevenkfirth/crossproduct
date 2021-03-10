@@ -3095,14 +3095,33 @@ class Segment():
                     return result
                 else:
                     raise Exception
-                
+        
+        if not segments:
+            return Segments(self)
+        
         result=self
         result=rf(result,segments)
+        #print('result',result)
         
         if result is None:
             return Segments()
         else:
+            #print('type(result)',type(result))
             return Segments(*result)        
+    
+    
+    def difference_simple_polygon(self,polygon):
+        """
+        
+        returns Segments
+        
+        """
+        if self.nD==2:
+            pts,sgmts = polygon.intersect_segment(self)
+            #print(pts,sgmts)
+            return self.difference_segments(sgmts)
+        else:
+            return Segments(self)
         
         
     def distance(self,obj):
@@ -4037,7 +4056,30 @@ class Polyline(collections.abc.Sequence):
         
         else:
             raise TypeError
+           
             
+    def difference_simple_polygon(self,polygon):
+        """
+        
+        returns Polylines
+        
+        note, if no intersection a different (but equivalent) polyline may be returned.
+        
+        """
+        if self.nD==2:
+        
+            pls=Polylines()
+            for segment in self.segments:
+                x=segment.difference_simple_polygon(polygon) # Segments
+                #print(x)
+                for s in x:
+                    pls.append(Polyline(s.P0,s.P1))
+            pls.add_all()
+            return pls
+        
+        else:
+            raise ValueError
+
             
             
     def difference_polyline(self,polyline):
@@ -4069,6 +4111,9 @@ class Polyline(collections.abc.Sequence):
         pls.add_all
         return pls
         
+    
+    
+    
         
     def intersect_polyline(self,polyline):
         """
@@ -4535,6 +4580,31 @@ class Plane():
             return self._distance_to_point(obj)
         else:
             raise TypeError('Plane.distance does not accept a %s type' % obj.__class__)
+    
+    
+    def intersect_convex_simple_polygon(self,polygon):
+        """
+        
+        returns None or Point or Segment or ConvexSimplePolygon
+        
+        
+        
+        """
+
+        if self==polygon.plane:
+            return polygon
+        
+        else: # plane is not on same plane as polygon
+        
+            pts,pls=self.intersect_polyline(polygon.polyline)
+            if len(pts)==1:
+                return pts[0]
+            elif len(pts)==2:
+                return Segment(*pts)
+            elif pls:
+                return pls[0].segments[0]
+            else:
+                return None
     
     
     def intersect_halfline(self,halfline):
@@ -5067,6 +5137,32 @@ class Polygon(collections.abc.Sequence):
         return 'Polygon(%s)' % ','.join([str(pt) for pt in self])
 
 
+    @property
+    def leftmost_lowest_vertex(self):
+        """Returns the index of the leftmost lowest point of the polygon.
+        
+        :rtype: int
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           
+        """
+        if self.nD==2:
+        
+            min_i=0
+            for i in range(1,len(self)):
+                if self[i].y>self[min_i].y:
+                    continue
+                if (self[i].y==self[min_i].y) and (self[i].x > self[min_i].x):
+                    continue
+                min_i=i
+            return min_i
+    
+        else:
+            raise ValueError
+    
     
     
     @property
@@ -5483,6 +5579,22 @@ class SimplePolygon(Polygon):
         else:
             
             raise TypeError
+       
+        
+    def difference_simple_polygon(self,polygon):
+        """
+        
+        return SimplePolygons
+        
+        """
+        pts, pls, pgs = self.intersect_simple_polygon(polygon)
+            
+        if len(pgs)==0:
+            return SimplePolygons(self)
+        
+        #for pg in pgs:
+        
+        
         
         
     def intersect_halfline(self,halfline):
@@ -5519,12 +5631,12 @@ class SimplePolygon(Polygon):
         triangles=self.triangles
         
         for triangle in triangles:
-            x=triangle.intersect_line(line) # returns None, Point, Segment
-            if isinstance(x, Point):
-                if not x in pts:
-                    pts.append(x)
-            elif isinstance(x, Segment):
-                sgmts.append(x)
+            xpts,xsgmts=triangle.intersect_line(line) # returns None, Point, Segment
+            for xpt in xpts:
+                if not xpt in pts:
+                    pts.append(xpt)
+            for xsgmt in xsgmts:
+                sgmts.append(xsgmt)
                 
         # remove any segments that are contained in other segments
         for i in range(len(sgmts)-1,-1,-1): 
@@ -5537,123 +5649,123 @@ class SimplePolygon(Polygon):
     
         return pts, sgmts
         
-        ################ old version below
+        # ################ old version below
         
-        pts=Points()
-        sgmts=Segments()
+        # pts=Points()
+        # sgmts=Segments()
         
-        if self.nD==2:
+        # if self.nD==2:
             
-            pg=self.ccw
+        #     pg=self.ccw
             
-            y=[]   # a list of intersection points which are not on the polygon vertices and intersection segments
-            for s in pg.polyline.segments:
-                x=s.intersect_line(line) # returns None or Point or Segment
-                if x:
-                    if isinstance(x,Point): 
+        #     y=[]   # a list of intersection points which are not on the polygon vertices and intersection segments
+        #     for s in pg.polyline.segments:
+        #         x=s.intersect_line(line) # returns None or Point or Segment
+        #         if x:
+        #             if isinstance(x,Point): 
                         
-                        if not x==s.P1: # ignores point if at the end of the segment - to avoid working with the same point twice if it is a vertex
+        #                 if not x==s.P1: # ignores point if at the end of the segment - to avoid working with the same point twice if it is a vertex
                         
-                            # if intersection is a point, there are a number of options:
-                            # - point is on a polygon vertex, but line doesn't enter to leave 
-                            # - point is on a polygon vertex, line enters the polygon
-                            # - point is on a polygon vertex, line leaves the polygon
-                            # - point is in the middle of a polygon edge, line enters the polygon
-                            # - point is in the middle of a polygon edge, line leaves the polygon
+        #                     # if intersection is a point, there are a number of options:
+        #                     # - point is on a polygon vertex, but line doesn't enter to leave 
+        #                     # - point is on a polygon vertex, line enters the polygon
+        #                     # - point is on a polygon vertex, line leaves the polygon
+        #                     # - point is in the middle of a polygon edge, line enters the polygon
+        #                     # - point is in the middle of a polygon edge, line leaves the polygon
                             
-                            pt=x
-                            if pt in pg: # if point is on a polygon vertex 
-                                i=pg.index(pt)
-                                v0=pt-pg[pg.previous_index(i)]
-                                v1=pg[pg.next_index(i)]-pt
-                            else: # if point is not on a polygon vertex
-                                v0=pt-s.P0
-                                v1=s.P1-pt
+        #                     pt=x
+        #                     if pt in pg: # if point is on a polygon vertex 
+        #                         i=pg.index(pt)
+        #                         v0=pt-pg[pg.previous_index(i)]
+        #                         v1=pg[pg.next_index(i)]-pt
+        #                     else: # if point is not on a polygon vertex
+        #                         v0=pt-s.P0
+        #                         v1=s.P1-pt
                                 
-                            pp0=line.vL.perp_product(v0) # <0 if v0 is on the right of vL
-                            pp1=line.vL.perp_product(v1) # <0 if v1 is on the right of vL
+        #                     pp0=line.vL.perp_product(v0) # <0 if v0 is on the right of vL
+        #                     pp1=line.vL.perp_product(v1) # <0 if v1 is on the right of vL
                 
-                            if pp0<0 and pp1<0: # both vectors on the right of line
-                                y.append((pt,'enter',line.calculate_t_from_coordinates(*pt))) # line enters the polygon
-                            if pp0>0 and pp1>0: # both vectors on the left of self
-                                y.append((pt,'leave',line.calculate_t_from_coordinates(*pt))) # line leaves the polygon
-                            else: # line doesn't enter or leave the polygon
-                                if not x in pts:
-                                    pts.append(x) # appends point if unique
+        #                     if pp0<0 and pp1<0: # both vectors on the right of line
+        #                         y.append((pt,'enter',line.calculate_t_from_coordinates(*pt))) # line enters the polygon
+        #                     if pp0>0 and pp1>0: # both vectors on the left of self
+        #                         y.append((pt,'leave',line.calculate_t_from_coordinates(*pt))) # line leaves the polygon
+        #                     else: # line doesn't enter or leave the polygon
+        #                         if not x in pts:
+        #                             pts.append(x) # appends point if unique
                                     
-                    else: # intersection is a segment
-                        y.append((x,'segment',line.calculate_t_from_coordinates(*x.P0)))
+        #             else: # intersection is a segment
+        #                 y.append((x,'segment',line.calculate_t_from_coordinates(*x.P0)))
             
-            #print(y)
+        #     #print(y)
             
-            # reverse segments in y if needed by t values
-            for i,(obj,desc,t) in enumerate(y):
-                if desc=='segment':
-                    t0=line.calculate_t_from_coordinates(*obj.P0)
-                    t1=line.calculate_t_from_coordinates(*obj.P1)
-                    if t1<t0:
-                        new_s=obj.reverse
-                        y[i]=(new_s,'segment',line.calculate_t_from_coordinates(*new_s.P0))
+        #     # reverse segments in y if needed by t values
+        #     for i,(obj,desc,t) in enumerate(y):
+        #         if desc=='segment':
+        #             t0=line.calculate_t_from_coordinates(*obj.P0)
+        #             t1=line.calculate_t_from_coordinates(*obj.P1)
+        #             if t1<t0:
+        #                 new_s=obj.reverse
+        #                 y[i]=(new_s,'segment',line.calculate_t_from_coordinates(*new_s.P0))
             
-            # sort items in y by their t values
-            y.sort(key=lambda x:x[2]) # sorts the points and segments in y by their line t-values
+        #     # sort items in y by their t values
+        #     y.sort(key=lambda x:x[2]) # sorts the points and segments in y by their line t-values
             
-            # merge the enter points, leave points and segments in y
-            for i in range(len(y)-1,0,-1):
-                obj,desc,t=y[i]
-                obj_p,desc_p,t_p=y[i-1]
+        #     # merge the enter points, leave points and segments in y
+        #     for i in range(len(y)-1,0,-1):
+        #         obj,desc,t=y[i]
+        #         obj_p,desc_p,t_p=y[i-1]
                 
-                # point, leaving the polygon
-                if desc=='leave':
+        #         # point, leaving the polygon
+        #         if desc=='leave':
                     
-                    if desc_p=='enter':
-                        y[i-1]=(Segment(obj_p,obj),'segment',t_p)
-                        del y[i]
-                    elif desc_p=='segment':
-                        y[i-1]=(Segment(obj_p.P0,obj),'segment',t_p)
-                        del y[i]
+        #             if desc_p=='enter':
+        #                 y[i-1]=(Segment(obj_p,obj),'segment',t_p)
+        #                 del y[i]
+        #             elif desc_p=='segment':
+        #                 y[i-1]=(Segment(obj_p.P0,obj),'segment',t_p)
+        #                 del y[i]
                     
-                elif desc=='segment':
+        #         elif desc=='segment':
                     
-                    if desc_p=='enter':
-                        y[i-1]=(Segment(obj_p,obj.P1),'segment',t_p)
-                        del y[i]
-                    elif desc_p=='segment':
-                        segments_midpoint=Point((obj_p.P1.x+obj.P0.x)/2,
-                                                (obj_p.P1.y+obj.P0.y)/2)
-                        if pg.contains(segments_midpoint):
-                            y[i-1]=(Segment(obj_p.P0,obj.P1),'segment',t_p)
-                            del y[i]
+        #             if desc_p=='enter':
+        #                 y[i-1]=(Segment(obj_p,obj.P1),'segment',t_p)
+        #                 del y[i]
+        #             elif desc_p=='segment':
+        #                 segments_midpoint=Point((obj_p.P1.x+obj.P0.x)/2,
+        #                                         (obj_p.P1.y+obj.P0.y)/2)
+        #                 if pg.contains(segments_midpoint):
+        #                     y[i-1]=(Segment(obj_p.P0,obj.P1),'segment',t_p)
+        #                     del y[i]
                     
-                else:
-                    raise Exception
+        #         else:
+        #             raise Exception
             
-            # add items in y to segments
-            sgmts.extend(x[0] for x in y)
+        #     # add items in y to segments
+        #     sgmts.extend(x[0] for x in y)
     
-            # remove any points that already exist in segments
-            pts.remove_points_in_segments(sgmts)
+        #     # remove any points that already exist in segments
+        #     pts.remove_points_in_segments(sgmts)
     
-            return pts, sgmts
+        #     return pts, sgmts
     
-        elif self.nD==3:
-            x=self.plane.intersect_line(line)
-            if x is None:
-                return pts, sgmts
-            elif isinstance(x,Point):
-                if self.contains(x):
-                    pts.append(x)
-                return pts, sgmts
-            else:
-                i,self2D=self.project_2D()
-                line2D=line.project_2D(i)
-                plane=self.plane
-                pts,sgmts=self2D.intersect_line(line2D)
-                return (tuple(pt.project_3D(plane,i) for pt in pts),
-                        tuple(s.project_3D(plane,i) for s in sgmts))
+        # elif self.nD==3:
+        #     x=self.plane.intersect_line(line)
+        #     if x is None:
+        #         return pts, sgmts
+        #     elif isinstance(x,Point):
+        #         if self.contains(x):
+        #             pts.append(x)
+        #         return pts, sgmts
+        #     else:
+        #         i,self2D=self.project_2D()
+        #         line2D=line.project_2D(i)
+        #         plane=self.plane
+        #         pts,sgmts=self2D.intersect_line(line2D)
+        #         return (tuple(pt.project_3D(plane,i) for pt in pts),
+        #                 tuple(s.project_3D(plane,i) for s in sgmts))
         
-        else:
-            raise Exception
+        # else:
+        #     raise Exception
         
         
     def intersect_polyline(self,polyline):
@@ -5662,40 +5774,24 @@ class SimplePolygon(Polygon):
         returns (Points, Polylines)
         
         """
+        
         pts=Points()
         pls=Polylines()
-        pl=Polyline()
+        
         for segment in polyline.segments:
-            x=self.intersect_segment(segment) # returns None, Point, Segment
+            xpts,xsgmts=self.intersect_segment(segment) # returns (Points,Segments)
+            #print(xpts,xsgmts)
+            for xpt in xpts:
+                if not xpt in pts:
+                    pts.append(xpt)
+            for xsgmt in xsgmts:
+                pls.append(Polyline(xsgmt.P0,xsgmt.P1))
             
-            # creates a new current polyline, or extends an existing current polyline
-            if isinstance(x,Segment):
-                if pl:
-                    pl=Polyline(*(list(pl)+[x.P1])) # extends existing current polyline
-                else:
-                    pl=Polyline(x.P0,x.P1) # creates new current polyline
-                    
-            else: # no a segment, so either None or Point
-            
-                # adds current polyline to pls, and resets current polyline
-                if pl:
-                    pls.append(pl) # appends existing polyline to pls
-                    pl=Polyline() # resets existing polyline
-                    
-                # adds point to pts if it is unique
-                if isinstance(x,Point):
-                    if not x in pts:
-                        pts.append(x) # adds unique point to pts
-            
-        # include current polyline if present
-        if pl: pls.append(pl)
-            
-        # remove points that are on the polylines
-        for pt in pts[::-1]: # iterate in reverse as items are being deleted
-            if any(pl.contains(pt) for pl in pls):
-                pts.remove(pt)
-                
+        pls.add_all()
+        pts.remove_points_in_segments(pls.segments)
+        
         return pts,pls
+        
         
 
     def intersect_segment(self,segment):
@@ -5704,6 +5800,9 @@ class SimplePolygon(Polygon):
         returns (Points,Segments)
         
         """
+        
+        #print(segment)
+        
         pts,sgmts=self.intersect_line(segment.line)
         #print(pts,sgmts)
         
@@ -5713,7 +5812,9 @@ class SimplePolygon(Polygon):
         sgmts2=Segments()
         for s in sgmts:
             y=segment.intersect_segment(s) # returns None, Point, Segment
-            if isinstance(y,Segment):
+            if isinstance(y,Point):
+                pts.append(y)
+            elif isinstance(y,Segment):
                 sgmts2.append(y)
         
         return pts,sgmts2
@@ -5997,7 +6098,7 @@ class SimplePolygon(Polygon):
                     if ps.P1.y <= point.y: # a downward crossing
                         if ps.line.vL.perp_product(point-ps.P1)<0: # P right of  edge
                             wn-=1
-            return wn
+            return abs(wn)
 
         else:
             
@@ -6017,44 +6118,146 @@ class ConvexSimplePolygon(SimplePolygon):
         return 'ConvexSimplePolygon(%s)' % ','.join([str(pt) for pt in self])
 
 
-    def difference_polyline(self,polyline):
-        """
+    # def _difference_convex_simple_polygon(self,polygon):
+    #     """
         
-        returns Polylines
+    #     return ConvexSimplePolygons
         
-        note, if no intersection a different (but equivalent) polyline may be returned.
-        
-        """
-        if self.nD==2:
-        
-            pls=Polylines()
-            for segment in polyline.segments:
-                x=self.difference_segment(segment) # Segments
-                for s in x:
-                    pls.append(Polyline(s.P0,s.P1))
-            pls.add_all()
-            return pls
-        
-        else:
-            raise ValueError
+    #     """
+    #     if self.nD==2:
+            
+    #         pts,pls=self.intersect_polyline(polygon.polyline)
+            
+    #         pls2=polygon.difference_polyline(self.polyline)
+            
+    #         # remove segments in pls which are on the polygon polyline
+    #         pls=Polylines(*(Polyline(s.P0,s.P1) 
+    #                           for s in pls.segments
+    #                           if not self.polyline.contains(s)))
+    #         pls.add_all()
+            
+    #         #print('\npls',pls)
+    #         #print('pls2',pls2)
+            
+    #         if len(pls)==0:
+                
+    #             if len(pls2)==0: # full intersection
+    #                 return ConvexSimplePolygons()
+                
+    #             else: # no polygon intersection
+    #                 return ConvexSimplePolygons(self)
+            
+    #         else:
+                
+    #             # if a full internal or external intersection
+    #             if (len(pls)==1 and len(pls[0])==len(self.polyline) 
+    #                 and len(pls2)==1 and len(pls2[0])==len(polygon.polyline)):  
+                    
+    #                 if self.contains(polygon[0]):  # if polygon is inside of self
+    #                     s=polygon.polyline.segments[0]
+    #                     pgs=self.divide_line(s.line)
+    #                     return ConvexSimplePolygons(*(x for pg in pgs
+    #                         for x in pg.difference_convex_simple_polygon(polygon)))
+                
+    #                 else: # full external intersection i.e. polygon is wholly outside of self
+    #                     return ConvexSimplePolygons()
+                        
+                        
+    #             else:
+                    
+    #                 # add pls2 to pls
+    #                 for pl in pls2:
+    #                     pls.append(pl)
+    #                 pls.add_all()
+    #                 #print('pls+pls2', pls)
+                    
+    #                 # return polygons
+    #                 return ConvexSimplePolygons(*(ConvexSimplePolygon(*pl[:-1]) 
+    #                                               for pl in pls))
+                
+    #     else:
+            
+    #         raise ValueError
+    
 
 
-    def difference_segment(self,segment):
-        """
+    def divide_by_line(self,line):
+        """Divides a convex simple polygon using the line
         
-        returns Segments
+        returns ConvexSimplePolygons
+        
+        
         
         """
+
+        #print('---')
+
         if self.nD==2:
-        
-            x=self.intersect_segment(segment) # returns None, Point or Segment
-            if isinstance(x,Segment):
-                return segment.difference_segment(x)
-            else:
-                return Segments(segment)
+            
+            # x=self.intersect_line(line)  # returns None, Point, Segment
+            
+            # # if x is a segment which doesn't intersect an edge - i.e. an internal intersection
+            # if isinstance(x,Segment) and not self.polyline.contains(x):
+            
+            cw_pls=Polylines()
+            ccw_pls=Polylines()
+            
+            for s in self.polyline.segments:
+                
+                x=s.intersect_line(line)  # returns None, Point, Segment
+                
+                if x is None:
+                    y=[s]
+                elif isinstance(x,Point):
+                    if x==s.P0 or x==s.P1:
+                        y=[s]
+                    else:
+                        y=[Segment(s.P0,x),Segment(x,s.P1)]
+                else:
+                    y=[]
+                
+                for z in y:
+                    #print(z)
+                    #print(line)
+                    #print(line.vL.perp_product(z.P0-line.P0))
+                    #print(line.vL.perp_product(z.P1-line.P0))
+                    
+                    if (line.vL.perp_product(z.P0-line.P0)<0
+                        or line.vL.perp_product(z.P1-line.P0)<0):
+                    
+                        cw_pls.append(Polyline(z.P0,z.P1))
+                        
+                    else:
+                        ccw_pls.append(Polyline(z.P0,z.P1))
+                
+                
+            
+            xpts,xsgmts=self.intersect_line(line)  # returns (Points,Segments)
+            if xsgmts:
+                x=xsgmts[0]
+                if len(cw_pls)>0: cw_pls.append(Polyline(x.P0,x.P1))
+                if len(ccw_pls)>0: ccw_pls.append(Polyline(x.P0,x.P1))
+                
+            cw_pls.add_all()
+            ccw_pls.add_all()
+                
+            #print('cw_pls',cw_pls)
+            #print('ccw_pls',ccw_pls)
+            
+            pgs=ConvexSimplePolygons()
+            if len(cw_pls)>0:
+                pgs.append(ConvexSimplePolygon(*cw_pls[0][:-1]))
+            if len(ccw_pls)>0:
+                pgs.append(ConvexSimplePolygon(*ccw_pls[0][:-1]))
+            return pgs
+            
             
         else:
+            
             raise ValueError
+
+
+
 
 
     def intersect_convex_simple_polygon(self,polygon):
@@ -6067,6 +6270,7 @@ class ConvexSimplePolygon(SimplePolygon):
         if self.nD==2:
         
             pts,pls=self.intersect_polyline(polygon.polyline)
+            #print(pts,pls)
             
             if pls:
                 pl2=polygon.intersect_polyline(self.polyline)[1][0]
@@ -6093,12 +6297,13 @@ class ConvexSimplePolygon(SimplePolygon):
                 
         elif self.nD==3:
             
-            a=self.plane.intersect_plane(polygon.plane) # returns None or Line or Plane
+            x=self.plane.intersect_convex_simple_polygon(polygon) # returns none or point or segment or convex_simple_polygon
             
-            if a is None: # polygon planes do not intersect
+            if x is None:
+                
                 return None
             
-            elif isinstance(a,Plane): # polygons lie on the same plane
+            elif isinstance(x,ConvexSimplePolygon):
                 
                 i,self_2D=self.project_2D()
                 i1,polygon_2D=polygon.project_2D()
@@ -6108,94 +6313,146 @@ class ConvexSimplePolygon(SimplePolygon):
                     return x.project_3D(self.plane,i)
                 else:
                     return None
+            
+            else:
                 
-            elif isinstance(a,Line): # the intersection of the two polygon planes as a line
-                
-                x=self.intersect_line(a) # returns None or Point or Segment
-                y=polygon.intersect_line(a) # returns None or Point or Segment
-                
-                if isinstance(x,Point) and isinstance(y,Point):
-                    return x if x==y else None
-                elif isinstance(x,Point) and isinstance(y,Segment):
-                    return x if y.contains(x) else None
-                elif isinstance(x,Segment) and isinstance(y,Point):
-                    return y if x.contains(y) else None
-                elif isinstance(x,Segment) and isinstance(y,Segment):
-                    return x.intersect_segment(y)
-                else:
+                y=polygon.plane.intersect_convex_simple_polygon(self) # returns none or point or segment or convex_simple_polygon
+            
+                if y is None:
                     return None
                 
+                if isinstance(x,Point) and isinstance(y,Point):
+                    if x==y:
+                        return x
+                    else:
+                        return None
+                    
+                elif isinstance(x,Point) and isinstance(y,Segment):
+                    if y.contains(x):
+                        return x
+                    else:
+                        return None
+                    
+                elif isinstance(x,Segment) and isinstance(y,Point):
+                    if x.contains(y):
+                        return y
+                    else:
+                        return None
+                    
+                elif isinstance(x,Segment) and isinstance(y,Segment):
+                    
+                    return x.intersect_segment(y)
+            
+            
+            
+            
+        #     return
+            
+        #     a=self.plane.intersect_plane(polygon.plane) # returns None or Line or Plane
+            
+        #     if a is None: # polygon planes do not intersect
+        #         return None
+            
+        #     elif isinstance(a,Plane): # polygons lie on the same plane
+                
+        #         i,self_2D=self.project_2D()
+        #         i1,polygon_2D=polygon.project_2D()
+        #         assert i==i1
+        #         x=self_2D.intersect_convex_simple_polygon(polygon_2D)
+        #         if x:
+        #             return x.project_3D(self.plane,i)
+        #         else:
+        #             return None
+                
+        #     elif isinstance(a,Line): # the intersection of the two polygon planes as a line
+                
+        #         x=self.intersect_line(a) # returns None or Point or Segment
+        #         print(x)
+        #         y=polygon.intersect_line(a) # returns None or Point or Segment
+                
+        #         if isinstance(x,Point) and isinstance(y,Point):
+        #             return x if x==y else None
+        #         elif isinstance(x,Point) and isinstance(y,Segment):
+        #             return x if y.contains(x) else None
+        #         elif isinstance(x,Segment) and isinstance(y,Point):
+        #             return y if x.contains(y) else None
+        #         elif isinstance(x,Segment) and isinstance(y,Segment):
+        #             return x.intersect_segment(y)
+        #         else:
+        #             return None
+                
         
         
-        ################# old version below
+        # ################# old version below
         
-        pts,pls=self.intersect_polyline(polygon.polyline)
+        # pts,pls=self.intersect_polyline(polygon.polyline)
         
-        if pls:
+        # if pls:
             
-            pls2=polygon.intersect_polyline(self.polyline)[1]
+        #     pls2=polygon.intersect_polyline(self.polyline)[1]
         
-            x=Polylines(pls[0]) # a list of polylines, starting with the first polyline in the first intersection
+        #     x=Polylines(pls[0]) # a list of polylines, starting with the first polyline in the first intersection
             
-            remaining_polylines=(pls[1:] if len(pls)>1 else []) + list(pls2) # all remaining polylines
-            remaining_segments=[s for pl in remaining_polylines for s in pl.segments] # the segments of all remaining polylines
+        #     remaining_polylines=(pls[1:] if len(pls)>1 else []) + list(pls2) # all remaining polylines
+        #     remaining_segments=[s for pl in remaining_polylines for s in pl.segments] # the segments of all remaining polylines
             
-            # adds all remaining segments to x - either as unions of existing polylines in x or as new polylines appended to x
-            for s in remaining_segments:        
-                if not x.contains(s): # if segment does not exist in any of the polylines in x           
-                    for pl in x:
-                        try:
-                            y=pl+s
-                            pl._points=y._points # in-place change of pl, to a new polyline representing the addition with the segment
-                            break    
-                        except ValueError:
-                            pass
-                    else: # if segment does not union with any of the polylines in x
-                        x.append(Polyline(*s.points)) # append a new polyline to x
+        #     # adds all remaining segments to x - either as unions of existing polylines in x or as new polylines appended to x
+        #     for s in remaining_segments:        
+        #         if not x.contains(s): # if segment does not exist in any of the polylines in x           
+        #             for pl in x:
+        #                 try:
+        #                     y=pl+s
+        #                     pl._points=y._points # in-place change of pl, to a new polyline representing the addition with the segment
+        #                     break    
+        #                 except ValueError:
+        #                     pass
+        #             else: # if segment does not union with any of the polylines in x
+        #                 x.append(Polyline(*s.points)) # append a new polyline to x
             
-            x.add_all()            
+        #     x.add_all()            
             
-            pl=x[0] # as both polygons are convex, only one polyline should be present in x
-            if len(pl)==2: 
-                return Segment(*pl)
-            else:        
-                return ConvexSimplePolygon(*(list(pl)[:-1]))
+        #     pl=x[0] # as both polygons are convex, only one polyline should be present in x
+        #     if len(pl)==2: 
+        #         return Segment(*pl)
+        #     else:        
+        #         return ConvexSimplePolygon(*(list(pl)[:-1]))
                         
-        else: # no polylines 
+        # else: # no polylines 
             
-            if pts:
-                return pts[0] # a point intersection
-            else:
-                return None # no intersection
+        #     if pts:
+        #         return pts[0] # a point intersection
+        #     else:
+        #         return None # no intersection
             
 
-    def intersect_halfline(self,halfline):
-        """
+    # def intersect_halfline(self,halfline):
+    #     """
         
-        returns Segment or Point or None
+    #     returns Segment or Point or None
         
-        """
-        x=self.intersect_line(halfline.line)
-        if x is None:
-            return None
+    #     """
+    #     x=self.intersect_line(halfline.line)
+    #     if x is None:
+    #         return None
         
-        elif isinstance(x,Point):
-            if halfline.contains(x):
-                return x
-            else:
-                return None
+    #     elif isinstance(x,Point):
+    #         if halfline.contains(x):
+    #             return x
+    #         else:
+    #             return None
             
-        elif isinstance(x,Segment):
-            return x.intersect_halfline(halfline)
+    #     elif isinstance(x,Segment):
+    #         return x.intersect_halfline(halfline)
 
-        else:
-            raise Exception
+    #     else:
+    #         raise Exception
         
 
     def intersect_line(self,line):
         """
         
-        returns Segment or Point or None
+        returns (Points,Segments)
+        
         
         """
         # if 3D, checks for no-plane-intersection or plane-point intersection
@@ -6203,10 +6460,13 @@ class ConvexSimplePolygon(SimplePolygon):
             x=self.plane.intersect_line(line)
             #print(x)
             if x is None:
-                return None
+                return (Points(),Segments())
             elif isinstance(x,Point):
                 #print(self.contains(x))
-                return x if self.contains(x) else None
+                if self.contains(x): 
+                    return (Points(x),Segments()) 
+                else:
+                    return (Points(),Segments())
             
         # 2D polygon or 3D polygon where the line is on the plane of the polygon
         pts=set()
@@ -6214,122 +6474,104 @@ class ConvexSimplePolygon(SimplePolygon):
             x=s.intersect_line(line)
             if x:
                 if isinstance(x,Segment):
-                    return x
+                    return (Points(),Segments(x))
                 else:
                     pts.add(x.to_tuple())
         if pts:
             if len(pts)==1:
-                return Point(*tuple(pts)[0])
+                return (Points(Point(*tuple(pts)[0])),
+                        Segments())
             elif len(pts)==2:
-                return Segment(*(Point(*pt) for pt in pts))
+                return (Points(),
+                        Segments(Segment(*(Point(*pt) for pt in pts))))
         else:
-            return None
+            return (Points(),Segments())
 
 
-    def intersect_plane(self,plane):
-        """
-        
-        returns None or Point or Segment or Polygon
-        
-        """
-
-        if self.plane==plane:
-            return self
-        
-        else: # plane is not on same plane as polygon
-        
-            pts,pls=plane.intersect_polyline(self.polyline)
-            if len(pts)==1:
-                return pts[0]
-            elif len(pts)==2:
-                return Segment(*pts)
-            elif pls:
-                return pls[0].segments[0]
-            else:
-                return None
-        
-
-    def intersect_polyline(self,polyline):
-        """
-        
-        returns (Points, Polylines)
-        
-        """
-        pts=Points()
-        pls=Polylines()
-        
-        for segment in polyline.segments:
-            x=self.intersect_segment(segment) # returns None, Point, Segment
-            if isinstance(x,Segment):
-                pls.append(Polyline(x.P0,x.P1))
-            elif isinstance(x,Point):
-                if not x in pts:
-                    pts.append(x)
-            
-        pls.add_all()
-        pts.remove_points_in_segments(pls.segments)
-        
-        return pts,pls
     
-        ################# different version below
+        
 
-        pts=Points()
-        pls=Polylines()
-        pl=Polyline()
-        for segment in polyline.segments:
-            x=self.intersect_segment(segment) # returns None, Point, Segment
+    # def intersect_polyline(self,polyline):
+    #     """
+        
+    #     returns (Points, Polylines)
+        
+    #     """
+    #     pts=Points()
+    #     pls=Polylines()
+        
+    #     for segment in polyline.segments:
+    #         x=self.intersect_segment(segment) # returns None, Point, Segment
+    #         if isinstance(x,Segment):
+    #             pls.append(Polyline(x.P0,x.P1))
+    #         elif isinstance(x,Point):
+    #             if not x in pts:
+    #                 pts.append(x)
             
-            # creates a new current polyline, or extends an existing current polyline
-            if isinstance(x,Segment):
-                if pl:
-                    pl=Polyline(*(list(pl)+[x.P1])) # extends existing current polyline
-                else:
-                    pl=Polyline(x.P0,x.P1) # creates new current polyline
+    #     pls.add_all()
+    #     pts.remove_points_in_segments(pls.segments)
+        
+    #     return pts,pls
+    
+    #     ################# different version below
+
+    #     pts=Points()
+    #     pls=Polylines()
+    #     pl=Polyline()
+    #     for segment in polyline.segments:
+    #         x=self.intersect_segment(segment) # returns None, Point, Segment
+            
+    #         # creates a new current polyline, or extends an existing current polyline
+    #         if isinstance(x,Segment):
+    #             if pl:
+    #                 pl=Polyline(*(list(pl)+[x.P1])) # extends existing current polyline
+    #             else:
+    #                 pl=Polyline(x.P0,x.P1) # creates new current polyline
                     
-            else: # no a segment, so either None or Point
+    #         else: # no a segment, so either None or Point
             
-                # adds current polyline to pls, and resets current polyline
-                if pl:
-                    pls.append(pl) # appends existing polyline to pls
-                    pl=Polyline() # resets existing polyline
+    #             # adds current polyline to pls, and resets current polyline
+    #             if pl:
+    #                 pls.append(pl) # appends existing polyline to pls
+    #                 pl=Polyline() # resets existing polyline
                     
-                # adds point to pts if it is unique
-                if isinstance(x,Point):
-                    if not x in pts:
-                        pts.append(x) # adds unique point to pts
+    #             # adds point to pts if it is unique
+    #             if isinstance(x,Point):
+    #                 if not x in pts:
+    #                     pts.append(x) # adds unique point to pts
             
-        # include current polyline if present
-        if pl: pls.append(pl)
+    #     # include current polyline if present
+    #     if pl: pls.append(pl)
             
-        # remove points that are on the polylines
-        for pt in pts[::-1]: # iterate in reverse as items are being deleted
-            if any(pl.contains(pt) for pl in pls):
-                pts.remove(pt)
+    #     # remove points that are on the polylines
+    #     for pt in pts[::-1]: # iterate in reverse as items are being deleted
+    #         if any(pl.contains(pt) for pl in pls):
+    #             pts.remove(pt)
                 
-        return pts,pls
+    #     return pts,pls
             
 
-    def intersect_segment(self,segment):
-        """
+    # def intersect_segment(self,segment):
+    #     """
         
-        returns Segment or Point or None
+    #     returns Segment or Point or None
         
-        """
-        x=self.intersect_line(segment.line)
-        if x is None:
-            return None
+    #     """
+    #     x=self.intersect_line(segment.line)
+    #     if x is None:
+    #         return None
         
-        elif isinstance(x,Point):
-            if segment.contains(x):
-                return x
-            else:
-                return None
+    #     elif isinstance(x,Point):
+    #         if segment.contains(x):
+    #             return x
+    #         else:
+    #             return None
             
-        elif isinstance(x,Segment):
-            return segment.intersect_segment(x)
+    #     elif isinstance(x,Segment):
+    #         return segment.intersect_segment(x)
 
-        else:
-            raise Exception
+    #     else:
+    #         raise Exception
     
             
     def union_convex_simple_polygon(self,polygon):
@@ -6583,13 +6825,12 @@ class ConvexSimplePolygons(SimplePolygons):
         pts=Points()
         sgmts=Segments()
         for pg in self:
-            x=pg.intersect_line(line)
-            #print(x)
-            if isinstance(x,Point):
-                if not x in pts:
-                    pts.append(x)
-            elif isinstance(x,Segment):
-                sgmts.append(x)
+            xpts,xsgmts=pg.intersect_line(line)
+            for xpt in xpts:
+                if not xpt in pts:
+                    pts.append(xpt)
+            for xsgmt in xsgmts:
+                sgmts.append(xsgmt)
         #print(pts,sgmts)
         pts.remove_points_in_segments(sgmts)
         
@@ -6704,6 +6945,20 @@ class Polyhedron(collections.abc.Sequence):
             pg.plot(ax,*args,**kwargs)
             
             
+    def to_tuple(self):
+        """Returns a tuple representation of the polyhedron.
+        
+        :returns: The points of the polyline as a tuple of tuples. 
+        :rtype: tuple
+        
+        .. code-block:: python
+        
+           >>> 
+        
+        """
+        return tuple(pg.to_tuple() for pg in self)
+            
+            
             
 class ConvexPolyhedron(Polyhedron):
     ""
@@ -6800,7 +7055,7 @@ class Tetrahedron(ConvexPolyhedron):
     @property
     def volume(self):
         ""
-        return (self.v0.dot(self.v1.cross_product(self.v2)))/6.0
+        return abs((self.v0.dot(self.v1.cross_product(self.v2)))/6.0)
     
     
     
