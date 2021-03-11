@@ -4089,13 +4089,24 @@ class Polyline(collections.abc.Sequence):
         
         """
         pls=Polylines()
+        p_sgmts=polyline.segments
         for s in self.segments:
-            x=s.difference_segments(polyline.segments) # returns Segments
+            x=s.difference_segments(p_sgmts) # returns Segments
             if x:
                 for s1 in x: pls.append(Polyline(s1.P0,s1.P1))
-        pls.add_all
+        pls.add_all()
         return pls
         
+    
+    def difference_polylines(self,polylines):
+        """
+        
+        returns Polylines
+        
+        """
+        return self.difference_polyline(polylines)
+    
+    
     
     def difference_segment(self,segment): 
         """
@@ -4216,6 +4227,12 @@ class Polyline(collections.abc.Sequence):
         """
         zipped=zip(*self)
         ax.plot(*zipped,*args,**kwargs)
+    
+    
+    def project_3D(self,plane,coordinate_index):
+        """
+        """
+        return Polyline(*(pt.project_3D(plane,coordinate_index) for pt in self))
     
     
     @property
@@ -5587,13 +5604,49 @@ class SimplePolygon(Polygon):
         return SimplePolygons
         
         """
-        pts, pls, pgs = self.intersect_simple_polygon(polygon)
+        xpts, xpls, xpgs = self.intersect_simple_polygon(polygon)
+        #print('---')
+        #print('xpgs',xpgs)
+        
+        # polyline of self which does not intersect with pgs
+        pl=self.polyline
+        xpls=xpgs.polylines
+        pls=pl.difference_polylines(xpls)
+        #print('pls',pls)
+        
+        for x in xpls:
+            pls.extend(x.difference_polyline(pl))
             
-        if len(pgs)==0:
-            return SimplePolygons(self)
+        pls.add_all()
         
-        #for pg in pgs:
-        
+        pgs=SimplePolygons()
+        for x in pls:
+            if x:
+                pgs.append(SimplePolygon(*(x[:-1])))
+            
+        # if the result is the original two polygons, then polygon is wholly inside self
+        if pgs==SimplePolygons(self,polygon):
+            
+            pgs=SimplePolygons()
+            for t1 in self.triangles:
+                #print('t1',t1)
+                pgs1=SimplePolygons(t1)
+                for t2 in polygon.triangles:
+                    pgs2=SimplePolygons()
+                    for pg1 in pgs1:
+                        pgs2.extend(pg1.difference_simple_polygon(t2))
+                    pgs1=pgs2
+                pgs.extend(pgs1)
+            
+            a=SimplePolygons(*pgs[:-1])
+            a.add_all()
+            a.append(SimplePolygon(*pgs[-1]))
+            return a
+            
+        #print('---')
+            
+        return pgs
+            
         
         
         
@@ -5833,8 +5886,6 @@ class SimplePolygon(Polygon):
 
         if self.nD==2:
         
-            #print('start')    
-        
             for t1 in self.triangles:
                 for t2 in polygon.triangles:
                     x=t1.intersect_convex_simple_polygon(t2) # return None, Point, Segment, or ConvexSimplePolygon
@@ -5847,8 +5898,6 @@ class SimplePolygon(Polygon):
                             pls.append(pl)
                     elif isinstance(x,ConvexSimplePolygon):
                         pgs.append(x)
-                
-            #print(pts,pls,pgs)
                 
             # removes polyline if it is contained in a polygon polyline
             pg_polylines=Polylines(*(pg.polyline for pg in pgs))
@@ -6118,6 +6167,56 @@ class ConvexSimplePolygon(SimplePolygon):
         return 'ConvexSimplePolygon(%s)' % ','.join([str(pt) for pt in self])
 
 
+    def difference_convex_simple_polygon(self,polygon):
+        """
+        
+        return SimplePolygons
+        
+        """
+        x = self.intersect_convex_simple_polygon(polygon)
+        #print(x)
+        
+        if isinstance(x,ConvexSimplePolygon):
+            
+            #print('---')
+            #print('x',x)
+            
+            # polyline of self which does not intersect with pgs
+            pl=self.polyline
+            xpl=x.polyline
+            pls=pl.difference_polyline(xpl)
+            #print('pls',pls)
+            
+            pls.extend(xpl.difference_polyline(pl))
+                
+            pls.add_all()
+            
+            pgs=SimplePolygons()
+            for x in pls:
+                if x:
+                    pgs.append(SimplePolygon(*(x[:-1])))
+                
+            # if the result is the original two polygons, then polygon is wholly inside self
+            if pgs==SimplePolygons(self,polygon):
+                    # divide self into two separate polygons
+                    s=polygon.polyline.segments[0]
+                    pgs=self.divide_by_line(s.line)
+                    # return the difference of these two new polygons with 'polygon'
+                    return SimplePolygons(*(x for pg in pgs
+                        for x in pg.difference_convex_simple_polygon(polygon)))
+                
+            #print('---')
+                
+            return pgs
+        
+        else:
+            
+            return SimplePolygons(self)
+            
+        
+
+
+
     # def _difference_convex_simple_polygon(self,polygon):
     #     """
         
@@ -6257,9 +6356,6 @@ class ConvexSimplePolygon(SimplePolygon):
             raise ValueError
 
 
-
-
-
     def intersect_convex_simple_polygon(self,polygon):
         """
         returns none, point, segment, convex_simple_polygon
@@ -6270,13 +6366,12 @@ class ConvexSimplePolygon(SimplePolygon):
         if self.nD==2:
         
             pts,pls=self.intersect_polyline(polygon.polyline)
-            #print(pts,pls)
+            pts2,pls2=polygon.intersect_polyline(self.polyline)
             
-            if pls:
-                pl2=polygon.intersect_polyline(self.polyline)[1][0]
+            if pls or pls2:
                 
                 # add pl2 segments to pls
-                for s in pl2.segments: # loop through segments in pl2
+                for s in pls2.segments: # loop through segments in pl2
                     if not pls.contains(s): # if segment is not contained by pls
                         pls.append(Polyline(s.P0,s.P1)) # append segment as a new polyline to pls
                         
@@ -6574,7 +6669,7 @@ class ConvexSimplePolygon(SimplePolygon):
     #         raise Exception
     
             
-    def union_convex_simple_polygon(self,polygon):
+    def xxunion_convex_simple_polygon(self,polygon):
         """
         returns None, SimplePolygon
         
@@ -6771,6 +6866,12 @@ class Polygons(collections.abc.MutableSequence):
         for pg in self:
             pg.plot(ax,*args,**kwargs)
         
+        
+    @property
+    def polylines(self):
+        ""
+        return Polylines(*(pg.polyline for pg in self))
+        
 
 
 class SimplePolygons(Polygons):
@@ -6790,10 +6891,11 @@ class SimplePolygons(Polygons):
         
         """
         for i in range(len(self)-1,-1,-1): # loops through offsets of x in reverse, as end items may be deleted
-            for pg in self[:i]: # loops through each polygon up to the ith polygon
+            for j,pg in enumerate(self[:i]): # loops through each polygon up to the ith polygon
                 try:
-                    y=pg+self[i]
-                    pg._points=y._points # in-place change of csp, to a new polygon representing the union 
+                    self[j]=pg+self[i]
+                    #y=pg+self[i]
+                    #pg._points=y._points # in-place change of csp, to a new polygon representing the union 
                     del self[i] 
                     break
                 except ValueError:
