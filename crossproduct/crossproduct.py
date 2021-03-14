@@ -5648,7 +5648,20 @@ class SimplePolygon(Polygon):
         return pgs
             
         
+    def difference_simple_polygons(self,polygons):
+        """
         
+        returns SimplePolygons
+        
+        """
+        result=SimplePolygons(self)
+        for polygon in polygons:
+            result2=SimplePolygons()
+            for pg in result:
+                result2.extend(pg.difference_simple_polygon(polygon))
+            result=result2
+        return result
+                
         
     def intersect_halfline(self,halfline):
         """

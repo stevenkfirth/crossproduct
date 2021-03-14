@@ -2370,6 +2370,31 @@ class Test_SimplePolygon(unittest.TestCase):
                          SimplePolygons())
     
     
+    def test_difference_simple_polygons(self):
+        ""
+        pg=SimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        # half intersection
+        pgs=SimplePolygons(SimplePolygon(Point(0.5,0),Point(1.5,0),
+                                         Point(1.5,1),Point(0.5,1)))
+        #print(pg.difference_simple_polygons(pgs); return
+        self.assertEqual(pg.difference_simple_polygons(pgs),
+                         SimplePolygons(SimplePolygon(Point(0.5,1.0),
+                                                      Point(0.5,0.0),
+                                                      Point(0.0,0.0),
+                                                      Point(0.0,1.0))))
+        # half and qurter intersection
+        pgs=SimplePolygons(SimplePolygon(Point(0.5,0),Point(1.5,0),
+                                         Point(1.5,1),Point(0.5,1)),
+                           SimplePolygon(Point(0,0.5),Point(0.5,0.5),
+                                         Point(0.5,1),Point(0,1)))
+        #print(pg.difference_simple_polygons(pgs)); return
+        self.assertEqual(pg.difference_simple_polygons(pgs),
+                         SimplePolygons(SimplePolygon(Point(0.0,0.5),
+                                                      Point(0.0,0.0),
+                                                      Point(0.5,0.0),
+                                                      Point(0.5,0.5))))
+                         
+                         
     def test_intersect_halfline(self):
         ""
         # 2D
