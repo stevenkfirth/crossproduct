@@ -6577,21 +6577,21 @@ class ConvexSimplePolygon(SimplePolygon):
                     return (Points(),Segments())
             
         # 2D polygon or 3D polygon where the line is on the plane of the polygon
-        pts=set()
+        pts=Points()
         for s in self.polyline.segments:
             x=s.intersect_line(line)
             if x:
                 if isinstance(x,Segment):
                     return (Points(),Segments(x))
                 else:
-                    pts.add(x.to_tuple())
+                    if not x in pts:
+                        pts.append(x)
         if pts:
             if len(pts)==1:
-                return (Points(Point(*tuple(pts)[0])),
-                        Segments())
+                return (pts,Segments())
             elif len(pts)==2:
                 return (Points(),
-                        Segments(Segment(*(Point(*pt) for pt in pts))))
+                        Segments(Segment(*pts)))
         else:
             return (Points(),Segments())
 
