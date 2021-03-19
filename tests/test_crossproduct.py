@@ -2084,6 +2084,13 @@ class Test_Polygon(unittest.TestCase):
                          'Polygon(Point(0.0,0.0),Point(1.0,0.0),Point(1.0,1.0),Point(0.0,1.0))')
     
     
+    def test_centroid(self):
+        ""
+        pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        self.assertEqual(pg.centroid,
+                         Point(0.5,0.5))
+    
+    
     def test_nD(self):
         ""
         pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))

@@ -5156,6 +5156,18 @@ class Polygon(collections.abc.Sequence):
 
 
     @property
+    def centroid(self):
+        """The centroid point of the polygon.
+        
+        :rtype: Point
+        
+        
+        """
+        return Point(*(sum(c)/len(c) for c in zip(*self)))
+        
+        
+
+    @property
     def leftmost_lowest_vertex(self):
         """Returns the index of the leftmost lowest point of the polygon.
         
