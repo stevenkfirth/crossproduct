@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 
 import collections.abc
@@ -5608,16 +5609,33 @@ class SimplePolygon(Polygon):
         #print('---')
         #print('xpgs',xpgs)
         
-        # polyline of self which does not intersect with pgs
+        # polyline of self which does not intersect with polygon
         pl=self.polyline
         xpls=xpgs.polylines
         pls=pl.difference_polylines(xpls)
         #print('pls',pls)
         
+        # intersection polylines that do not intersect with self or with each other
+        
+        z=Polylines()
         for x in xpls:
-            pls.extend(x.difference_polyline(pl))
-            
+            #print('diff',x.difference_polyline(pl))
+            for zpl in x.difference_polyline(pl):
+                for s in zpl.segments:
+                    new_pl=Polyline(s.P0,s.P1)
+                    z.append(new_pl)
+        #print('z',z)
+        # remove polylines that appear more than once
+        z1=Polylines()
+        for a in z:
+            if len([x for x in z if x==a])==1:
+                z1.append(a)
+        #print('z1',z1)
+        
+        pls.extend(z1)
         pls.add_all()
+        
+        pls=Polylines(*[pl.add_segments() for pl in pls])
         
         pgs=SimplePolygons()
         for x in pls:
@@ -5627,25 +5645,51 @@ class SimplePolygon(Polygon):
         # if the result is the original two polygons, then polygon is wholly inside self
         if pgs==SimplePolygons(self,polygon):
             
-            pgs=SimplePolygons()
-            for t1 in self.triangles:
-                #print('t1',t1)
-                pgs1=SimplePolygons(t1)
-                for t2 in polygon.triangles:
-                    pgs2=SimplePolygons()
-                    for pg1 in pgs1:
-                        pgs2.extend(pg1.difference_simple_polygon(t2))
-                    pgs1=pgs2
-                pgs.extend(pgs1)
+            # divide self into two separate polygons
+            s=polygon.polyline.segments[0]
+            #print('s',s)
+            cw_pgs,ccw_pgs=self.divide_by_line(s.line)
+            #print('cw_pgs',cw_pgs)
+            #print('ccw_pgs',ccw_pgs)
+            pgs=cw_pgs
+            pgs.extend(ccw_pgs)
             
-            a=SimplePolygons(*pgs[:-1])
-            a.add_all()
-            a.append(SimplePolygon(*pgs[-1]))
-            return a
+            # return the difference of these two new polygons with 'polygon'
+            return SimplePolygons(*(x for pg in pgs
+                for x in pg.difference_simple_polygon(polygon)))
+            
+            
+            
+            # pgs=SimplePolygons()
+            # for t1 in self.triangles:
+            #     print('t1',t1)
+            #     pgs1=SimplePolygons(t1)
+            #     for t2 in polygon.triangles:
+            #         print('t2',t2)
+            #         dpgs=t1.difference_convex_simple_polygon(t2)
+            #         #print('dpgs',dpgs)for 
+            #         pgs1.extend(dpgs)
+            #         #pgs2=SimplePolygons()
+            #         #for pg1 in pgs1:
+            #         #    pgs2.extend(pg1.difference_simple_polygon(t2))
+            #         #pgs1=pgs2
+            #     #pgs.extend(pgs1)
+            #     break
+            # print('pgs1',pgs1)
+            
+            
+            # pgs=pgs1
+            
+            # a=SimplePolygons(*pgs[:-1])
+            # a.add_all()
+            # a.append(SimplePolygon(*pgs[-1]))
+            # return a
             
         #print('---')
             
-        return pgs
+        else:
+        
+            return pgs
             
         
     def difference_simple_polygons(self,polygons):
@@ -5661,7 +5705,40 @@ class SimplePolygon(Polygon):
                 result2.extend(pg.difference_simple_polygon(polygon))
             result=result2
         return result
-                
+       
+
+    def divide_by_line(self,line):
+        """Divides a simple polygon using the line
+    
+        returns SimplePolygons
+        
+        """
+
+        #print('---')
+
+        if self.nD==2:
+            
+            cw_pgs=SimplePolygons()
+            ccw_pgs=SimplePolygons()
+            
+            for t in self.triangles:
+                dvcw_pgs,dvccw_pgs=t.divide_by_line(line)
+                cw_pgs.extend(dvcw_pgs)
+                ccw_pgs.extend(dvccw_pgs)
+            
+            cw_pgs.add_all()
+            ccw_pgs.add_all()
+            
+            return cw_pgs,ccw_pgs
+            
+        else:
+            
+            i,self2D=self.project_2D()
+            line2D=line.project_2D(i)
+            cw_pgs2D,ccw_pgs2D=self2D.divide_by_line(line2D)
+            return (cw_pgs2D.project_3D(self.plane,i),
+                    ccw_pgs2D.project_3D(self.plane,i))
+         
         
     def intersect_halfline(self,halfline):
         """
@@ -6213,7 +6290,10 @@ class ConvexSimplePolygon(SimplePolygon):
             if pgs==SimplePolygons(self,polygon):
                     # divide self into two separate polygons
                     s=polygon.polyline.segments[0]
-                    pgs=self.divide_by_line(s.line)
+                    cw_pgs,ccw_pgs=self.divide_by_line(s.line)
+                    pgs=cw_pgs
+                    pgs.extend(ccw_pgs)
+                    
                     # return the difference of these two new polygons with 'polygon'
                     return SimplePolygons(*(x for pg in pgs
                         for x in pg.difference_convex_simple_polygon(polygon)))
@@ -6227,6 +6307,57 @@ class ConvexSimplePolygon(SimplePolygon):
             return SimplePolygons(self)
             
         
+    def _difference_simple_polygon(self,polygon):
+        """
+        
+        return SimplePolygons
+        
+        """
+        xpts, xpls, xpgs = self.intersect_simple_polygon(polygon)
+        #print('---')
+        #print('xpgs',xpgs)
+        
+        # polyline of self which does not intersect with pgs
+        pl=self.polyline
+        xpls=xpgs.polylines
+        pls=pl.difference_polylines(xpls)
+        #print('pls',pls)
+        
+        for x in xpls:
+            pls.extend(x.difference_polyline(pl))
+            
+        pls.add_all()
+        
+        pgs=SimplePolygons()
+        for x in pls:
+            if x:
+                pgs.append(SimplePolygon(*(x[:-1])))
+            
+        # if the result is the original two polygons, then polygon is wholly inside self
+        if pgs==SimplePolygons(self,polygon):
+            
+            # divide self into two separate polygons
+            s=polygon.polyline.segments[0]
+            pgs=self.divide_by_line(s.line)
+            # return the difference of these two new polygons with 'polygon'
+            return SimplePolygons(*(x for pg in pgs
+                for x in pg.difference_convex_simple_polygon(polygon)))
+                
+            #print('---')
+            print('pgs1',pgs1)
+            
+            
+            pgs=pgs1
+            
+            a=SimplePolygons(*pgs[:-1])
+            a.add_all()
+            a.append(SimplePolygon(*pgs[-1]))
+            return a
+            
+        #print('---')
+            
+        return pgs
+            
 
 
 
@@ -6295,10 +6426,8 @@ class ConvexSimplePolygon(SimplePolygon):
 
     def divide_by_line(self,line):
         """Divides a convex simple polygon using the line
-        
-        returns ConvexSimplePolygons
-        
-        
+    
+        returns tuple(cw_polygons, ccw_polygons)
         
         """
 
@@ -6342,8 +6471,6 @@ class ConvexSimplePolygon(SimplePolygon):
                     else:
                         ccw_pls.append(Polyline(z.P0,z.P1))
                 
-                
-            
             xpts,xsgmts=self.intersect_line(line)  # returns (Points,Segments)
             if xsgmts:
                 x=xsgmts[0]
@@ -6358,15 +6485,23 @@ class ConvexSimplePolygon(SimplePolygon):
             
             pgs=ConvexSimplePolygons()
             if len(cw_pls)>0:
-                pgs.append(ConvexSimplePolygon(*cw_pls[0][:-1]))
+                cw_pgs=ConvexSimplePolygons(ConvexSimplePolygon(*cw_pls[0][:-1]))
+            else:
+                cw_pgs=ConvexSimplePolygons()
             if len(ccw_pls)>0:
-                pgs.append(ConvexSimplePolygon(*ccw_pls[0][:-1]))
-            return pgs
+                ccw_pgs=ConvexSimplePolygons(ConvexSimplePolygon(*ccw_pls[0][:-1]))
+            else:
+                ccw_pgs=ConvexSimplePolygons()
+            return cw_pgs,ccw_pgs
             
             
         else:
             
-            raise ValueError
+            i,self2D=self.project_2D()
+            line2D=line.project_2D(i)
+            cw_pgs2D,ccw_pgs2D=self2D.divide_by_line(line2D)
+            return (cw_pgs2D.project_3D(self.plane,i),
+                    ccw_pgs2D.project_3D(self.plane,i))
 
 
     def intersect_convex_simple_polygon(self,polygon):

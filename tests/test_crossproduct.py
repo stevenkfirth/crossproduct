@@ -2343,25 +2343,45 @@ class Test_SimplePolygon(unittest.TestCase):
                                                       Point(0.0,1.0),
                                                       Point(1.0,1.0),
                                                       Point(1.0,0.0))))
-        # internal intersection, no edges
+        
+        #
+        pg=SimplePolygon(Point(1.0,0.25),Point(1.0,1.0),Point(0.0,1.0),Point(0.0,0.25))
         pg1=SimplePolygon(Point(0.25,0.25),
                           Point(0.75,0.25),
                           Point(0.75,0.75),
                           Point(0.25,0.75))
-        #print(pg.difference_simple_polygon(pg1)); return
+        #print('---return--\n',pg.difference_simple_polygon(pg1)); return
         self.assertEqual(pg.difference_simple_polygon(pg1),
-                         SimplePolygons(SimplePolygon(Point(0.25,0.25),
-                                                      Point(0.0,0.0),
-                                                      Point(1.0,0.0),
-                                                      Point(1.0,1.0),
-                                                      Point(0.75,0.75),
-                                                      Point(0.75,0.25)), 
-                                        SimplePolygon(Point(0.75,0.75),
+                         SimplePolygons(SimplePolygon(Point(0.75,0.25),
+                                                      Point(1.0,0.25),
                                                       Point(1.0,1.0),
                                                       Point(0.0,1.0),
-                                                      Point(0.0,0.0),
+                                                      Point(0.0,0.25),
                                                       Point(0.25,0.25),
-                                                      Point(0.25,0.75))))
+                                                      Point(0.25,0.75),
+                                                      Point(0.75,0.75))))
+        
+        
+        # internal intersection, no edges
+        pg=SimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        pg1=SimplePolygon(Point(0.25,0.25),
+                          Point(0.75,0.25),
+                          Point(0.75,0.75),
+                          Point(0.25,0.75))
+        #print('---return--\n',pg.difference_simple_polygon(pg1)); return
+        self.assertEqual(pg.difference_simple_polygon(pg1),
+                         SimplePolygons(SimplePolygon(Point(0.0,0.0),
+                                                      Point(1.0,0.0),
+                                                      Point(1.0,0.25),
+                                                      Point(0.0,0.25)), 
+                                        SimplePolygon(Point(0.75,0.25),
+                                                      Point(1.0,0.25),
+                                                      Point(1.0,1.0),
+                                                      Point(0.0,1.0),
+                                                      Point(0.0,0.25),
+                                                      Point(0.25,0.25),
+                                                      Point(0.25,0.75),
+                                                      Point(0.75,0.75))))
     
         # external intersection, no edges
         pg1=SimplePolygon(Point(-1,-1),Point(2,-1),Point(2,2),Point(-1,2))
@@ -2369,6 +2389,33 @@ class Test_SimplePolygon(unittest.TestCase):
         self.assertEqual(pg.difference_simple_polygon(pg1),
                          SimplePolygons())
     
+    
+        #
+        pg=SimplePolygon(Point(0.0,8.0,3.0),
+                         Point(3.0,8.0,3.0),
+                         Point(3.0,8.0,0.0),
+                         Point(0.0,8.0,0.0))
+        pg1=SimplePolygon(Point(0.5,8.0,2.5),
+                          Point(2.5,8.0,2.5),
+                          Point(2.5,8.0,1.0),
+                          Point(0.5,8.0,1.0))
+        #print(pg.difference_simple_polygon(pg1)); return
+        self.assertEqual(pg.difference_simple_polygon(pg1),
+                         SimplePolygons(SimplePolygon(Point(0.0,8.0,3.0),
+                                                      Point(3.0,8.0,3.0),
+                                                      Point(3.0,8.0,2.5),
+                                                      Point(0.0,8.0,2.5)), 
+                                        SimplePolygon(Point(2.5,8.0,2.5),
+                                                      Point(3.0,8.0,2.5),
+                                                      Point(3.0,8.0,0.0),
+                                                      Point(0.0,8.0,0.0),
+                                                      Point(0.0,8.0,2.5),
+                                                      Point(0.5,8.0,2.5),
+                                                      Point(0.5,8.0,1.0),
+                                                      Point(2.5,8.0,1.0))))
+        
+        
+        
     
     def test_difference_simple_polygons(self):
         ""
@@ -2393,7 +2440,99 @@ class Test_SimplePolygon(unittest.TestCase):
                                                       Point(0.0,0.0),
                                                       Point(0.5,0.0),
                                                       Point(0.5,0.5))))
-                         
+                 
+        #
+        pg=SimplePolygon(Point(0.0,8.0,3.0),
+                         Point(3.0,8.0,3.0),
+                         Point(3.0,8.0,0.0),
+                         Point(0.0,8.0,0.0))
+        pg1=SimplePolygon(Point(0.5,8.0,2.5),
+                          Point(2.5,8.0,2.5),
+                          Point(2.5,8.0,1.0),
+                          Point(0.5,8.0,1.0))
+
+
+    def test_divide_by_line(self):
+        ""
+        # 2D
+        pg=SimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        # no intersection
+        l=Line(Point(-1,0),Vector(0,1))
+        #print(pg.divide_by_line(l)); return
+        self.assertEqual(pg.divide_by_line(l),
+                         (SimplePolygons(pg),
+                          SimplePolygons()))
+        # point intersection
+        l=Line(Point(0,0),Vector(1,-1))
+        #print(pg.divide_by_line(l)); return
+        self.assertEqual(pg.divide_by_line(l),
+                         (SimplePolygons(),
+                          SimplePolygons(pg)))
+        # full edge intersection
+        l=Line(Point(0,0),Vector(1,0))
+        #print(pg.divide_by_line(l)); return
+        self.assertEqual(pg.divide_by_line(l),
+                         (SimplePolygons(),
+                          SimplePolygons(pg)))
+        # vertex-to-vertex intersection
+        l=Line(Point(0,0),Vector(1,1))
+        #print(pg.divide_by_line(l)); return
+        self.assertEqual(pg.divide_by_line(l), 
+                         (SimplePolygons(SimplePolygon(Point(0.0,0.0),
+                                                       Point(1.0,0.0),
+                                                       Point(1.0,1.0))),
+                          SimplePolygons(SimplePolygon(Point(1.0,1.0),
+                                                       Point(0.0,1.0),
+                                                       Point(0.0,0.0))))
+                         )
+        # vertex-to-midedge intersection
+        l=Line(Point(0,0),Vector(0.5,1))
+        #print(pg.divide_by_line(l)); return
+        self.assertEqual(pg.divide_by_line(l),
+                         (SimplePolygons(SimplePolygon(Point(0.0,0.0),
+                                                       Point(1.0,0.0),
+                                                       Point(1.0,1.0),
+                                                       Point(0.5,1.0))),
+                          SimplePolygons(SimplePolygon(Point(0.5,1.0),
+                                                       Point(0.0,1.0),
+                                                       Point(0.0,0.0)))))
+        # midedge-to-midedge intersection
+        l=Line(Point(0.5,0),Vector(1,1))
+        #print(pg.divide_by_line(l)); return
+        self.assertEqual(pg.divide_by_line(l),
+                         (SimplePolygons(SimplePolygon(Point(0.5,0.0),
+                                                       Point(1.0,0.0),
+                                                       Point(1.0,0.5))),
+                          SimplePolygons(SimplePolygon(Point(0.0,0.0),
+                                                       Point(0.5,0.0),
+                                                       Point(1.0,0.5),
+                                                       Point(1.0,1.0),
+                                                       Point(0.0,1.0)))))
+        # concave polygon
+        pg=SimplePolygon(Point(0,0),
+                         Point(2,0),
+                         Point(2,1),
+                         Point(1,1),
+                         Point(1,2),
+                         Point(2,2),
+                         Point(2,3),
+                         Point(0,3))
+        l=Line(Point(1,0),Vector(0,1))
+        #print(pg.divide_by_line(l)); return
+        self.assertEqual(pg.divide_by_line(l),
+                         (SimplePolygons(SimplePolygon(Point(1.0,0.0),
+                                                       Point(2.0,0.0),
+                                                       Point(2.0,1.0),
+                                                       Point(1.0,1.0)), 
+                                         SimplePolygon(Point(1.0,2.0),
+                                                       Point(2.0,2.0),
+                                                       Point(2.0,3.0),
+                                                       Point(1.0,3.0))), 
+                          SimplePolygons(SimplePolygon(Point(0.0,0.0),
+                                                       Point(1.0,0.0),
+                                                       Point(1.0,3.0),
+                                                       Point(0.0,3.0)))))
+    
                          
     def test_intersect_halfline(self):
         ""
@@ -2927,7 +3066,125 @@ class Test_ConvexSimplePolygon(unittest.TestCase):
                          SimplePolygons())
     
     
+    def _test_difference_simple_polygon(self):
+        ""
+        # 2D
+        pg=ConvexSimplePolygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        # no intersection
+        pg1=SimplePolygon(Point(0,2),Point(1,2),Point(1,3),Point(0,3))
+        #print(pg.difference_simple_polygon(pg1)); return
+        self.assertEqual(pg.difference_simple_polygon(pg1),
+                         SimplePolygons(pg))
+        # point intersection
+        pg1=SimplePolygon(Point(1,1),Point(2,1),Point(2,2),Point(1,2))
+        #print(pg.difference_simple_polygon(pg1)); return
+        self.assertEqual(pg.difference_simple_polygon(pg1),
+                         SimplePolygons(pg))
+        # full edge intersection
+        pg1=SimplePolygon(Point(0,1),Point(1,1),Point(1,2),Point(0,2))
+        #print(pg.difference_simple_polygon(pg1)); return
+        self.assertEqual(pg.difference_simple_polygon(pg1),
+                         SimplePolygons(pg))
+        # half edge overlap intersection
+        pg1=SimplePolygon(Point(0.5,1),Point(1.5,1),Point(1.5,2),Point(0.5,2))
+        #print(pg.difference_simple_polygon(pg1)); return
+        self.assertEqual(pg.difference_simple_polygon(pg1),
+                         SimplePolygons(pg))
+        # partial internal edge intersection
+        pg1=SimplePolygon(Point(0.25,1),Point(0.75,1),Point(0.75,2),Point(0.25,2))
+        #print(pg.difference_simple_polygon(pg1)); return
+        self.assertEqual(pg.difference_simple_polygon(pg1),
+                         SimplePolygons(pg))
+        # full intersection
+        pg1=pg
+        #print(pg.difference_simple_polygon(pg1)); return
+        self.assertEqual(pg.difference_simple_polygon(pg1),
+                         SimplePolygons())
+        # half intersection
+        pg1=SimplePolygon(Point(0.5,0),Point(1.5,0),Point(1.5,1),Point(0.5,1))
+        #print(pg.difference_simple_polygon(pg1)); return
+        self.assertEqual(pg.difference_simple_polygon(pg1),
+                         SimplePolygons(SimplePolygon(Point(0.5,1.0),
+                                                      Point(0.5,0.0),
+                                                      Point(0.0,0.0),
+                                                      Point(0.0,1.0))))
+        # quarter intersection
+        pg1=SimplePolygon(Point(0.5,0.5),Point(1.5,0.5),Point(1.5,1.5),Point(0.5,1.5))
+        #print(pg.difference_simple_polygon(pg1)); return
+        self.assertEqual(pg.difference_simple_polygon(pg1),
+                         SimplePolygons(SimplePolygon(Point(0.5,1.0),
+                                                      Point(0.5,0.5),
+                                                      Point(1.0,0.5),
+                                                      Point(1.0,0.0),
+                                                      Point(0.0,0.0),
+                                                      Point(0.0,1.0))))
+        # internal intersection, 2 edges
+        pg1=SimplePolygon(Point(0.25,0),Point(0.75,0),Point(0.75,1),Point(0.25,1))
+        #print(pg.difference_simple_polygon(pg1)); return
+        self.assertEqual(pg.difference_simple_polygon(pg1),
+                         SimplePolygons(SimplePolygon(Point(0.25,1.0),
+                                                      Point(0.0,1.0),
+                                                      Point(0.0,0.0),
+                                                      Point(0.25,0.0)), 
+                                        SimplePolygon(Point(0.75,0.0),
+                                                      Point(1.0,0.0),
+                                                      Point(1.0,1.0),
+                                                      Point(0.75,1.0))))
+        # internal intersection, 1 edges
+        pg1=SimplePolygon(Point(0.25,0),Point(0.75,0),Point(0.75,0.5),Point(0.25,0.5))
+        #print(pg.difference_simple_polygon(pg1)); return
+        self.assertEqual(pg.difference_simple_polygon(pg1),
+                         SimplePolygons(SimplePolygon(Point(0.75,0.0),
+                                                      Point(0.75,0.5),
+                                                      Point(0.25,0.5),
+                                                      Point(0.25,0.0),
+                                                      Point(0.0,0.0),
+                                                      Point(0.0,1.0),
+                                                      Point(1.0,1.0),
+                                                      Point(1.0,0.0))))
+        # internal intersection, no edges
+        pg1=SimplePolygon(Point(0.25,0.25),
+                          Point(0.75,0.25),
+                          Point(0.75,0.75),
+                          Point(0.25,0.75))
+        #print(pg.difference_simple_polygon(pg1)); return
+        self.assertEqual(pg.difference_simple_polygon(pg1),
+                         SimplePolygons(ConvexSimplePolygon(Point(0.0,0.0),
+                                                            Point(1.0,0.0),
+                                                            Point(1.0,0.25),
+                                                            Point(0.0,0.25)), 
+                                        SimplePolygon(Point(0.75,0.25),
+                                                      Point(1.0,0.25),
+                                                      Point(1.0,1.0),
+                                                      Point(0.0,1.0),
+                                                      Point(0.0,0.25),
+                                                      Point(0.25,0.25),
+                                                      Point(0.25,0.75),
+                                                      Point(0.75,0.75))))
     
+        # external intersection, no edges
+        pg1=SimplePolygon(Point(-1,-1),Point(2,-1),Point(2,2),Point(-1,2))
+        #print(pg.difference_simple_polygon(pg1)); return
+        self.assertEqual(pg.difference_simple_polygon(pg1),
+                         SimplePolygons())
+    
+    
+        #
+        pg=ConvexSimplePolygon(Point(0.0,8.0,3.0),
+                               Point(3.0,8.0,3.0),
+                               Point(3.0,8.0,0.0),
+                               Point(0.0,8.0,0.0))
+        pg1=SimplePolygon(Point(0.5,8.0,2.5),
+                          Point(2.5,8.0,2.5),
+                          Point(2.5,8.0,1.0),
+                          Point(0.5,8.0,1.0))
+        print(pg.difference_simple_polygon(pg1)); return
+        return
+        self.assertEqual(pg.difference_simple_polygon(pg1),
+                         SimplePolygons())
+        
+        
+        
     
         
         
@@ -2941,50 +3198,54 @@ class Test_ConvexSimplePolygon(unittest.TestCase):
         l=Line(Point(-1,0),Vector(0,1))
         #print(pg.divide_by_line(l)); return
         self.assertEqual(pg.divide_by_line(l),
-                         ConvexSimplePolygons(pg))
+                         (ConvexSimplePolygons(pg),
+                          ConvexSimplePolygons()))
         # point intersection
         l=Line(Point(0,0),Vector(1,-1))
         #print(pg.divide_by_line(l)); return
         self.assertEqual(pg.divide_by_line(l),
-                         ConvexSimplePolygons(pg))
+                         (ConvexSimplePolygons(),
+                          ConvexSimplePolygons(pg)))
         # full edge intersection
         l=Line(Point(0,0),Vector(1,0))
         #print(pg.divide_by_line(l)); return
         self.assertEqual(pg.divide_by_line(l),
-                         ConvexSimplePolygons(pg))
+                         (ConvexSimplePolygons(),
+                          ConvexSimplePolygons(pg)))
         # vertex-to-vertex intersection
         l=Line(Point(0,0),Vector(1,1))
         #print(pg.divide_by_line(l)); return
-        self.assertEqual(pg.divide_by_line(l),
-                         ConvexSimplePolygons(ConvexSimplePolygon(Point(0.0,0.0),
-                                                                  Point(1.0,0.0),
-                                                                  Point(1.0,1.0)), 
-                                              ConvexSimplePolygon(Point(1.0,1.0),
-                                                                  Point(0.0,1.0),
-                                                                  Point(0.0,0.0))))
+        self.assertEqual(pg.divide_by_line(l), 
+                         (ConvexSimplePolygons(ConvexSimplePolygon(Point(0.0,0.0),
+                                                                   Point(1.0,0.0),
+                                                                   Point(1.0,1.0))),
+                          ConvexSimplePolygons(ConvexSimplePolygon(Point(1.0,1.0),
+                                                                   Point(0.0,1.0),
+                                                                   Point(0.0,0.0))))
+                         )
         # vertex-to-midedge intersection
         l=Line(Point(0,0),Vector(0.5,1))
         #print(pg.divide_by_line(l)); return
         self.assertEqual(pg.divide_by_line(l),
-                         ConvexSimplePolygons(ConvexSimplePolygon(Point(0.0,0.0),
-                                                                  Point(1.0,0.0),
-                                                                  Point(1.0,1.0),
-                                                                  Point(0.5,1.0)), 
-                                              ConvexSimplePolygon(Point(0.5,1.0),
-                                                                  Point(0.0,1.0),
-                                                                  Point(0.0,0.0))))
+                         (ConvexSimplePolygons(ConvexSimplePolygon(Point(0.0,0.0),
+                                                                   Point(1.0,0.0),
+                                                                   Point(1.0,1.0),
+                                                                   Point(0.5,1.0))),
+                          ConvexSimplePolygons(ConvexSimplePolygon(Point(0.5,1.0),
+                                                                   Point(0.0,1.0),
+                                                                   Point(0.0,0.0)))))
         # midedge-to-midedge intersection
         l=Line(Point(0.5,0),Vector(1,1))
         #print(pg.divide_by_line(l)); return
         self.assertEqual(pg.divide_by_line(l),
-                         ConvexSimplePolygons(ConvexSimplePolygon(Point(0.5,0.0),
-                                                                  Point(1.0,0.0),
-                                                                  Point(1.0,0.5)), 
-                                              ConvexSimplePolygon(Point(0.0,0.0),
-                                                                  Point(0.5,0.0),
-                                                                  Point(1.0,0.5),
-                                                                  Point(1.0,1.0),
-                                                                  Point(0.0,1.0))))
+                         (ConvexSimplePolygons(ConvexSimplePolygon(Point(0.5,0.0),
+                                                                   Point(1.0,0.0),
+                                                                   Point(1.0,0.5))),
+                          ConvexSimplePolygons(ConvexSimplePolygon(Point(0.0,0.0),
+                                                                   Point(0.5,0.0),
+                                                                   Point(1.0,0.5),
+                                                                   Point(1.0,1.0),
+                                                                   Point(0.0,1.0)))))
     
     def test_intersect_convex_simple_polygon(self):
         ""
