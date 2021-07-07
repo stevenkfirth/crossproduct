@@ -15,24 +15,24 @@
 
 
 from .crossproduct import Point
-from .crossproduct import Vector
+# from .crossproduct import Vector
 from .crossproduct import Points
-from .crossproduct import Line
-from .crossproduct import Halfline
-from .crossproduct import Segment
-from .crossproduct import Segments
+# from .crossproduct import Line
+# from .crossproduct import Halfline
+# from .crossproduct import Segment
+# from .crossproduct import Segments
 from .crossproduct import Polyline
 from .crossproduct import Polylines
-from .crossproduct import Plane
+# from .crossproduct import Plane
 from .crossproduct import Polygon
-from .crossproduct import SimplePolygon
-from .crossproduct import ConvexSimplePolygon
-from .crossproduct import Triangle
+# from .crossproduct import SimplePolygon
+# from .crossproduct import ConvexSimplePolygon
+# from .crossproduct import Triangle
 from .crossproduct import Polygons
-from .crossproduct import Triangles
-from .crossproduct import SimplePolygons
-from .crossproduct import ConvexSimplePolygons
-from .crossproduct import Polyhedron
-from .crossproduct import ConvexPolyhedron
-from .crossproduct import Tetrahedron
+# from .crossproduct import Triangles
+# from .crossproduct import SimplePolygons
+# from .crossproduct import ConvexSimplePolygons
+# from .crossproduct import Polyhedron
+# from .crossproduct import ConvexPolyhedron
+# from .crossproduct import Tetrahedron
 
