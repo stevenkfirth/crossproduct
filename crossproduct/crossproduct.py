@@ -5,6 +5,13 @@ import collections.abc
 import itertools
 import math
 
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+import shapely.geometry
+import triangle as tr
+import numpy as np
+
 ABS_TOL = 1e-7 # default value for math.isclose
 
 
@@ -244,14 +251,15 @@ class Point(collections.abc.Sequence):
         return len(self)
     
     
-    def plot(self, ax, *args, **kwargs):
+    def plot(self, ax=None, **kwargs):
         """Plots the point on the supplied axes.
         
         :param ax: An 2D or 3D Axes instance.
         :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
-        :param args: positional arguments to be passed to the Axes.plot call.
         :param kwargs: keyword arguments to be passed to the Axes.plot call.
                    
+        :rtype: matplotlib.axes._subplots.Axes3DSubplot
+        
         .. rubric:: Code Example
     
         .. code-block:: python
@@ -281,8 +289,19 @@ class Point(collections.abc.Sequence):
         .. image:: /_static/point_plot_3D.png
         
         """
+        if ax is None:
+            if self.nD==2:
+                fig, ax = plt.subplots()
+            else:
+                fig = plt.figure()
+                ax = fig.add_subplot(111, projection='3d')
+        
+        if not 'marker' in kwargs:
+            kwargs['marker']='o'
+        
         x=[[c] for c in self]
-        ax.plot(*x, *args, **kwargs)
+        ax.plot(*x, **kwargs)
+        return ax
     
     
     def project_2D(self,coordinate_index):
@@ -4188,12 +4207,11 @@ class Polyline(collections.abc.Sequence):
         return self[0].nD
     
     
-    def plot(self, ax, *args, **kwargs):
+    def plot(self, ax, **kwargs):
         """Plots the polyline on the supplied axes.
         
         :param ax: An 2D or 3D Axes instance.
         :type ax:  matplotlib.axes.Axes, mpl_toolkits.mplot3d.axes3d.Axes3D
-        :param args: positional arguments to be passed to the Axes.plot call.
         :param kwargs: keyword arguments to be passed to the Axes.plot call.
         
         .. rubric:: Code Example
@@ -4226,8 +4244,17 @@ class Polyline(collections.abc.Sequence):
         
            
         """
+        
+        if ax is None:
+            if self.nD==2:
+                fig, ax = plt.subplots()
+            else:
+                fig = plt.figure()
+                ax = fig.add_subplot(111, projection='3d')
+        
         zipped=zip(*self)
-        ax.plot(*zipped,*args,**kwargs)
+        ax.plot(*zipped,**kwargs)
+        return ax
     
     
     def project_3D(self,plane,coordinate_index):
@@ -5156,6 +5183,29 @@ class Polygon(collections.abc.Sequence):
 
 
     @property
+    def bounding_box(self):
+        """
+        
+        :rtype: Polygon, SimplePolygon etc.
+        
+        """
+        if self.nD==2:
+            pg=shapely.geometry.Polygon(self.to_tuple())
+            minx, miny, maxx, maxy = pg.bounds
+            return self.__class__(Point(minx,miny),
+                                  Point(maxx,miny),
+                                  Point(maxx,maxy),
+                                  Point(minx,maxy))
+        elif self.nD==3:
+            i,pg2d=self.project_2D()
+            pg=pg2d.bounding_box
+            return pg.project_3D(self.plane,i)
+        
+        else:
+            raise Exception
+        
+
+    @property
     def centroid(self):
         """The centroid point of the polygon.
         
@@ -5275,9 +5325,12 @@ class Polygon(collections.abc.Sequence):
     #         pc=Poly3DCollection(verts,**kwargs)
     #         ax.add_collection3d(pc)
 
-    def plot(self,ax,**kwargs):
+    def plot(self,ax=None,**kwargs):
         ""
-        self.polyline.plot(ax,**kwargs)
+        
+        
+        ax=self.polyline.plot(ax,**kwargs)
+        return ax
 
 
     @property
@@ -5438,6 +5491,20 @@ class Polygon(collections.abc.Sequence):
     
         else:
             raise ValueError
+    
+    
+    @property
+    def reduce(self):
+        """Returns a polygon with the number of points reduced to the minimum.
+        
+        This happens if the polygon contains adjacent segments which are collinear.
+        
+        :rtype: Polygon, SimplePolygon
+        
+        """
+    
+        pl=self.polyline.add_segments()
+        return self.__class__(*pl[:-1])
     
     
     @property
@@ -5617,92 +5684,166 @@ class SimplePolygon(Polygon):
         return SimplePolygons
         
         """
-        xpts, xpls, xpgs = self.intersect_simple_polygon(polygon)
-        #print('---')
-        #print('xpgs',xpgs)
+        use_shapely=True
         
-        # polyline of self which does not intersect with polygon
-        pl=self.polyline
-        xpls=xpgs.polylines
-        pls=pl.difference_polylines(xpls)
-        #print('pls',pls)
+        if use_shapely:
+            
+            pgs=SimplePolygons()
+            
+            if self.nD==2:
+            
+                pg1=shapely.geometry.Polygon(self.to_tuple())
+                pg2=shapely.geometry.Polygon(polygon.to_tuple())
+                
+                result=pg1.difference(pg2)
+                #print(result)
+                #print(type(result))
+                
+                if isinstance(result,shapely.geometry.polygon.Polygon):
+                    
+                    if len(result.exterior.coords)>0:
+                        
+                        if len(result.interiors)==0: 
+                            pg=SimplePolygon(*[Point(*c) for c in result.exterior.coords[:-1]])
+                            pg=pg.reduce
+                            pgs.append(pg)
+                            
+                        else:  # i.e. it has an interior polygon
+                            
+                            # divide self into two separate polygons
+                            s=polygon.polyline.segments[0]
+                            #print('s',s)
+                            cw_pgs,ccw_pgs=self.divide_by_line(s.line)
+                            #print('cw_pgs',cw_pgs)
+                            #print('ccw_pgs',ccw_pgs)
+                            pgs=cw_pgs
+                            pgs.extend(ccw_pgs)
+                    
+                            # return the difference of these two new polygons with 'polygon'
+                            return SimplePolygons(*(x for pg in pgs
+                                for x in pg.difference_simple_polygon(polygon)))
+                            
+                        
+                elif isinstance(result,shapely.geometry.multipolygon.MultiPolygon):
+                    
+                    for polygon in result:
+                        pg=SimplePolygon(*[Point(*c) for c in polygon.exterior.coords[:-1]])
+                        pg=pg.reduce
+                        pgs.append(pg)
+                
+                    
+                return pgs
+            
+            else:  # 3D
+            
+                a=self.plane.intersect_plane(polygon.plane) # returns None or Line or Plane
+            
+                if a is None: # polygon planes do not intersect
+                    return pgs
+                
+                elif isinstance(a,Plane): # polygons lie on the same plane
+                    
+                    i,self_2D=self.project_2D()
+                    i1,polygon_2D=polygon.project_2D()
+                    assert i==i1
+                    pgs=self_2D.difference_simple_polygon(polygon_2D)
+                    return pgs.project_3D(self.plane,i)
+                    
+                elif isinstance(a,Line): # the intersection of the two polygon planes as a line
+                    
+                    return pgs
         
-        # intersection polylines that do not intersect with self or with each other
         
-        z=Polylines()
-        for x in xpls:
-            #print('diff',x.difference_polyline(pl))
-            for zpl in x.difference_polyline(pl):
-                for s in zpl.segments:
-                    new_pl=Polyline(s.P0,s.P1)
-                    z.append(new_pl)
-        #print('z',z)
-        # remove polylines that appear more than once
-        z1=Polylines()
-        for a in z:
-            if len([x for x in z if x==a])==1:
-                z1.append(a)
-        #print('z1',z1)
         
-        pls.extend(z1)
-        pls.add_all()
         
-        pls=Polylines(*[pl.add_segments() for pl in pls])
+        else:        
         
-        pgs=SimplePolygons()
-        for x in pls:
-            if x:
-                pgs.append(SimplePolygon(*(x[:-1])))
+            xpts, xpls, xpgs = self.intersect_simple_polygon(polygon)
+            #print('---')
+            #print('xpgs',xpgs)
             
-        # if the result is the original two polygons, then polygon is wholly inside self
-        if pgs==SimplePolygons(self,polygon):
+            # polyline of self which does not intersect with polygon
+            pl=self.polyline
+            xpls=xpgs.polylines
+            pls=pl.difference_polylines(xpls)
+            #print('pls',pls)
             
-            # divide self into two separate polygons
-            s=polygon.polyline.segments[0]
-            #print('s',s)
-            cw_pgs,ccw_pgs=self.divide_by_line(s.line)
-            #print('cw_pgs',cw_pgs)
-            #print('ccw_pgs',ccw_pgs)
-            pgs=cw_pgs
-            pgs.extend(ccw_pgs)
+            # intersection polylines that do not intersect with self or with each other
             
-            # return the difference of these two new polygons with 'polygon'
-            return SimplePolygons(*(x for pg in pgs
-                for x in pg.difference_simple_polygon(polygon)))
+            z=Polylines()
+            for x in xpls:
+                #print('diff',x.difference_polyline(pl))
+                for zpl in x.difference_polyline(pl):
+                    for s in zpl.segments:
+                        new_pl=Polyline(s.P0,s.P1)
+                        z.append(new_pl)
+            #print('z',z)
+            # remove polylines that appear more than once
+            z1=Polylines()
+            for a in z:
+                if len([x for x in z if x==a])==1:
+                    z1.append(a)
+            #print('z1',z1)
             
+            pls.extend(z1)
+            pls.add_all()
             
+            pls=Polylines(*[pl.add_segments() for pl in pls])
             
-            # pgs=SimplePolygons()
-            # for t1 in self.triangles:
-            #     print('t1',t1)
-            #     pgs1=SimplePolygons(t1)
-            #     for t2 in polygon.triangles:
-            #         print('t2',t2)
-            #         dpgs=t1.difference_convex_simple_polygon(t2)
-            #         #print('dpgs',dpgs)for 
-            #         pgs1.extend(dpgs)
-            #         #pgs2=SimplePolygons()
-            #         #for pg1 in pgs1:
-            #         #    pgs2.extend(pg1.difference_simple_polygon(t2))
-            #         #pgs1=pgs2
-            #     #pgs.extend(pgs1)
-            #     break
-            # print('pgs1',pgs1)
+            pgs=SimplePolygons()
+            for x in pls:
+                if x:
+                    pgs.append(SimplePolygon(*(x[:-1])))
+                
+            # if the result is the original two polygons, then polygon is wholly inside self
+            if pgs==SimplePolygons(self,polygon):
+                
+                # divide self into two separate polygons
+                s=polygon.polyline.segments[0]
+                #print('s',s)
+                cw_pgs,ccw_pgs=self.divide_by_line(s.line)
+                #print('cw_pgs',cw_pgs)
+                #print('ccw_pgs',ccw_pgs)
+                pgs=cw_pgs
+                pgs.extend(ccw_pgs)
+                
+                # return the difference of these two new polygons with 'polygon'
+                return SimplePolygons(*(x for pg in pgs
+                    for x in pg.difference_simple_polygon(polygon)))
+                
+                
+                
+                # pgs=SimplePolygons()
+                # for t1 in self.triangles:
+                #     print('t1',t1)
+                #     pgs1=SimplePolygons(t1)
+                #     for t2 in polygon.triangles:
+                #         print('t2',t2)
+                #         dpgs=t1.difference_convex_simple_polygon(t2)
+                #         #print('dpgs',dpgs)for 
+                #         pgs1.extend(dpgs)
+                #         #pgs2=SimplePolygons()
+                #         #for pg1 in pgs1:
+                #         #    pgs2.extend(pg1.difference_simple_polygon(t2))
+                #         #pgs1=pgs2
+                #     #pgs.extend(pgs1)
+                #     break
+                # print('pgs1',pgs1)
+                
+                
+                # pgs=pgs1
+                
+                # a=SimplePolygons(*pgs[:-1])
+                # a.add_all()
+                # a.append(SimplePolygon(*pgs[-1]))
+                # return a
+                
+            #print('---')
+                
+            else:
             
-            
-            # pgs=pgs1
-            
-            # a=SimplePolygons(*pgs[:-1])
-            # a.add_all()
-            # a.append(SimplePolygon(*pgs[-1]))
-            # return a
-            
-        #print('---')
-            
-        else:
-        
-            return pgs
-            
+                return pgs
+                
         
     def difference_simple_polygons(self,polygons):
         """
@@ -5732,6 +5873,8 @@ class SimplePolygon(Polygon):
             
             cw_pgs=SimplePolygons()
             ccw_pgs=SimplePolygons()
+            
+            
             
             for t in self.triangles:
                 dvcw_pgs,dvccw_pgs=t.divide_by_line(line)
@@ -5784,6 +5927,7 @@ class SimplePolygon(Polygon):
         sgmts=Segments()
         
         triangles=self.triangles
+        #print(triangles)
         
         for triangle in triangles:
             xpts,xsgmts=triangle.intersect_line(line) # returns None, Point, Segment
@@ -5988,33 +6132,62 @@ class SimplePolygon(Polygon):
 
         if self.nD==2:
         
-            for t1 in self.triangles:
-                for t2 in polygon.triangles:
-                    x=t1.intersect_convex_simple_polygon(t2) # return None, Point, Segment, or ConvexSimplePolygon
-                    if isinstance(x,Point):
-                        if not x in pts:
-                            pts.append(x)
-                    elif isinstance(x,Segment):
-                        pl=Polyline(x.P0,x.P1)
-                        if not pl in pls:
-                            pls.append(pl)
-                    elif isinstance(x,ConvexSimplePolygon):
-                        pgs.append(x)
+            use_shapely=True
+            if use_shapely:
                 
-            # removes polyline if it is contained in a polygon polyline
-            pg_polylines=Polylines(*(pg.polyline for pg in pgs))
-            #print(pg_polylines)
-            for i in range(len(pls)-1,-1,-1):
-                #print(pls[i])
-                if pg_polylines.contains(pls[i]):
-                    del pls[i]
+                pg1=shapely.geometry.Polygon(self.to_tuple())
+                pg2=shapely.geometry.Polygon(polygon.to_tuple())
+                
+                result=pg1.intersection(pg2)
+                
+                if isinstance(result,shapely.geometry.polygon.Polygon):
+                    
+                    if len(result.exterior.coords)==0:
+                        pass
+                    else:
+                        pg=SimplePolygon(*[Point(*c) for c in result.exterior.coords[:-1]])
+                        pg=pg.reduce
+                        pgs.append(pg)
             
-            pgs.add_all()
-            pls.add_all()
-            pts.remove_points_in_segments(pls.segments)
+                elif isinstance(result,shapely.geometry.point.Point):
+                    
+                    pts.append(Point(*result.coords[0]))
+                    
+                elif isinstance(result,shapely.geometry.linestring.LineString):
+                    
+                    pls.append(Polyline(*result.coords))
+                    
+                return pts, pls, pgs
                 
-            return pts,pls,pgs
+            else:
         
+                for t1 in self.triangles:
+                    for t2 in polygon.triangles:
+                        x=t1.intersect_convex_simple_polygon(t2) # return None, Point, Segment, or ConvexSimplePolygon
+                        if isinstance(x,Point):
+                            if not x in pts:
+                                pts.append(x)
+                        elif isinstance(x,Segment):
+                            pl=Polyline(x.P0,x.P1)
+                            if not pl in pls:
+                                pls.append(pl)
+                        elif isinstance(x,ConvexSimplePolygon):
+                            pgs.append(x)
+                    
+                # removes polyline if it is contained in a polygon polyline
+                pg_polylines=Polylines(*(pg.polyline for pg in pgs))
+                #print(pg_polylines)
+                for i in range(len(pls)-1,-1,-1):
+                    #print(pls[i])
+                    if pg_polylines.contains(pls[i]):
+                        del pls[i]
+                
+                pgs.add_all()
+                pls.add_all()
+                pts.remove_points_in_segments(pls.segments)
+                    
+                return pts,pls,pgs
+            
                 
         elif self.nD==3:
             
@@ -6148,6 +6321,44 @@ class SimplePolygon(Polygon):
         :rtype: Triangles
         
         """
+        
+        use_triangle=True
+        
+        if use_triangle:
+            
+            if self.nD==2:
+                
+                vertices=np.array([pt.to_tuple() for pt in self])
+                #print(vertices)
+                segments=np.array([(x,x+1) for x in range(len(self))])
+                segments[-1][1]=0
+                #print(segments)
+                A=dict(vertices=vertices,
+                            segments=segments)
+                B=tr.triangulate(A,'p')
+                #import matplotlib.pyplot as plt
+                #tr.compare(plt, A, B)
+                #plt.show()
+                #print(result['triangles'])
+                tris=Triangles()
+                if 'triangles' in B:
+                    for x in B['triangles']:
+                        tri=Triangle(*(Point(*vertices[y]) for y in x))
+                        #print(tri)
+                        tris.append(tri)
+                #print(vertices[result['triangles']])
+                
+                return tris
+                
+            else:
+            
+                i,pg2d=self.project_2D()
+                triangles2d=pg2d.triangles
+                return Triangles(*[tri.project_3D(self.plane,i) for tri in triangles2d])
+        
+        
+        
+        
         def _first_triangle(polygon):
             """Finds the first triangle in the polygon
             
@@ -6443,6 +6654,82 @@ class ConvexSimplePolygon(SimplePolygon):
         
         """
 
+        use_triangles=True
+        
+        if use_triangles:
+            
+            if self.nD==2:
+                
+                vertices=[pt.to_tuple() for pt in self]
+                segments=[[x,x+1] for x in range(len(self))]
+                segments[-1][1]=0
+            
+                xpts,xsgmts=self.intersect_line(line)
+                #print(xpts,xsgmts)
+                
+                if len(xsgmts)==0:
+                    pass
+                elif len(xsgmts)==1:
+                    xsgmt=xsgmts[0]
+                else:
+                    raise Exception
+                    
+                if not xsgmt.P0 in self:
+                    vertices.append(xsgmt.P0.to_tuple())
+                if not xsgmt.P1 in self:
+                    vertices.append(xsgmt.P1.to_tuple())
+                
+                segments.append([vertices.index(xsgmt.P0.to_tuple()),
+                                 vertices.index(xsgmt.P1.to_tuple())])
+                
+                #print('vertices',vertices)
+                #print('segments',segments)
+                
+                A=dict(vertices=vertices,
+                            segments=segments)
+                B=tr.triangulate(A,'p')
+                
+                #print(B)
+                
+                tris=Triangles()
+                if 'triangles' in B:
+                    for x in B['triangles']:
+                        tri=Triangle(*(Point(*vertices[y]) for y in x))
+                        tris.append(tri)
+                
+                tris_cw=Triangles()
+                tris_ccw=Triangles()
+                
+                for tri in tris:
+                    for pt in tri:
+                        if not line.contains(pt):
+                            #print(pt, line.vL.perp_product(pt-line.P0))
+                            if line.vL.perp_product(pt-line.P0)<0:
+                                tris_cw.append(tri)
+                            else:
+                                tris_ccw.append(tri)
+                            break
+                
+                #print(tris_cw)
+                #print(tris_ccw)
+                
+                tris_cw.add_all()
+                tris_ccw.add_all()
+                
+                return (ConvexSimplePolygons(tris_cw[0]), 
+                        ConvexSimplePolygons(tris_ccw[0]))
+            
+            else:  # 3D
+            
+                i,pg2d=self.project_2D()
+                
+                triangles2d=pg2d.triangles
+                return Triangles(*[tri.project_3D(self.plane,i) for tri in triangles2d])
+        
+        
+
+
+
         #print('---')
 
         if self.nD==2:
@@ -6492,8 +6779,8 @@ class ConvexSimplePolygon(SimplePolygon):
             cw_pls.add_all()
             ccw_pls.add_all()
                 
-            #print('cw_pls',cw_pls)
-            #print('ccw_pls',ccw_pls)
+            print('cw_pls',cw_pls)
+            print('ccw_pls',ccw_pls)
             
             pgs=ConvexSimplePolygons()
             if len(cw_pls)>0:
@@ -7021,11 +7308,20 @@ class Polygons(collections.abc.MutableSequence):
         return self._polygons.insert(index,value)
 
 
-    def plot(self,ax,*args,**kwargs):
+    def plot(self,ax=None,*args,**kwargs):
         ""
+        if ax is None:
+            if self[0].nD==2:
+                fig, ax = plt.subplots()
+            else:
+                fig = plt.figure()
+                ax = fig.add_subplot(111, projection='3d')
+        
         for pg in self:
             pg.plot(ax,*args,**kwargs)
         
+        return ax
+    
         
     @property
     def polylines(self):
