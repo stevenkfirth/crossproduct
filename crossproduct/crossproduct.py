@@ -32,7 +32,7 @@ class _BaseShapelyObject():
                 
             elif self.nD==3:
                 
-                pass  # to do
+                raise Exception  # to do
             
             else:
                 print(self)
@@ -49,63 +49,105 @@ class _BaseShapelyObject():
         if shapely_obj.is_empty:
             return []
         elif isinstance(shapely_obj,shapely.geometry.Point):
-            return [Point(*shapely_obj.coords[0])]
+            return [self._shapely_point_to_point(shapely_obj)]
         elif isinstance(shapely_obj,shapely.geometry.LineString):
-            return [Polyline(*(Point(*x) for x in shapely_obj.coords))]
+            return [self._shapely_linestring_to_polyloop(shapely_obj)]
         elif isinstance(shapely_obj,shapely.geometry.Polygon):
-            holes=[]  # to do
-            return [Polygon(*(Point(*x) 
-                              for x in shapely_obj.exterior.coords[:-1]),
-                            holes=holes)]
-        elif (isinstance(shapely_obj,shapely.geometry.MultiPoint) 
-              or isinstance(shapely_obj,shapely.geometry.MultiLineString)
-              or isinstance(shapely_obj,shapely.geometry.MultiPolygon)
-              or isinstance(shapely_obj,shapely.geometry.GeometryCollection)):
+            return [self._shapely_polygon_to_polygon(shapely_obj)]
+        elif isinstance(shapely_obj,shapely.geometry.MultiPoint):
+            return [self._shapely_point_to_point(x) for x in shapely_obj]
+        elif isinstance(shapely_obj,shapely.geometry.MultiLineString):
+            return [self._shapely_linestring_to_polyloop(x) for x in shapely_obj]
+        elif isinstance(shapely_obj,shapely.geometry.MultiPolygon):
+            return [self._shapely_polygon_to_polygon(x) for x in shapely_obj]
+        elif isinstance(shapely_obj,shapely.geometry.GeometryCollection):
             return [self._shapely_to_objs(x)[0] for x in shapely_obj]
         else:
             raise Exception  # type not captured
         
-            
-    def intersection(self,obj):
+        
+    def _shapely_linestring_to_polyloop(self,shapely_obj):
         ""
+        return Polyline(*(Point(*x) for x in shapely_obj.coords))
+    
+    
+    def _shapely_point_to_point(self,shapely_obj):
+        ""
+        return Point(*shapely_obj.coords[0])
+        
+    
+    def _shapely_polygon_to_polygon(self,shapely_obj):
+        ""
+        holes=[]  # to do
+        for x in shapely_obj.interiors:
+            hole_pg=Polygon(*(Point(*y) for y in x.coords[:-1]))
+            holes.append(hole_pg)
+        return Polygon(*(Point(*x) for x in shapely_obj.exterior.coords[:-1]),
+                       holes=holes)
+    
+    
+    def _shapely_to_pts_pls_pgns(self,shapely_obj):
+        ""
+        result=self._shapely_to_objs(shapely_obj)
+            
         pts=[]
         pls=[]
         pgs=[]
         
+        for obj in result:
+            if isinstance(obj,Point):
+                pts.append(obj)
+            elif isinstance(obj,Polyline):
+                pls.append(obj)
+            elif isinstance(obj,Polygon):
+                pgs.append(obj)
+            else:
+                raise Exception  # type not captured
+                
+        return Points(*pts),Polylines(*pls),Polygons(*pgs)
+        
+    
+    
+        
+        
+    
+    def difference(self,obj):
+        ""
         
         if self.nD==2:
             
             a=self._shapely
             b=obj._shapely
-            
-            result=a.intersection(b)
-            print(result)
-            print(type(result))
-            
-            result=self._shapely_to_objs(result)
-            
-            for obj in result:
-                if isinstance(obj,Point):
-                    pts.append(obj)
-                elif isinstance(obj,Polyline):
-                    pls.append(obj)
-                elif isinstance(obj,Polygon):
-                    pgs.append(obj)
-            
-                else:
-                    raise Exception  # type not captured
-                
-            
+            result=a.difference(b)
+            #print(result)
+            return self._shapely_to_pts_pls_pgns(result)[2]
             
         elif self.nD==3:
             
-            pass  ## to do
+            raise Exception  # shapely doesn't work for 3d
+            
+        else:
+            
+            raise ValueError
+    
+            
+    def intersection(self,obj):
+        ""
+        if self.nD==2:
+            
+            a=self._shapely
+            b=obj._shapely
+            result=a.intersection(b)
+            return self._shapely_to_pts_pls_pgns(result)
+                
+        elif self.nD==3:
+            
+            raise Exception  # shapely doesn't work for 3d
             
         else:
             
             raise ValueError
         
-        return Points(*pts),Polylines(*pls),Polygons(*pgs)
         
 
 class _BaseSequence(collections.abc.Sequence):
@@ -142,10 +184,8 @@ class _BaseSequence(collections.abc.Sequence):
     @property
     def nD(self):
         ""
-        try:
-            return self[0].nD
-        except IndexError:
-            return None
+        return self[0].nD
+        
  
 
 class Point(_BaseSequence,_BaseShapelyObject):
@@ -276,6 +316,13 @@ class Polyline(_BaseSequence,_BaseShapelyObject):
             raise Exception  # only 2d for shapely polygons
 
 
+    @property
+    def polylines(self):
+        """Returns a Polylines of the individual line segments
+        """
+        n=len(self)
+        return Polylines(*[Polyline(self[i],self[i+1]) for i in range(n-1)])
+
 
 
 class Polylines(_BaseSequence,_BaseShapelyObject):
@@ -384,10 +431,22 @@ class Polygon(_BaseSequence,_BaseShapelyObject):
         # self._triangles=None
         # self._ccw=None
         
+        
+    def __repr__(self):
+        ""
+        return '%s(%s%s)' % (self.__class__.__name__,
+                                     ','.join([str(c) for c in self]),
+                                     ', holes=%s' % self.holes if len(self.holes)>0 else ''
+                                     )
+        
 
     @property
     def _shapely(self):
-        ""
+        """
+        
+        :rtype: shapely.geometry.MultiPolygon
+        
+        """
         if self.nD==2:
             x=[shapely.geometry.Polygon(pg.coordinates) for pg in self.polygons]
             return shapely.geometry.MultiPolygon(x)
@@ -396,9 +455,35 @@ class Polygon(_BaseSequence,_BaseShapelyObject):
 
 
     @property
+    def area(self):
+        ""
+        return self._shapely.area
+
+
+
+    @property
+    def centroid(self):
+        ""
+        if self.nD==2:
+            if len(self.holes)==0:
+                return self._shapely_point_to_point(self._shapely[0].centroid)
+            else:
+                raise Exception  # to do
+        elif self.nD==3:
+            
+            raise Exception  # to do
+            
+        else:
+            
+            raise ValueError
+        
+
+
+
+    @property
     def exterior(self):
         ""
-        return Polygon(*self.points)
+        return Polygon(*self)
     
     
     
@@ -412,6 +497,22 @@ class Polygon(_BaseSequence,_BaseShapelyObject):
         return self._holes
 
 
+
+    @property
+    def polyline(self):
+        """Returns a polyline of the polygon points.
+        
+        :return: A polyline of the polygon points which starts and ends at 
+            the first polygon point.
+        :rtype: Polyline     
+        
+        :Example:
+    
+        .. code-block:: python
+           
+            
+        """
+        return Polyline(*(list(self) + [self[0]]))
     
 
 
@@ -419,16 +520,98 @@ class Polygon(_BaseSequence,_BaseShapelyObject):
     def polygons(self):
         """An equivalent polygons collection representing the polygon and its holes.
         
+        Each polygon does not have any holes.
+        
         :rtype: Polygons
         """
-        if len(self.holes)==0:
-            return Polygons(self)
-        else:
-            raise Exception  # to do
         
+        if self.nD==2:
+        
+            if len(self.holes)==0:
+                return Polygons(self)
+            else:
+                return self.triangles
+                
+        elif self.nD==3:
+            
+            raise Exception  # to do
+            
+        else:
+            
+            raise ValueError
+            
+            
+            
+    @property
+    def triangles(self):
+        """Returns a Polygons sequence of triangles which when combined have 
+            the same shape as the polygon.
+            
+        Triangles have no holes.
+        
+        2d only
+        
+        :rtype: Polygons
+        
+        
+        """
+        if self.nD==2:
+            
+            if len(self.holes)==0:
+                
+                vertices=self.coordinates
+                segments=np.array([(x,x+1) for x in range(len(self))])
+                segments[-1][1]=0
+                A=dict(vertices=vertices,
+                       segments=segments)
+                B=tr.triangulate(A,'p')
+                tris=[]
+                if 'triangles' in B:
+                    for x in B['triangles']:
+                        tri=Polygon(*(Point(*vertices[y]) for y in x))
+                        tris.append(tri)
+                return Polygons(*tris)
+            
+            else:
+                
+                # exterior vertices and segments
+                vertices=list(self.coordinates)
+                segments=[[x,x+1] for x in range(len(self))]
+                segments[-1][1]=0
+                holes=[]
+                # holes vertices and segments
+                for hole in self.holes:
+                    vertices.extend(hole.coordinates)
+                    n=len(segments)
+                    segments.extend(np.array([(x,x+1) for x in range(n,n+len(self))]))
+                    segments[-1][1]=n
+                    holes.append(hole.exterior.triangles[0].centroid.coordinates)
+                # get triangles
+                A=dict(vertices=vertices,
+                       segments=segments,
+                       holes=holes)
+                B=tr.triangulate(A,'p')
+                tris=[]
+                if 'triangles' in B:
+                    for x in B['triangles']:
+                        tri=Polygon(*(Point(*vertices[y]) for y in x))
+                        tris.append(tri)
+                return Polygons(*tris)  #  each polygon is a triangle with no holes
+            
+            
+        elif self.nD==3:
+            
+            raise Exception  # to do
+            
+        else:
+            
+            raise ValueError
+            
+        
+    
 
 
-
+    
     
 
 class Polygons(_BaseSequence,_BaseShapelyObject):
