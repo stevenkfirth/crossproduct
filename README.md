@@ -5,7 +5,7 @@
 
 ## Introduction
 
-*crossproduct* does 2D and 3D geometry calculations in Python. It builds on the [Shapely](https://pypi.org/project/Shapely/) package by including additional geometric objects (such as vectors, lines and polyhedrons) and by extending the geometric algorithms to work in 3D space. It also uses the [triangle](https://pypi.org/project/triangle/) package.
+*crossproduct* does 2D and 3D geometry calculations in Python. It builds on the [Shapely](https://pypi.org/project/Shapely/) package by including additional geometric objects (such as vectors, lines and polyhedrons) and by extending the geometric algorithms to work in 3D space. It also uses the [triangle](https://pypi.org/project/triangle/) package and implements a number of the geometric algorithms previous available on the [website by Dan Sunday](https://geomalgorithms.com/index.html) (now available as a book).
 
 *crossproduct* is a Python package designed for applications with complex, small-scale geometries. 
 It provides open source and well documented algorithms which can be easily understood and modified as needed. 
@@ -46,7 +46,6 @@ To view the source code, raise issues and suggest improvements - visit the proje
 
 ## References
 
-https://pypi.org/project/Shapely/
-https://pypi.org/project/triangle/
-https://geomalgorithms.com/index.html
-https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
+- https://pypi.org/project/Shapely/
+- https://pypi.org/project/triangle/
+- https://geomalgorithms.com/index.html

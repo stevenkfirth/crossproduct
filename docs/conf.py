@@ -46,7 +46,10 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 
+                    'Thumbs.db', 
+                    '.DS_Store',
+                    '_old/*']
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -68,3 +71,10 @@ default_role='any'
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
                        'matplotlib': ('http://matplotlib.sourceforge.net', None)
                        }
+
+
+
+# stops autosummary automatically generating stub pages, 
+#   as I am generating them myself.
+# https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html
+autosummary_generate=False

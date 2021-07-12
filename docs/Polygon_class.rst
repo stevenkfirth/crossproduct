@@ -10,22 +10,14 @@ Polygon
    :toctree: _autosummary
 
    ~crossproduct.crossproduct.Polygon.__eq__
-   ~crossproduct.crossproduct.Polygon.__hash__
    ~crossproduct.crossproduct.Polygon.area
-   ~crossproduct.crossproduct.Polygon.ccw
-   ~crossproduct.crossproduct.Polygon.contains
-   ~crossproduct.crossproduct.Polygon.is_counterclockwise
-   ~crossproduct.crossproduct.Polygon.known_convex
-   ~crossproduct.crossproduct.Polygon.known_simple
-   ~crossproduct.crossproduct.Polygon.next_index
-   ~crossproduct.crossproduct.Polygon.plane
-   ~crossproduct.crossproduct.Polygon.plot
+   ~crossproduct.crossproduct.Polygon.centroid
+   ~crossproduct.crossproduct.Polygon.coordinates
+   ~crossproduct.crossproduct.Polygon.difference
+   ~crossproduct.crossproduct.Polygon.exterior
+   ~crossproduct.crossproduct.Polygon.holes
+   ~crossproduct.crossproduct.Polygon.intersection
+   ~crossproduct.crossproduct.Polygon.nD
+   ~crossproduct.crossproduct.Polygon.polygons
    ~crossproduct.crossproduct.Polygon.polyline
-   ~crossproduct.crossproduct.Polygon.previous_index
-   ~crossproduct.crossproduct.Polygon.project_2D
-   ~crossproduct.crossproduct.Polygon.project_3D
-   ~crossproduct.crossproduct.Polygon.reorder
-   ~crossproduct.crossproduct.Polygon.reverse
-   ~crossproduct.crossproduct.Polygon.rightmost_lowest_vertex
-   ~crossproduct.crossproduct.Polygon.signed_area
-   ~crossproduct.crossproduct.Polygon.to_tuple
+   ~crossproduct.crossproduct.Polygon.triangles

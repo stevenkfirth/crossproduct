@@ -10,10 +10,8 @@ Polyline
    :toctree: _autosummary
 
    ~crossproduct.crossproduct.Polyline.__eq__
-   ~crossproduct.crossproduct.Polyline.contains
-   ~crossproduct.crossproduct.Polyline.intersect
+   ~crossproduct.crossproduct.Polyline.coordinates
+   ~crossproduct.crossproduct.Polyline.difference
+   ~crossproduct.crossproduct.Polyline.intersection
    ~crossproduct.crossproduct.Polyline.nD
-   ~crossproduct.crossproduct.Polyline.plot
-   ~crossproduct.crossproduct.Polyline.reverse
-   ~crossproduct.crossproduct.Polyline.segments
-   ~crossproduct.crossproduct.Polyline.to_tuple
+   ~crossproduct.crossproduct.Polyline.polylines

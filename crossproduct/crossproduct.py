@@ -214,9 +214,14 @@ class Point(_BaseSequence,_BaseShapelyObject):
        >>> print(pt[1])         # prints the y coordinate
        2.0
     
-    .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Basic-Definitions>`_
     
     """
+    
+    def __init__(self,*coordinates):
+        ""
+        
+        self._items=tuple(coordinates)
+        
     
     @property
     def _shapely(self):

@@ -9,13 +9,8 @@ Polylines
 .. autosummary::
    :toctree: _autosummary
 
-   ~crossproduct.crossproduct.Polylines.__delitem__
-   ~crossproduct.crossproduct.Polylines.__iadd__
-   ~crossproduct.crossproduct.Polylines.__setitem__
-   ~crossproduct.crossproduct.Polylines.append
-   ~crossproduct.crossproduct.Polylines.clear
-   ~crossproduct.crossproduct.Polylines.extend
-   ~crossproduct.crossproduct.Polylines.insert
-   ~crossproduct.crossproduct.Polylines.pop
-   ~crossproduct.crossproduct.Polylines.remove
-   ~crossproduct.crossproduct.Polylines.reverse
+   ~crossproduct.crossproduct.Polylines.__eq__
+   ~crossproduct.crossproduct.Polylines.coordinates
+   ~crossproduct.crossproduct.Polylines.difference
+   ~crossproduct.crossproduct.Polylines.intersection
+   ~crossproduct.crossproduct.Polylines.nD

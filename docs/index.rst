@@ -14,37 +14,20 @@ Geometry in Python - 2D and 3D
    :caption: Overview
 
    Introduction
-   Geometric_Objects
-   Geometric_Object_Collections
-   Equality
-   Contains
-   Distances
-   Intersections
-   Differences
+  
    
 .. toctree::
    :maxdepth: 1
    :caption: Geometric Objects
    
    Point_class
-   Vector_class
-   Line_class
-   Halfline_class
-   Segment_class
-   Polyline_class
-   Plane_class
-   Polygon_class
-   SimplePolygon_class
-   Polyhedron_class
-   
-.. toctree::
-   :maxdepth: 1
-   :caption: Geometric Collections
-   
    Points_class
-   Segments_class
+   Polyline_class
    Polylines_class
+   Polygon_class
    Polygons_class
+   
+
    
 
 Indices and tables
