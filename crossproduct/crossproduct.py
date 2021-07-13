@@ -423,6 +423,38 @@ class Point(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         
         """
         return self._items
+    
+    
+    def equals(self,point):
+        """Tests if this point and the supplied point have the same coordinates.
+        
+        A tolerance value is used so coordinates with very small difference 
+        are considered equal.
+        
+        :param point: The point to be tested.
+        :type point: Point
+        
+        :raises ValueError: If points are not of the same length.
+        
+        :return: True if the point coordinates are the same, otherwise False.
+        :rtype: bool
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+            >>> from crossproduct import Point
+            >>> result = Point(1,2).equals(Point(2,2))
+            >>> print(result)
+            False
+            
+        """
+        zipped=itertools.zip_longest(self,point) # missing values filled with None
+        try:
+            result=[math.isclose(a, b, abs_tol=ABS_TOL) for a,b in zipped]
+        except TypeError: # occurs if, say, a or b is None
+            raise ValueError('Points to compare must be of the same length.')
+        return all(result)
 
 
     @property
@@ -1365,6 +1397,56 @@ class Line(_BaseGeometricObject):
         raise Exception()
     
     
+    def contains(self,obj):
+        """Tests if the line contains the object.
+        
+        :param obj: A point, halfline or segment.
+        :type obj: Point, Halfline, Segment
+        
+        :raises TypeError: If supplied object is not supported by this method.
+            
+        :return:  For point, True if the point lies on the line; otherwise False. 
+            For halfline, True if the halfline startpoint is on the line and 
+            the halfline vector is collinear to the line vector; otherwise False. 
+            For segment, True if the segment start and endpoints are on the line; otherwise False. 
+        :rtype: bool
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> from crossproduct import Point, Vector, Line
+           >>> l = Line(Point(0,0), Vector(1,0))
+           >>> result = Point(2,0) in l
+           >>> print(result)
+           True
+           
+           # 3D example
+           >>> from crossproduct import Point, Vector, Line
+           >>> l = Line(Point(0,0,0), Vector(1,0,0))
+           >>> hl = Halfline(Point(0,0,0), Vector(-1,0,0))
+           >>> result = hl in l
+           >>> print(result)
+           True
+            
+        """
+        if isinstance(obj,Point):
+            t=self.calculate_t_from_coordinates(*obj)
+            pt=self.calculate_point(t)           
+            return obj.equals(pt)
+                    
+        # elif isinstance(obj,Halfline):
+        #     return self.contains(obj.P0) and obj.vL.is_collinear(self.vL)
+        
+        # elif isinstance(obj,Segment):
+        #     return self.contains(obj.P0) and self.contains(obj.P1)
+        
+        else:
+            raise TypeError
+        
+    
+    
     @property
     def coordinates(self):
         """Returns a tuple representation of the line.
@@ -1382,6 +1464,45 @@ class Line(_BaseGeometricObject):
         
         """
         return (self.P0.coordinates,self.vL.coordinates)
+    
+    
+    def equals(self,line):
+        """Tests if this line and the supplied line are equal.
+        
+        :param line: A line.
+        :type line: Line
+        
+        :raises TypeError: If a Line instance is not supplied.
+        
+        :return: True if the start point of supplied line lies on line (self),
+            and the vL of supplied line is collinear to the vL of line (self); 
+            otherwise False.
+        :rtype: bool
+            
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+           # 2D example
+           >>> from crossproduct import Point, Vector, Line
+           >>> l = Line(Point(0,0), Vector(1,0))
+           >>> result = l == l
+           >>> print(result)
+           True
+           
+           # 3D example
+           >>> from crossproduct import Point, Vector, Line
+           >>> l1 = Line(Point(0,0,0), Vector(1,0,0))
+           >>> l2 = Line(Point(0,0,0), Vector(-1,0,0))
+           >>> result = l1 == l2
+           >>> print(result)
+           True
+           
+        """
+        if isinstance(line,Line):
+            return self.contains(line.P0) and self.vL.is_collinear(line.vL)
+        else:
+            raise TypeError('Line.__eq__ should be used with a Line instance')
     
     
     @property
@@ -1413,6 +1534,22 @@ class Line(_BaseGeometricObject):
         """
         return self._P0
     
+    
+    @property
+    def plane(self):
+        """A plane which the line lies on.
+        
+        
+        """
+        if not self.vL.is_collinear(Vector(1,0,0)):
+            N=self.vL.cross_product(Vector(1,0,0))
+        elif not self.vL.is_collinear(Vector(0,1,0)):
+            N=self.vL.cross_product(Vector(0,1,0))
+        else:
+            N=self.vL.cross_product(Vector(0,0,1))
+            
+        return Plane(self.P0,N)
+        
     
     def project_2D(self,coordinate_index):
         """Projection of the 3D line as a 2D line.
@@ -1491,6 +1628,50 @@ class Polyline(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
             raise Exception  # only 2d for shapely polygons
 
 
+    def contains(self,obj):
+        ""
+        if isinstance(obj,Point):
+            
+            for pl in self.polylines:
+                line=pl.lines[0]
+                t=line.calculate_t_from_coordinates(*obj)
+                pt=line.calculate_point(t)  
+                return obj.equals(pt)
+            
+        else:
+            
+            raise Exception
+        
+        
+
+
+    def _intersection_point_3D(self,point):
+        ""
+        if self.contains(point):
+            return (point,)
+        else:
+            return tuple()
+        
+        
+    def _intersection_polyline_3D(self,polyline):
+        ""
+        result=[]
+        for pl1 in self.polylines:
+            l1=pl1.lines[0]
+            plane=l1.plane
+            for pl2 in polyline.polylines:
+                l2=pl2.lines[0]
+                if l1.equals(l2):
+                    i=plane.N.index_largest_absolute_coordinate
+                    pl1_2D=pl1.project_2D(i)
+                    pl2_2D=pl2.project_2D(i)
+                    x=pl1_2D.intersection(pl2_2D)
+                    result.extend([y.project_3D(plane,i) for y in x])
+                    
+        return tuple(result)
+                
+
+
     def intersection(self,obj):
         """The geometric intersection between self and obj.
         
@@ -1516,6 +1697,8 @@ class Polyline(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
             
             if isinstance(obj,Point):
                 return self._intersection_point_3D(obj)
+            elif isinstance(obj,Polyline):
+                return self._intersection_polyline_3D(obj)
             else:
                 raise Exception('%s' % obj.__class__)  # not implemented yet
             
@@ -1542,6 +1725,8 @@ class Polyline(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         """
         n=len(self)
         return Polylines(*[Polyline(self[i],self[i+1]) for i in range(n-1)])
+
+
 
 
 
@@ -2167,48 +2352,21 @@ class Polygon(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
             
             line=a[0]
             x=self.intersection(line)
-            print(x)
             y=polygon.intersection(line)
-            print(y)
             
             result=[]
             for x1 in x:
                 for y1 in y:
-                    result.append(x1.intersection(y1))
+                    result.extend(x1.intersection(y1))
             
             return tuple(result)
             
-            
-            return
         
-            pts_x,sgmts_x=self.intersect_line(a) # returns (Points,Segments)
-            pts_y,sgmts_y=polygon.intersect_line(a) # returns (Points,Segments)
-            
-            #print(pts_x,sgmts_x)
-            #print(pts_y,sgmts_y)
-            
-            for pt in pts_x:
-                if pt in pts_y or sgmts_y.contains(pt):
-                    if not pt in pts:
-                        pts.append(pt)
-            for pt in pts_y:
-                if sgmts_x.contains(pt):
-                    if not pt in pts:
-                        pts.append(pt)
-            for sx in sgmts_x:
-                for sy in sgmts_y:
-                    z=sx.intersect_segment(sy) # returns None, Point, Segment
-                    if isinstance(z,Point):
-                        if not z in pts:
-                            pts.append(z)
-                    if isinstance(z,Segment):
-                        pls.append(Polyline(z.P0,z.P1))
-                    
-            pls.add_all()
-            pts.remove_points_in_segments(pls.segments)
-            
-            return pts, pls, pgs
-    
+    def difference(self,obj):
+        ""
+        # to do ... 3D difference
+        
+        
     
     def intersection(self,obj):
         """The geometric intersection between self and obj.

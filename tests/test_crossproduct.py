@@ -385,7 +385,7 @@ class Test_Polygon(unittest.TestCase):
                          tuple())
         # skew plane point intersection
         pg1=Polygon(Point(0,0,0),Point(1,0,1),Point(0,0,1))
-        print(pg.intersection(pg1)); return
+        #print(pg.intersection(pg1)); return
         self.assertEqual(pg.intersection(pg1),
                          (Point(0,0,0),))
         # skew plane full edge intersection
