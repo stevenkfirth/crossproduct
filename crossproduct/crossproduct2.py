@@ -41,8 +41,6 @@ class Point(collections.abc.Sequence):
        >>> print(pt[1])         # prints the y coordinate
        2.0
     
-    .. seealso:: `<https://geomalgorithms.com/points_and_vectors.html#Basic-Definitions>`_
-    
     """
     
     def __add__(self,vector):
@@ -4625,6 +4623,10 @@ class Plane():
             return self._distance_to_point(obj)
         else:
             raise TypeError('Plane.distance does not accept a %s type' % obj.__class__)
+    
+    
+    
+
     
     
     def intersect_convex_simple_polygon(self,polygon):

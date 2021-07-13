@@ -22,8 +22,11 @@ Geometry in Python - 2D and 3D
    
    Point_class
    Points_class
+   Vector_class
+   Line_class
    Polyline_class
    Polylines_class
+   Plane_class
    Polygon_class
    Polygons_class
    

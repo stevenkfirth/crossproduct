@@ -14,3 +14,5 @@ Points
    ~crossproduct.crossproduct.Points.difference
    ~crossproduct.crossproduct.Points.intersection
    ~crossproduct.crossproduct.Points.nD
+   ~crossproduct.crossproduct.Points.project_2D
+   ~crossproduct.crossproduct.Points.project_3D

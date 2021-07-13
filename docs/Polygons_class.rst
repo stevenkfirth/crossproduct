@@ -14,3 +14,5 @@ Polygons
    ~crossproduct.crossproduct.Polygons.difference
    ~crossproduct.crossproduct.Polygons.intersection
    ~crossproduct.crossproduct.Polygons.nD
+   ~crossproduct.crossproduct.Polygons.project_2D
+   ~crossproduct.crossproduct.Polygons.project_3D

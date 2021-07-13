@@ -15,3 +15,5 @@ Polyline
    ~crossproduct.crossproduct.Polyline.intersection
    ~crossproduct.crossproduct.Polyline.nD
    ~crossproduct.crossproduct.Polyline.polylines
+   ~crossproduct.crossproduct.Polyline.project_2D
+   ~crossproduct.crossproduct.Polyline.project_3D

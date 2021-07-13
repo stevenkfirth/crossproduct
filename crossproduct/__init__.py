@@ -15,15 +15,15 @@
 
 
 from .crossproduct import Point
-# from .crossproduct import Vector
+from .crossproduct import Vector
 from .crossproduct import Points
-# from .crossproduct import Line
+from .crossproduct import Line
 # from .crossproduct import Halfline
 # from .crossproduct import Segment
 # from .crossproduct import Segments
 from .crossproduct import Polyline
 from .crossproduct import Polylines
-# from .crossproduct import Plane
+from .crossproduct import Plane
 from .crossproduct import Polygon
 # from .crossproduct import SimplePolygon
 # from .crossproduct import ConvexSimplePolygon
