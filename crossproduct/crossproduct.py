@@ -47,6 +47,11 @@ class _BaseGeometricObject():
         else:
             return False
         
+        
+    def __hash__(self):
+        """
+        """
+        return self.coordinates
 
 
 class _BaseShapelyObject():
@@ -119,6 +124,18 @@ class _BaseShapelyObject():
                 raise Exception  # type not captured
                 
         return Points(*pts),Polylines(*pls),Polygons(*pgs)
+    
+    
+    @property
+    def centroid(self):
+        """
+        """
+        if self.nD==2:
+            return self._shapely_point_to_point(self._shapely.centroid)
+        elif self.nD==3:
+            raise Exception  # shapely doesn't work for 3d
+        else:
+            raise ValueError
         
     
     def difference(self,obj):
@@ -649,6 +666,22 @@ class Points(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         else:
             raise Exception  # only 2d for shapely objects
     
+    
+    @property
+    def centroid(self):
+        """The centroid of the points.
+        
+        :rtype: Point
+        
+        """
+        if self.nD==2:
+            return self._shapely_point_to_point(self._shapely.centroid)
+        elif self.nD==3:
+            return Point(*(sum(c)/len(c) for c in zip(*self.coordinates)))
+        else:
+            raise ValueError
+            
+            
 
 class Vector(_BaseGeometricObject,_BaseSequence):
     """A vector, as described by xy or xyz coordinates.
@@ -1719,6 +1752,8 @@ class Polyline(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         return tuple(Line(pl[0],pl[1]-pl[0]) for pl in pls)
 
 
+    
+
     @property
     def polylines(self):
         """Returns a Polylines of the individual line segments
@@ -1727,6 +1762,24 @@ class Polyline(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         return Polylines(*[Polyline(self[i],self[i+1]) for i in range(n-1)])
 
 
+    @property
+    def reverse(self):
+        """Return a polyline with the points reversed.
+        
+        :rtype: Polyline
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+        
+           >>> from crossproduct import Point,Polyline
+           >>> pl = Polyline(Point(0,0), Point(1,0), Point(1,1))
+           >>> result = pl.reverse
+           >>> print(result)
+           Polyline(Point(1.0,1.0),Point(1.0,0.0),Point(0.0,0.0))
+        
+        """
+        return Polyline(*self[::-1])
 
 
 
@@ -2140,14 +2193,8 @@ class Plane(_BaseGeometricObject):
 
     
 
-
-    
-
-class Polygon(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
+class Polygon(_BaseGeometricObject,_BaseShapelyObject):
     """A polygon, situated on an xy or xyz plane. 
-    
-    In crossproduct a Polygon object is a immutable sequence. 
-    Iterating over a Polygon will provide its Point instances.
     
     This polygon cannot be self-intersecting, and can be concave or convex.
     
@@ -2203,11 +2250,10 @@ class Polygon(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
             return False
         
 
-   
     def __init__(self,*points,holes=None):
         ""
         
-        self._items=Points(*points)
+        self._points=Points(*points)
         if holes is None:
             self._holes=Polygons()
         else:
@@ -2217,11 +2263,11 @@ class Polygon(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
     def __repr__(self):
         ""
         return '%s(%s%s)' % (self.__class__.__name__,
-                                     ','.join([str(c) for c in self]),
+                                     ','.join([str(c) for c in self.points]),
                                      ', holes=%s' % self.holes if len(self.holes)>0 else ''
                                      )
         
-
+    
     @property
     def _shapely(self):
         """
@@ -2246,7 +2292,17 @@ class Polygon(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         if self.nD==2:
             return float(self._shapely.area)
         elif self.nD==3:
-            raise Exception  # to do
+            plane=self.plane
+            i=plane.N.index_largest_absolute_coordinate
+            self_2D=self.project_2D(i)
+            if i==0:
+                return self_2D.signed_area*(plane.N.length/(N.x))
+            elif i==1:
+                return self_2D.signed_area*(plane.N.length/(N.y))
+            elif i==2:
+                return self_2D.signed_area*(plane.N.length/(N.z))
+            else:
+                raise Exception
         else:
             raise ValueError
 
@@ -2261,7 +2317,10 @@ class Polygon(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         if self.nD==2:
             return self._shapely_point_to_point(self._shapely.centroid)
         elif self.nD==3:
-            raise Exception  # to do
+            plane=self.plane
+            i=plane.N.index_largest_absolute_coordinate
+            self_2D=self.project_2D(i)
+            return self_2D.centroid.project_3D(plane,i)
         else:
             raise ValueError
         
@@ -2283,15 +2342,82 @@ class Polygon(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
             (((0, 0), (1, 0), (1, 1), (0, 1)), ())
         
         """
-        return (tuple(pt.coordinates for pt in self),
-                tuple(tuple(pt.coordinates for pt in hole) 
+        return (tuple(pt.coordinates for pt in self.points),
+                tuple(tuple(pt.coordinates for pt in hole.points) 
                       for hole in self.holes))
 
 
+    def _difference_polygon_3D(self,polygon):
+        ""
+        a=self.plane.intersection(polygon.plane) # returns () or (Line,) or (Plane,)
+        #print(a)
+        
+        if len(a)==0: # polygon planes do not intersect
+            return tuple([self])
+        
+        elif isinstance(a[0],Line): # the intersection of the two polygon planes as a line
+            return tuple([self])
+
+        elif isinstance(a[0],Plane): # polygons lie on the same plane
+            
+            plane=self.plane
+            i=plane.N.index_largest_absolute_coordinate
+            self_2D=self.project_2D(i)
+            polygon_2D=polygon.project_2D(i)
+            result=self_2D.difference(polygon_2D)
+            return tuple(x.project_3D(plane,i) for x in result)
+           
+        
+    def _difference_polygons_3D(self,polygons):
+        ""
+        result=set()
+        for pg in polygons:
+            x=self.difference(pg)
+            result.update(x)
+        return tuple(result)
+        
+
+    def difference(self,obj):
+        """The geometric difference between self and obj.
+        
+        :param obj: A geometric object.
+        
+        :returns: A tuple of the difference objects.
+        :rtype: tuple
+        
+        """
+        # to do ... 3D difference
+        if self.nD==2:
+            if isinstance(obj,_BaseShapelyObject):
+                return _BaseShapelyObject.difference(self,obj)
+            else:
+                raise Exception('%s' % obj.__class__)
+        
+        elif self.nD==3:
+            
+            if isinstance(obj,Point):
+                return tuple([self])
+            elif isinstance(obj,Points):
+                return tuple([self])
+            elif isinstance(obj,Polyline):
+                return tuple([self])
+            elif isinstance(obj,Polylines):
+                return tuple([self])
+            elif isinstance(obj,Polygon):
+                return self._difference_polygon_3D(obj)
+            elif isinstance(obj,Polygons):
+                return self._difference_polygons_3D(obj)
+            else:
+                raise Exception  # not implemented yet
+            
+        else:
+            raise ValueError
+        
+    
     @property
     def exterior(self):
         ""
-        return Polygon(*self)
+        return Polygon(*self.points)
     
 
     @property
@@ -2362,10 +2488,13 @@ class Polygon(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
             return tuple(result)
             
         
-    def difference(self,obj):
+    def _intersection_polygons_3D(self,polygons):
         ""
-        # to do ... 3D difference
-        
+        result=set()
+        for pg in polygons:
+            x=self.intersection(pg)
+            result.update(x)
+        return tuple(result)
         
     
     def intersection(self,obj):
@@ -2393,17 +2522,68 @@ class Polygon(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         
         elif self.nD==3:
             
-            if isinstance(obj,Polygon):
-                return self._intersection_polygon_3D(obj)
-            elif isinstance(obj,Line):
+            if isinstance(obj,Line):
                 return self._intersection_line_3D(obj)
+            elif isinstance(obj,Polygon):
+                return self._intersection_polygon_3D(obj)
+            elif isinstance(obj,Polygons):
+                return self._intersection_polygons_3D(obj)
             else:
                 raise Exception  # not implemented yet
             
-        
         else:
             raise ValueError
             
+            
+    @property
+    def nD(self):
+        """The number of dimensions of the polygon.
+        
+        :returns: 2 or 3
+        :rtype: int
+        
+        .. rubric:: Code Examples
+    
+        .. code-block:: python
+        
+            >>> from crossproduct import Point, Points
+            >>> pts = Points(Point(1,1))
+            >>> print(pts.nD)
+            2
+            
+        """
+        return self.points[0].nD
+            
+    
+    def next_index(self,i):
+        """Returns the next point index in the polygon.
+        
+        :param i: A point index.
+        :type i: int
+        
+        :return: Returns the index of the next point in the polygon. 
+            If i is the index of the last point, then the index of 
+            the first point (i.e. 0) is returned.
+        :rtype: int
+        
+        :Example:
+    
+        .. code-block:: python
+           
+            >>> pg = Polygon2D(Point2D(0,0), Point2D(1,0), Point2D(1,1))
+            >>> result = pg.next_index(0)
+            >>> print(result)
+            1
+        
+        """
+        n=len(self.points)
+        if i==n-1:
+            return 0
+        else:
+            return i+1
+    
+    
+    
             
     @property
     def plane(self):
@@ -2414,20 +2594,28 @@ class Polygon(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         
         """
         if self.nD==3:
-            P0,P1,P2=self[:3]
+            P0,P1,P2=self.points[:3]
             N=(P1-P0).cross_product(P2-P1)
             return Plane(P0,N)
         else:
             raise ValueError
             
-
+    
     @property
-    def polyline(self):
-        """Returns a polyline of the polygon points.
+    def points(self):
+        """Returns the exterior points.
+        """
+        return self._points
+            
+            
+    @property
+    def polylines(self):
+        """Returns polylines of the polygon exterior and the polygon holes.
         
         :return: A polyline of the polygon points which starts and ends at 
             the first polygon point.
-        :rtype: Polyline     
+            tuple (exterior polyline, hole polylines)
+        :rtype: tuple     
         
         :Example:
     
@@ -2435,8 +2623,11 @@ class Polygon(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
            
             
         """
-        return Polyline(*(list(self) + [self[0]]))
-    
+        return (Polyline(*(list(self.points) + [self.points[0]])), 
+                Polylines(*(Polyline(*(list(hole.points) + [hole.points[0]])) 
+                            for hole in self.holes))
+                )
+
 
     @property
     def polygons(self):
@@ -2456,13 +2647,74 @@ class Polygon(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
                 
         elif self.nD==3:
             
-            raise Exception  # to do
+            plane=self.plane
+            i=plane.N.index_largest_absolute_coordinate
+            self_2D=self.project_2D(i)
+            result=self_2D.polygons
+            return Polygons(*(x.project_3D(plane,i) for x in result))
             
         else:
             
             raise ValueError
             
             
+    def _project_2D_exterior(self,coordinate_index):
+        ""
+        return Polygon(*(x.project_2D(coordinate_index) 
+                         for x in self.points))
+            
+            
+    def project_2D(self,coordinate_index):
+        """Projects the object on a 2D plane.
+        
+        """
+        return Polygon(*self._project_2D_exterior(coordinate_index).points,
+                       holes=[hole._project_2D_exterior(coordinate_index)
+                              for hole in self.holes])
+    
+    
+    def _project_3D_exterior(self,plane,coordinate_index):
+        ""
+        return Polygon(*(x.project_3D(plane,coordinate_index) 
+                         for x in self.points))
+    
+    
+    def project_3D(self,plane,coordinate_index):
+        """Projects the object on a 3D plane.
+        
+        """
+        return Polygon(*self._project_3D_exterior(plane,coordinate_index).points,
+                       holes=[hole._project_3D_exterior(plane,coordinate_index)
+                              for hole in self.holes])
+            
+    
+    @property
+    def reverse(self):
+        """Returns a polygon with the exterior points reversed.
+        
+        :return: A new polygon with the points in reverse order.
+        :rtype: Polygon
+        
+        .. rubric:: Code Example
+    
+        .. code-block:: python
+           
+            # 2D example
+            >>> pg = Polygon(Point(0,0), Point(1,0), Point(1,1))
+            >>> print(pg.reverse)
+            Polygon(Point(1,1), Point(1,0), Point(0,0))
+        
+            # 3D example
+            >>> pg = Polygon(Point(0,0,0), Point(1,0,0), Point(1,1,0))
+            >>> print(pg.reverse)
+            Polygon(Point(1,1,0), Point(1,0,0), Point(0,0,0))
+        
+        """
+        points=[self.points[i] 
+                for i in range(len(self.points)-1,-1,-1)]
+        return self.__class__(*points, holes=self.holes)
+            
+    
     @property
     def triangles(self):
         """Returns a Polygons sequence of triangles which when combined have 
@@ -2481,7 +2733,7 @@ class Polygon(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
             if len(self.holes)==0:
                 
                 vertices=self.coordinates[0]
-                segments=np.array([(x,x+1) for x in range(len(self))])
+                segments=np.array([(x,x+1) for x in range(len(self.points))])
                 segments[-1][1]=0
                 A=dict(vertices=vertices,
                        segments=segments)
@@ -2497,14 +2749,14 @@ class Polygon(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
                 
                 # exterior vertices and segments
                 vertices=list(self.coordinates[0])
-                segments=[[x,x+1] for x in range(len(self))]
+                segments=[[x,x+1] for x in range(len(self.points))]
                 segments[-1][1]=0
                 holes=[]
                 # holes vertices and segments
                 for hole in self.holes:
                     vertices.extend(hole.coordinates[0])
                     n=len(segments)
-                    segments.extend(np.array([(x,x+1) for x in range(n,n+len(self))]))
+                    segments.extend(np.array([(x,x+1) for x in range(n,n+len(self.points))]))
                     segments[-1][1]=n
                     holes.append(hole.exterior.triangles[0].centroid.coordinates)
                 # get triangles
@@ -2521,8 +2773,12 @@ class Polygon(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
             
         elif self.nD==3:
             
-            raise Exception  # to do
-            
+            plane=self.plane
+            i=plane.N.index_largest_absolute_coordinate
+            self_2D=self.project_2D(i)
+            result=self_2D.triangles
+            return Polygons(*(x.project_3D(plane,i) for x in result))
+           
         else:
             
             raise ValueError
@@ -2561,4 +2817,129 @@ class Polygons(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         else:
             raise Exception  # only 2d for shapely polygons
 
+
+class Tetrahedron(_BaseGeometricObject,_BaseSequence):
+    """A tetrahedron, situated on the xyz plane. 
+    
+    :param polygons: A sequence of polygons for the outer faces.
+        All polygons should not have any holes. 
+        All polygons must have outward facing normals.
+    :type polygons: Polygons or other sequence.
+    
+    """
+    
+    def __init__(self,*polygons):
+        ""
+        self._items=Polygons(*polygons)
+        
+        
+    @property
+    def polygons(self):
+        ""
+        return self._items
+        
+        
+def tetrahedron_from_points(P0,P1,P2,P3):
+    """Forms a tetrahedron from the specified points.
+    
+    :returns: A tetrahedron 
+    :rtype: Tetrahedron
+    
+    """
+    pts=Points(P0,P1,P2,P3)
+    pgs=Polygons(*(Polygon(*x) for x in itertools.combinations(pts,3)))
+    centroid=pts.centroid
+    
+    # makes sure all polygon plane normals are outward facing
+    result=[]
+    for pg in pgs:
+        plane=pg.plane
+        if plane.signed_distance_to_point(centroid)>0:
+            result.append(pg.reverse)
+        else:
+            result.append(pg)
+        
+    return Tetrahedron(*result)
+    
+
+def tetrahedrons_from_extruded_triangle(triangle, extrud_vector):
+    """
+    Returns the internal tetrahedrons for an extruded triangle.
+    
+    """
+    
+    th0=tetrahedron_from_points(*triangle.points,
+                                triangle.points[0]+extrud_vector)
+    th1=tetrahedron_from_points(triangle.points[1],
+                                triangle.points[2],
+                                triangle.points[0]+extrud_vector,
+                                triangle.points[1]+extrud_vector)
+    th2=tetrahedron_from_points(triangle.points[0]+extrud_vector,
+                                triangle.points[1]+extrud_vector,
+                                triangle.points[2]+extrud_vector,
+                                triangle.points[2])
+    return [th0,th1,th2]
+    
+    
+    
+    
+    
+    
+class ExtrudedPolyhedron(_BaseGeometricObject,_BaseSequence):
+    """
+    """
+    
+    def __init__(self,base_polygon,extrud_vector):
+        ""
+        self._base_polygon=base_polygon
+        self._extrud_vector=extrud_vector
+        self._items=None
+        self._tetrahedrons=None
+        
+        # _items
+        if base_polygon.plane.N.dot(extrud_vector)>0:  # if angle is less than 90
+            base_polygon=base_polygon.reverse
+        top_polygon=Polygon(*(pt+extrud_vector for pt in base_polygon.reverse.points))
+        side_polygons=[]
+        for i in range(len(base_polygon.points)):
+            pg=Polygon(base_polygon.points[i]+extrud_vector,
+                       base_polygon.points[base_polygon.next_index(i)]+extrud_vector,
+                       base_polygon.points[base_polygon.next_index(i)],
+                       base_polygon.points[i])
+            side_polygons.append(pg)
+        self._items=Polygons(base_polygon, top_polygon, *side_polygons)
+        
+        # _tetrahedrons
+        result=[]
+        for triangle in base_polygon.triangles:
+            result.extend(tetrahedrons_from_extruded_triangle(triangle, extrud_vector))
+        self._tetrahedrons=result
+        
+        
+    @property
+    def base_polygon(self):
+        ""
+        return self._base_polygon
+    
+    
+    def extrud_vector(self):
+        ""
+        return self._extrud_vector
+        
+        
+    @property
+    def polygons(self):
+        ""
+        return self._items
+    
+    
+    @property
+    def tetrahedrons(self):
+        ""
+        return self._tetrahedrons
+
+    
+    
+    
+    
     

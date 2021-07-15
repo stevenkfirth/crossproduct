@@ -34,5 +34,6 @@ from .crossproduct import Polygons
 # from .crossproduct import ConvexSimplePolygons
 # from .crossproduct import Polyhedron
 # from .crossproduct import ConvexPolyhedron
-# from .crossproduct import Tetrahedron
-
+from .crossproduct import Tetrahedron
+from .crossproduct import tetrahedron_from_points
+from .crossproduct import ExtrudedPolyhedron

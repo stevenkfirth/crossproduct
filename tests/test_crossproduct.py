@@ -10,6 +10,9 @@ from crossproduct import Line
 from crossproduct import Polyline, Polylines
 from crossproduct import Plane
 from crossproduct import Polygon, Polygons
+from crossproduct import Tetrahedron, tetrahedron_from_points
+from crossproduct import ExtrudedPolyhedron
+
 
 class Test_Point(unittest.TestCase):
     ""
@@ -94,8 +97,8 @@ class Test_Polygon(unittest.TestCase):
         ""
         pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
         self.assertIsInstance(pg,Polygon)
-        self.assertEqual(tuple(pg),
-                         (Point(0,0),Point(1,0),Point(1,1),Point(0,1)))
+        self.assertEqual(pg.points,
+                         Points(Point(0,0),Point(1,0),Point(1,1),Point(0,1)))
         
         
     def test__shapely(self):
@@ -504,6 +507,64 @@ class Test_Polygons(unittest.TestCase):
                                                                      (1,0),
                                                                      (1,1)))
                                            ]))
+        
+        
+class Test_Tetrahedron(unittest.TestCase):
+    ""
+    
+    def test_tetrahedron_from_points(self):
+        ""
+        t=tetrahedron_from_points(Point(0,0,0),Point(1,1,0),Point(0,1,0),Point(0,1,1))
+        self.assertIsInstance(t,
+                              Tetrahedron)
+        self.assertEqual(t.polygons,
+                         Polygons(Polygon(Point(0,1,0),Point(1,1,0),Point(0,0,0)),
+                                  Polygon(Point(0,0,0),Point(1,1,0),Point(0,1,1)),
+                                  Polygon(Point(0,1,1),Point(0,1,0),Point(0,0,0)),
+                                  Polygon(Point(1,1,0),Point(0,1,0),Point(0,1,1))))
+        
+        
+class Test_ExtrudedPolyhedron(unittest.TestCase):
+    ""
+    
+    def test___init__(self):
+        ""
+        ep=ExtrudedPolyhedron(Polygon(Point(0,0,0),
+                                      Point(1,0,0),
+                                      Point(1,1,0),
+                                      Point(0,1,0)),
+                              Vector(0,0,1))
+        self.assertEqual(ep.polygons,
+                         Polygons(Polygon(Point(0,1,0),
+                                            Point(1,1,0),
+                                            Point(1,0,0),
+                                            Point(0,0,0)),
+                                    Polygon(Point(0,0,1),
+                                            Point(1,0,1),
+                                            Point(1,1,1),
+                                            Point(0,1,1)),
+                                    Polygon(Point(0,1,1),
+                                            Point(1,1,1),
+                                            Point(1,1,0),
+                                            Point(0,1,0)),
+                                    Polygon(Point(1,1,1),
+                                            Point(1,0,1),
+                                            Point(1,0,0),
+                                            Point(1,1,0)),
+                                    Polygon(Point(1,0,1),
+                                            Point(0,0,1),
+                                            Point(0,0,0),
+                                            Point(1,0,0)),
+                                    Polygon(Point(0,0,1),
+                                            Point(0,1,1),
+                                            Point(0,1,0),
+                                            Point(0,0,0))))
+        self.assertEqual(len(ep.base_polygon.triangles),
+                         2)
+        self.assertEqual(len(ep.tetrahedrons),
+                         6)
+        
+        
         
         
 if __name__=='__main__':
