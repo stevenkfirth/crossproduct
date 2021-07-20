@@ -37,3 +37,4 @@ from .crossproduct import Polygons
 from .crossproduct import Tetrahedron
 from .crossproduct import tetrahedron_from_points
 from .crossproduct import ExtrudedPolyhedron
+from .crossproduct import GeometryObjects

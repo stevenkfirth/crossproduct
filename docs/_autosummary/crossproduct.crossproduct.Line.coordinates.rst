@@ -1,4 +1,4 @@
 Line.coordinates
 ================
 
-.. automethod:: crossproduct.crossproduct.Line.coordinates
+.. autoattribute:: crossproduct.crossproduct.Line.coordinates

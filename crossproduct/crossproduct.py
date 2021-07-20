@@ -1,21 +1,55 @@
 # -*- coding: utf-8 -*-
 
+# general
 import collections.abc
 import itertools
 import math
 
+# for plotting
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
+# for external geometric calculations
 import shapely.geometry
 import triangle as tr
-import numpy as np
+
+# for rendering
+import vpython
+
 
 ABS_TOL = 1e-7 # default value for math.isclose
 
 
-class _BaseGeometricObject():
-    """A base class for all geometric objects.
+class SequenceObject(collections.abc.Sequence):
+    """
+    """
+    def __getitem__(self,index):
+        ""
+        return self._items[index]
+    
+   
+    def __init__(self,*items):
+        ""
+        
+        self._items=tuple(items)
+        
+
+    def __len__(self):
+        ""
+        return len(self._items)
+    
+    
+    def __repr__(self):
+        ""
+        return '%s(%s)' % (self.__class__.__name__,
+                           ', '.join([str(c) for c in self]))
+    
+
+class GeometricEntity():
+    """
+    
+    Includes all
     
     """
     
@@ -29,40 +63,112 @@ class _BaseGeometricObject():
             otherwise False.
         :rtype: bool
         
-        .. rubric:: Code Examples
-    
-        .. code-block:: python
-        
-            >>> from crossproduct import Point
-            >>> print(Point(1,2) == Point(1,2))
-            True
-            
-            >>> from crossproduct import Point, Points
-            >>> print(Points(Point(1,2)) == Points(Point(1,2)))
-            True
-        
         """
         if isinstance(obj,self.__class__):
             return self.coordinates==obj.coordinates
         else:
             return False
         
+    
+
+class GeometricObject(GeometricEntity):
+    """
+    
+    All except for Vector
+    
+    """
+    @property
+    def coordinates(self):
+        """Returns a tuple representation of the object.
         
-    def __hash__(self):
+        :returns: The coordinates as a tuple. 
+        :rtype: tuple
+    
         """
+        return tuple(x.coordinates for x in self)
+    
+    
+    def difference(self,obj):
+        """The geometric difference between self and obj.
+        
+        :param obj: A geometric object.
+        
+        :returns: The difference objects.
+        :rtype: GeometryObjects
+        
         """
-        return self.coordinates
-
-
-class _BaseShapelyObject():
-    """A base class for geometric objects that can be represented with shapely objects.
+        
+        if self.nD==2:
+            
+            a=self._shapely
+            b=obj._shapely
+            result=a.difference(b)
+            #print(result)
+            return GeometryObjects(*self._shapely_to_objs(result))
+            
+        elif self.nD==3:
+            
+            raise Exception  # shapely doesn't work for 3d
+            
+        else:
+            
+            raise ValueError
+    
+            
+    def intersection(self,obj):
+        """The geometric intersection between self and obj.
+        
+        :param obj: A geometric object.
+        
+        :returns: The intersection objects.
+        :rtype: GeometryObjects
+        
+        """
+        if self.nD==2:
+            
+            a=self._shapely
+            b=obj._shapely
+            result=a.intersection(b)
+            return GeometryObjects(*self._shapely_to_objs(result))
+                
+        elif self.nD==3:
+            
+            raise Exception  # shapely doesn't work for 3d
+            
+        else:
+            
+            raise ValueError
+    
+    
+    @property
+    def nD(self):
+        """The number of dimensions of the object.
+        
+        :returns: 2 or 3
+        :rtype: int
+        
+        """
+        return self[0].nD
     
     
     
+class FiniteGeometricObject(GeometricObject, SequenceObject):
+    """
+    
+    Point, Points, Polyline, Polylines, Polygon, Polygons,
+    Tetrahedron, ExtrudedPolyhedron
     
     """
     
-            
+    
+    
+    @property
+    def _vpython_vector(self):
+        ""
+        return [x._vpython_vector for x in self]
+
+    
+    
     def _shapely_to_objs(self,shapely_obj):
         ""
         if shapely_obj.is_empty:
@@ -127,6 +233,18 @@ class _BaseShapelyObject():
     
     
     @property
+    def bounds(self):
+        """
+        """
+        if self.nD==2:
+            return self._shapely.bounds
+        elif self.nD==3:
+            raise Exception  # shapely doesn't work for 3d
+        else:
+            raise ValueError
+            
+    
+    @property
     def centroid(self):
         """
         """
@@ -137,164 +255,6 @@ class _BaseShapelyObject():
         else:
             raise ValueError
         
-    
-    def difference(self,obj):
-        """The geometric difference between self and obj.
-        
-        :param obj: A geometric object.
-        
-        :returns: A tuple of the difference objects.
-        :rtype: tuple
-        
-        .. rubric:: Code Examples
-        
-        .. code-block:: python
-        
-            >>> from crossproduct import Point, Polygon
-            >>> pt=Point(0.5,0.5)
-            >>> pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
-            >>> result=pt.difference(pg)
-            >>> print(result)
-            ()
-            
-            >>> from crossproduct import Point, Points, Polygon
-            >>> pts=Points(Point(0.5,0.5))
-            >>> pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
-            >>> result=pts.difference(pg)
-            >>> print(result)
-            ()
-        
-        """
-        
-        if self.nD==2:
-            
-            a=self._shapely
-            b=obj._shapely
-            result=a.difference(b)
-            #print(result)
-            return tuple(self._shapely_to_objs(result))
-            
-        elif self.nD==3:
-            
-            raise Exception  # shapely doesn't work for 3d
-            
-        else:
-            
-            raise ValueError
-    
-            
-    def intersection(self,obj):
-        """The geometric intersection between self and obj.
-        
-        :param obj: A geometric object.
-        
-        :returns: A tuple of the difference objects.
-        :rtype: tuple
-        
-        .. rubric:: Code Examples
-        
-        .. code-block:: python
-        
-            >>> from crossproduct import Point, Polygon
-            >>> pt=Point(0.5,0.5)
-            >>> pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
-            >>> result=pt.intersection(pg)
-            >>> print(result)
-            (Point(0.5,0.5),)
-            
-            >>> from crossproduct import Point, Points, Polygon
-            >>> pts=Points(Point(0.5,0.5))
-            >>> pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
-            >>> result=pts.intersection(pg)
-            >>> print(result)
-            (Point(0.5,0.5),)
-        
-        """
-        if self.nD==2:
-            
-            a=self._shapely
-            b=obj._shapely
-            result=a.intersection(b)
-            return tuple(self._shapely_to_objs(result))
-                
-        elif self.nD==3:
-            
-            raise Exception  # shapely doesn't work for 3d
-            
-        else:
-            
-            raise ValueError
-        
-        
-
-class _BaseSequence(collections.abc.Sequence):
-    """A base class for geometric objects that are represented as a mmutable sequence.
-    
-    """
-    
-    
-    def __getitem__(self,index):
-        ""
-        return self._items[index]
-    
-   
-    def __init__(self,*items):
-        ""
-        
-        self._items=tuple(items)
-        
-
-    def __len__(self):
-        ""
-        return len(self._items)
-    
-    
-    def __repr__(self):
-        ""
-        return '%s(%s)' % (self.__class__.__name__,
-                           ','.join([str(c) for c in self]))
-    
-    
-    @property
-    def coordinates(self):
-        """Returns a tuple representation of the object.
-        
-        :returns: The coordinates as a tuple. 
-        :rtype: tuple
-        
-        .. rubric:: Code Examples
-        
-        .. code-block:: python
-        
-            >>> from crossproduct import Point, Points
-            >>> pts = Points(Point(1,1),Point(2,2))
-            >>> result = pts.coordinates()
-            >>> print(result)
-            ((1.0,1.0),(2.0,2.0))
-        
-        """
-        return tuple(x.coordinates for x in self)
-    
-    
-    @property
-    def nD(self):
-        """The number of dimensions of the object.
-        
-        :returns: 2 or 3
-        :rtype: int
-        
-        .. rubric:: Code Examples
-    
-        .. code-block:: python
-        
-            >>> from crossproduct import Point, Points
-            >>> pts = Points(Point(1,1))
-            >>> print(pts.nD)
-            2
-            
-        """
-        return self[0].nD
-    
     
     def project_2D(self,coordinate_index):
         """Projects the object on a 2D plane.
@@ -312,9 +272,27 @@ class _BaseSequence(collections.abc.Sequence):
         return self.__class__(*(x.project_3D(plane,coordinate_index) 
                                 for x in self))
         
+
+    
+class InfiniteGeometricObject(GeometricObject):
+    """
+    
+    Line, Plane
+    
+    """
+
+    
+class GeometryObjects(GeometricObject, SequenceObject):
+    """
+    
+    A collection of geometric objects (i.e. all but vectors)
+    
+    """
+    
+
  
 
-class Point(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
+class Point(FiniteGeometricObject):
     """A point, as described by xy or xyz coordinates.
     
     In *crossproduct* a `Point` object is a immutable sequence. 
@@ -324,21 +302,7 @@ class Point(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
     :param coordinates: Argument list of two (xy) or three (xyz) coordinates. 
         Coordinates should be of type int, float or similar numeric. These values
         are converted to floats.
-    
-    .. rubric:: Code Example
-    
-    .. code-block:: python
-       
-       >>> from crossproduct import Point
-       >>> pt = Point(1,2)
-       >>> print(pt)
-       Point(1.0,2.0)
-       >>> print(list(pt))      # prints a list of the coordinates
-       [1.0,2.0]
-       >>> print(pt[1])         # prints the y coordinate
-       2.0
-    
-    
+
     """
     
     def __add__(self,vector):
@@ -348,16 +312,6 @@ class Point(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         :type vector: Vector
         
         :rtype: Point
-        
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-        
-            >>> from crossproduct import Point
-            >>> p = Point(1,2)
-            >>> result = p + Vector(1,1)
-            >>> print(result)
-            Point(2.0,3.0)
         
         """
         zipped=itertools.zip_longest(self,vector) # missing values filled with None
@@ -370,7 +324,7 @@ class Point(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
     
     def __init__(self,*coordinates):
         ""
-        self._items=tuple(coordinates)
+        self._items=tuple(map(float,coordinates))
         
         
     def __sub__(self,point_or_vector):
@@ -382,15 +336,6 @@ class Point(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         :return: If a point is supplied, then a vector is returned (i.e. v=P1-P0). 
             If a vector is supplied, then a point is returned (i.e. P1=P0-v).
         :rtype: Point or Vector
-        
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-        
-            >>> from crossproduct import Point
-            >>> result = Point(2,2) - Point(1,2)
-            >>> print(result)
-            Vector(1.0,0.0)
         
         """
         zipped=itertools.zip_longest(self,point_or_vector) # missing values filled with None
@@ -419,6 +364,16 @@ class Point(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
             raise ValueError  # only 2d for shapely objects
     
     
+    @property
+    def centroid(self):
+        """The centroid of the point (i.e. self).
+        
+        :rtype: Point
+        
+        """
+        return self
+    
+    
     @property       
     def coordinates(self):
         """Returns a tuple representation of the point.
@@ -427,16 +382,6 @@ class Point(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
             For a point, this can also be achieved by creating a 
             tuple of the point itself (i.e. :code:`tuple(pt)`).
         :rtype: tuple
-        
-        .. rubric:: Code Example
-        
-        .. code-block:: python
-        
-            >>> from crossproduct import Point
-            >>> pt = Point(2,2)
-            >>> result = pt.coordinates()
-            >>> print(result)
-            (2.0,2.0)
         
         """
         return self._items
@@ -456,15 +401,6 @@ class Point(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         :return: True if the point coordinates are the same, otherwise False.
         :rtype: bool
         
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-        
-            >>> from crossproduct import Point
-            >>> result = Point(1,2).equals(Point(2,2))
-            >>> print(result)
-            False
-            
         """
         zipped=itertools.zip_longest(self,point) # missing values filled with None
         try:
@@ -480,18 +416,32 @@ class Point(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         
         :returns: 2 or 3
         :rtype: int
-        
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-        
-            >>> from crossproduct import Point
-            >>> pt = Point(1,1)
-            >>> print(pt.nD)
-            2
             
         """
         return len(self)
+    
+    
+    def plot(self, ax=None, **kwargs):
+        """Plots the point on the supplied axes.
+        
+        :param ax: An 2D or 3D Axes instance.
+        :type ax:  matplotlib.axes._subplots.AxesSubplot, matplotlib.axes._subplots.Axes3DSubplot
+        :param kwargs: keyword arguments to be passed to the Axes.plot call.
+                   
+        :returns: The matplotlib axes.
+        :rtype: matplotlib.axes._subplots.AxesSubplot or 
+        matplotlib.axes._subplots.Axes3DSubplot
+    
+        """
+        if ax is None:
+            fig,ax=get_matplotlib_fig_ax(self.nD)
+        
+        if not 'marker' in kwargs:
+            kwargs['marker']='o'
+        
+        x=[[c] for c in self]
+        ax.plot(*x, **kwargs)
+        return ax
     
     
     def project_2D(self,coordinate_index):
@@ -507,18 +457,7 @@ class Point(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         :return: A 2D point based on the projection of the 3D point.
         :rtype: Point
                
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-        
-            >>> from crossproduct import Point
-            >>> pt = Point(1,2,3)
-            >>> result = pt.project_2D(1)
-            >>> print(result)
-            Point(1.0,3.0)   
-        
         """
-        
         if coordinate_index==0:
             return Point(self.y,self.z)
         elif coordinate_index==1:
@@ -545,19 +484,7 @@ class Point(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         :return: The 3D point as projected onto the plane.
         :rtype: Point
                
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-        
-            >>> from crossproduct import Point, Plane
-            >>> pt = Point(2,2)
-            >>> pl = Plane(Point(0,0,1), Vector(0,0,1))
-            >>> result = pt.project_3D(pl, 2)
-            >>> print(result)
-            Point(2.0,2.0,1.0)   
-        
         """
-        
         if coordinate_index==0:
             point=plane.point_yz(self.x,self.y)
         elif coordinate_index==1:
@@ -569,6 +496,42 @@ class Point(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
             
         return point
 
+    @property
+    def _vpython_vector(self):
+        ""
+        return vpython.vector(*self.coordinates)
+
+
+    def render(self,
+           scene=None,
+           radius=5,
+           color=vpython.color.red,
+           ):
+        """Renders the object using vpython.
+        
+        :param scene: A vpython canvas.
+        :type scene: vpython.vpython.canvas
+        :param radius: The radius f the point.
+        :type radius: float
+        :param color: The color of the point.
+        :type color: vpython.cyvector.vector
+
+        :returns: The scene
+        :rtype: vpython.vpython.canvas
+        
+        """
+        
+        if scene is None:
+            scene=get_render_scene()
+        
+        vpython.points(pos=[self._vpython_vector],
+                       color=color,
+                       radius=radius)
+        
+        return scene
+
+
+
 
     @property
     def x(self):
@@ -576,15 +539,6 @@ class Point(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         
         :rtype: float
         
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-        
-            >>> from crossproduct import Point
-            >>> pt = Point(0,1,2)
-            >>> print(pt.x)
-            0.0
-            
         """
         return self[0]
     
@@ -595,15 +549,6 @@ class Point(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         
         :rtype: float
         
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-        
-            >>> from crossproduct import Point
-            >>> pt = Point(0,1,2)
-            >>> print(pt.y)
-            1.0
-            
         """
         return self[1]
     
@@ -616,39 +561,19 @@ class Point(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         
         :rtype: float
         
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-        
-            >>> from crossproduct import Point
-            >>> pt = Point(0,1,2)
-            >>> print(pt.z)
-            2.0
-        
         """
         return self[2]
     
 
 
 
-class Points(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
+class Points(FiniteGeometricObject):
     """A collection of points.    
     
     In *crossproduct* a `Points` object is a immutable sequence. 
     Iterating over a `Points` will provide its Point objects.
     
     :param points: An argument list of Point instances. 
-    
-    .. rubric:: Code Example
-        
-    .. code-block:: python
-        
-        >>> from crossproduct import Point, Points
-        >>> pts = Points(Point(0,0), Point(1,0))
-        >>> print(pts)
-        Points(Point(0.0,0.0), Point(1.0,0.0))
-        >>> print(pts[1])
-        Point(1.0,0.0)
     
     """
     
@@ -680,10 +605,50 @@ class Points(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
             return Point(*(sum(c)/len(c) for c in zip(*self.coordinates)))
         else:
             raise ValueError
-            
+    
             
 
-class Vector(_BaseGeometricObject,_BaseSequence):
+            
+    def plot(self, ax=None, **kwargs):
+        """Plots the points on the supplied axes.
+        
+        :param ax: An 2D or 3D Axes instance.
+        :type ax:  matplotlib.axes._subplots.AxesSubplot, matplotlib.axes._subplots.Axes3DSubplot
+        :param kwargs: keyword arguments to be passed to the Axes.plot call.
+                   
+        :returns: The matplotlib axes.
+        :rtype: matplotlib.axes._subplots.AxesSubplot or 
+        matplotlib.axes._subplots.Axes3DSubplot
+    
+        """
+        if ax is None:
+            fig,ax=get_matplotlib_fig_ax(self.nD)
+        
+        if not 'marker' in kwargs:
+            kwargs['marker']='o'
+        
+        ax.scatter(*zip(*self.coordinates), **kwargs)
+        return ax
+    
+    
+    def render(self,
+           scene=None,
+           radius=5,
+           color=vpython.color.red,
+           ):
+        ""
+        
+        if scene is None:
+            scene=get_render_scene()
+        
+        vpython.points(pos=self._vpython_vector,
+                       color=color,
+                       radius=radius)
+    
+        return scene
+            
+
+class Vector(GeometricEntity, SequenceObject):
     """A vector, as described by xy or xyz coordinates.
     
     In *crossproduct* a Vector object is a immutable sequence. 
@@ -693,15 +658,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
     :param coordinates: Argument list of two (xy) or three (xyz) coordinates. 
         Coordinates should be of type int, float or similar numeric. These values
         are converted to floats.
-    
-    .. rubric:: Code Example
-    
-    .. code-block:: python
-       
-       >>> from crossproduct import Vector
-       >>> v = Vector(1,2)
-       >>> print(v)
-       Vector(1.0,2.0)
     
     """
 
@@ -713,16 +669,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
         
         :rtype: Vector
         
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-           
-           >>> from crossproduct import Vector
-           >>> v = Vector(1,2)
-           >>> result = v + Vector(1,1)
-           >>> print(result)
-           Vector(2.0,3.0)
-            
         """
         zipped=itertools.zip_longest(self,vector) # missing values filled with None
         try:
@@ -734,7 +680,7 @@ class Vector(_BaseGeometricObject,_BaseSequence):
 
     def __init__(self,*coordinates):
         ""
-        self._items=tuple(coordinates)
+        self._items=tuple(map(float,coordinates))
 
 
     def __mul__(self,scalar):
@@ -744,16 +690,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
         :type scalar: float
         
         :rtype: Vector
-        
-        .. rubric:: Code Example
-        
-        .. code-block:: python
-           
-           >>> from crossproduct import Vector
-           >>> v = Vector(1,2)
-           >>> result = v1 * 2
-           >>> print(result)
-           Vector(2.0,4.0)
         
         """
         return Vector(*(c*scalar for c in self))            
@@ -766,16 +702,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
         :type vector: Vector
         
         :rtype: Vector
-        
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-           
-           >>> from crossproduct import Vector
-           >>> v = Vector(1,2)
-           >>> result = v - Vector(1,1)
-           >>> print(result)
-           Vector(0,1)
         
         """
         zipped=itertools.zip_longest(self,vector) # missing values filled with None
@@ -795,20 +721,15 @@ class Vector(_BaseGeometricObject,_BaseSequence):
         :return: The angle in radians.
         :rtype: float
         
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-           
-           >>> from crossproduct import Vector
-           >>> v1=Vector(0,1)
-           >>> v2=Vector(1,1)
-           >>> result=v1.angle(v2)
-           >>> print(result)            # a 45 degree angle
-           0.7853981633974484
-        
         """
         return math.acos(self.dot(vector)/self.length/vector.length)
     
+    
+    @property
+    def _vpython_vector(self):
+        ""
+        return vpython.vector(*self.coordinates)
+
     
     @property
     def coordinates(self):
@@ -818,14 +739,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
             For a vector, this can also be achieved by creating a 
             tuple of the vector itself (i.e. :code:`tuple(v)`).
         :rtype: tuple
-        
-        .. code-block:: python
-        
-            >>> from crossproduct import Vector
-            >>> v = Vector(2,2)
-            >>> result = v.coordinates
-            >>> print(result)
-            (2.0,2.0)
         
         """
         return self._items
@@ -847,17 +760,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
             then the returned vector is (0,0,0)
         
         :rtype: Vector
-        
-        .. rubric:: Code Example
-        
-        .. code-block:: python
-           
-           >>> from crossproduct import Vector
-           >>> v1 = Vector(1,0,0)
-           >>> v2 = Vector(0,1,0)
-           >>> result = v1.cross_product(v2)
-           >>> print(result)
-           Vector(0,0,1)
         
         """
         if self.nD==3:
@@ -881,17 +783,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
             returns <0 if the angle between self and vector is an obtuse angle (i.e. >90deg).
         :rtype: float
         
-        .. rubric:: Code Example
-        
-        .. code-block:: python
-           
-           >>> from crossproduct import Vector
-           >>> v1 = Vector(1,0)
-           >>> v2 = Vector(0,1)               
-           >>> result = v1.dot(v2)
-           >>> print(result)
-           0
-        
         """
         zipped=itertools.zip_longest(self,vector) # missing values filled with None
         try:
@@ -910,24 +801,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
             absolute value.
         :rtype: int
         
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-           
-           # 2D example
-           >>> from crossproduct import Vector
-           >>> v = Vector(1,2)
-           >>> result = v.index_largest_absolute_coordinate
-           >>> print(result)
-           1
-           
-           # 3D example
-           >>> from crossproduct import Vector
-           >>> v = Vector(1,2,3)
-           >>> result = v.index_largest_absolute_coordinate
-           >>> print(result)
-           2
-            
         """
         absolute_coords=[abs(c) for c in self]
         return absolute_coords.index(max(absolute_coords)) 
@@ -942,26 +815,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
         :return: True if the vectors point in the exact same direction; 
             otherwise False.
         :rtype: bool
-        
-        .. rubric:: Code Example
-            
-        .. code-block:: python
-           
-           # 2D example
-           >>> from crossproduct import Vector
-           >>> v1 = Vector(1,2)
-           >>> v2 = Vector(2,4)
-           >>> result = v1.is_codirectional(v2)
-           >>> print(result)
-           True
-           
-           # 3D example
-           >>> from crossproduct import Vector
-           >>> v1 = Vector(1,1,1)
-           >>> v2 = Vector(1,0,0)
-           >>> result = v1.is_codirectional(v2)
-           >>> print(result)
-           False
             
         """
         return self.is_collinear(vector) and self.dot(vector)>0
@@ -978,24 +831,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
         :return: True if the vectors lie on the same line; 
             otherwise False.
         :rtype: bool
-        
-        .. rubric:: Code Example
-        
-        .. code-block:: python
-           
-           >>> from crossproduct import Vector
-           >>> v1 = Vector(1,0)
-           >>> v2 = Vector(2,0)               
-           >>> result = v1.is_collinear(v2)
-           >>> print(result)
-           True     
-           
-           >>> from crossproduct import Vector
-           >>> v1 = Vector(1,0,0)
-           >>> v2 = Vector(2,0,0)               
-           >>> result = v1.is_collinear(v2)
-           >>> print(result)
-           True        
         
         """
         if self.nD==2:
@@ -1016,26 +851,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
             otherwise False.
         :rtype: bool
         
-        .. rubric:: Code Example
-            
-        .. code-block:: python
-           
-           # 2D example
-           >>> from crossproduct import Vector
-           >>> v1 = Vector(1,2)
-           >>> v2 = Vector(-2,-4)
-           >>> result = v1.is_opposite(v2)
-           >>> print(result)
-           True
-           
-           # 3D example
-           >>> from crossproduct import Vector
-           >>> v1 = Vector(1,2,3)
-           >>> v2 = Vector(-1,-2,-3)
-           >>> result = v1.is_opposite(v2)
-           >>> print(result)
-           True
-        
         """
         return self.is_collinear(vector) and self.dot(vector)<0
             
@@ -1050,26 +865,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
             otherwise False.
         :rtype: bool
         
-        .. rubric:: Code Example
-                
-        .. code-block:: python
-           
-           # 2D example
-           >>> from crossproduct import Vector
-           >>> v1 = Vector(1,0)
-           >>> v2 = Vector(0,1)
-           >>> result = v1.is_perpendicular(v2)
-           >>> print(result)
-           True
-           
-           # 3D example
-           >>> from crossproduct import Vector
-           >>> v1 = Vector(1,0,0)
-           >>> v2 = Vector(0,1,0)
-           >>> result = v1.is_perpendicular(v2)
-           >>> print(result)
-           True
-        
         """
         return math.isclose(self.dot(vector), 0, abs_tol=ABS_TOL)
         
@@ -1079,16 +874,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
         """Returns the length of the vector.
         
         :rtype: float
-        
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-           
-           >>> from crossproduct import Vector
-           >>> v = Vector(1,0)
-           >>> result = v.length
-           >>> print(result)
-           1
         
         """
         return sum(c**2 for c in self)**0.5
@@ -1101,15 +886,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
         :returns: 2 or 3
         :rtype: int
         
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-        
-            >>> from crossproduct import Vector
-            >>> v = Vector(1,1)
-            >>> print(v.nD)
-            2
-            
         """
         return len(self)
     
@@ -1120,16 +896,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
         
         :returns: A codirectional vector of length 1.
         :rtype: Vector
-        
-        :Example:
-    
-        .. code-block:: python
-           
-           >>> from crossproduct import Vector
-           >>> v = Vector(3,0)
-           >>> result = v.normalise
-           >>> print(result)
-           Vector(1,0)
         
         """
         l=self.length
@@ -1142,23 +908,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
         
         :return: A collinear vector which points in the opposite direction.
         :rtype: Vector
-        
-        .. rubric:: Code Example
-            
-        .. code-block:: python
-           
-           # 2D example
-           >>> from crossproduct import Vector
-           >>> v = Vector(1,2)
-           >>> result = v.opposite
-           >>> print(result)
-           Vector(-1,-2)
-           
-           # 3D example
-           >>> v = Vector(1,2,3)
-           >>> result = v.opposite
-           >>> print(result)
-           Vector(-1,-2,-3)
         
         """
         return self*-1
@@ -1180,17 +929,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
             If supplied vector is on the right of self, returns <0 (i.e. clockwise).
         :rtype: float
             
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-           
-           >>> from crossproduct import Vector
-           >>> v1 = Vector(1,0)
-           >>> v2 = Vector(1,0)               
-           >>> result = v1.perp_product(v2)
-           >>> print(result)
-           0
-        
         """
         if self.nD==2:
             return self.perp_vector.dot(vector)
@@ -1208,21 +946,31 @@ class Vector(_BaseGeometricObject,_BaseSequence):
             (counterclockwise) side of self.
         :rtype: Vector
         
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-           
-           >>> from crossproduct import Vector
-           >>> v = Vector(1,0)
-           >>> result = v.perp_vector
-           >>> print(result)
-           Vector(0,1)
-        
         """
         if self.nD==2:
             return Vector(-self.y,self.x)
         else:
             raise ValueError('"perp_vector" method only applicable for a 2D vector.')
+
+
+    def render(self,
+           scene=None,
+           color=vpython.color.blue,
+           **kwargs
+           ):
+        ""
+        
+        if scene is None:
+            scene=get_render_scene()
+        
+        vpython.arrow(pos=Point(0,0,0)._vpython_vector,
+                      axis=self._vpython_vector,
+                      color=color,
+                      **kwargs
+                      )
+        
+        return scene
+    
 
 
     def triple_product(self,vector1,vector2):
@@ -1239,18 +987,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
             
         :rtype: float
         
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-           
-           >>> from crossproduct import Vector
-           >>> v1 = Vector(1,0,0)
-           >>> v2 = Vector(0,1,0)
-           >>> v3 = Vector(0,0,1)
-           >>> result = v1.triple_product(v2,v3)
-           >>> print(result)
-           1
-        
         """
         return self.dot(vector1.cross_product(vector2))
 
@@ -1261,15 +997,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
         
         :rtype: float
         
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-        
-            >>> from crossproduct import Vector
-            >>> v = Vector(0,1,2)
-            >>> print(v.x)
-            0.0
-        
         """
         return self[0]
     
@@ -1279,15 +1006,6 @@ class Vector(_BaseGeometricObject,_BaseSequence):
         """The y coordinate of the vector.
         
         :rtype: float
-        
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-        
-            >>> from crossproduct import Vector
-            >>> v = Vector(0,1,2)
-            >>> print(v.y)
-            1.0
         
         """
         return self[1]
@@ -1301,20 +1019,11 @@ class Vector(_BaseGeometricObject,_BaseSequence):
         
         :rtype: float
         
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-        
-            >>> from crossproduct import Vector
-            >>> v = Vector(0,1,2)
-            >>> print(v.z)
-            2.0
-        
         """
         return self[2]
     
 
-class Line(_BaseGeometricObject):
+class Line(InfiniteGeometricObject):
     """A 2D or 3D line, as described by a point and a vector.
     
     Equation of the line is P(t) = P0 + vL*t where:
@@ -1631,7 +1340,7 @@ class Line(_BaseGeometricObject):
             
     
 
-class Polyline(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
+class Polyline(FiniteGeometricObject):
     """A 2D or 3D polyline.
     
     A polyline is a series of joined segments which are defined as a series of points.
@@ -1721,8 +1430,8 @@ class Polyline(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         
         """
         if self.nD==2:
-            if isinstance(obj,_BaseShapelyObject):
-                return _BaseShapelyObject.intersection(self,obj)
+            if hasattr(obj,'_shapely'):
+                return GeometricObject.intersection(self,obj)
             else:
                 raise Exception('%s' % obj.__class__)  # not implemented yet
         
@@ -1752,6 +1461,23 @@ class Polyline(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         return tuple(Line(pl[0],pl[1]-pl[0]) for pl in pls)
 
 
+    def plot(self, ax=None, **kwargs):
+        """Plots the polyline on the supplied axes.
+        
+        :param ax: An 2D or 3D Axes instance.
+        :type ax:  matplotlib.axes._subplots.AxesSubplot, matplotlib.axes._subplots.Axes3DSubplot
+        :param kwargs: keyword arguments to be passed to the Axes.plot call.
+                   
+        :returns: The matplotlib axes.
+        :rtype: matplotlib.axes._subplots.AxesSubplot or 
+        matplotlib.axes._subplots.Axes3DSubplot
+    
+        """
+        if ax is None:
+            fig,ax=get_matplotlib_fig_ax(self.nD)
+        
+        ax.plot(*zip(*self.coordinates), **kwargs)
+        return ax
     
 
     @property
@@ -1760,6 +1486,25 @@ class Polyline(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         """
         n=len(self)
         return Polylines(*[Polyline(self[i],self[i+1]) for i in range(n-1)])
+
+
+    def render(self,
+           scene=None,
+           color=vpython.color.blue,
+           **kwargs
+           ):
+        ""
+        
+        if scene is None:
+            scene=get_render_scene()
+        
+        vpython.curve(pos=self._vpython_vector,
+                      color=color,
+                      **kwargs
+                      )
+        
+        return scene
+    
 
 
     @property
@@ -1783,7 +1528,7 @@ class Polyline(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
 
 
 
-class Polylines(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
+class Polylines(FiniteGeometricObject):
     """A sequence of polylines.    
     
     In *crossproduct* a Polylines object is a mutable sequence. 
@@ -1798,6 +1543,7 @@ class Polylines(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
         ""
         self._items=tuple(polylines)
     
+    
     @property
     def _shapely(self):
         ""
@@ -1808,7 +1554,57 @@ class Polylines(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
             raise Exception  # only 2d for shapely objects
 
 
-class Plane(_BaseGeometricObject):
+    def plot(self, ax=None, **kwargs):
+        """Plots the polylines on the supplied axes.
+        
+        :param ax: An 2D or 3D Axes instance.
+        :type ax:  matplotlib.axes._subplots.AxesSubplot, matplotlib.axes._subplots.Axes3DSubplot
+        :param kwargs: keyword arguments to be passed to the Axes.plot call.
+                   
+        :returns: The matplotlib axes.
+        :rtype: matplotlib.axes._subplots.AxesSubplot or 
+        matplotlib.axes._subplots.Axes3DSubplot
+    
+        """
+        if ax is None:
+            fig,ax=get_matplotlib_fig_ax(self.nD)
+        
+        for pl in self:
+            ax=pl.plot(ax,**kwargs)
+        return ax
+    
+    
+
+    @property
+    def points(self):
+        ""
+        result=[]
+        for pl in self:
+            result.extend(pl)
+        return Points(*result)
+
+
+    def render(self,
+           scene=None,
+           color=vpython.color.blue,
+           **kwargs
+           ):
+        ""
+        
+        if scene is None:
+            scene=get_render_scene()
+        
+        for pl in self:
+            pl.render(scene=scene,
+                      color=color,
+                      **kwargs)
+        
+        return scene
+    
+
+
+
+class Plane(InfiniteGeometricObject):
     """A three dimensional plane, situated on an x, y, z plane.
     
     Equation of plane: N . (P - P0) = 0 where:
@@ -2193,7 +1989,7 @@ class Plane(_BaseGeometricObject):
 
     
 
-class Polygon(_BaseGeometricObject,_BaseShapelyObject):
+class Polygon(FiniteGeometricObject):
     """A polygon, situated on an xy or xyz plane. 
     
     This polygon cannot be self-intersecting, and can be concave or convex.
@@ -2253,7 +2049,7 @@ class Polygon(_BaseGeometricObject,_BaseShapelyObject):
     def __init__(self,*points,holes=None):
         ""
         
-        self._points=Points(*points)
+        self._items=Points(*points)
         if holes is None:
             self._holes=Polygons()
         else:
@@ -2386,10 +2182,9 @@ class Polygon(_BaseGeometricObject,_BaseShapelyObject):
         :rtype: tuple
         
         """
-        # to do ... 3D difference
         if self.nD==2:
-            if isinstance(obj,_BaseShapelyObject):
-                return _BaseShapelyObject.difference(self,obj)
+            if hasattr(obj,'_shapely'):
+                return GeometricObject.difference(self,obj)
             else:
                 raise Exception('%s' % obj.__class__)
         
@@ -2513,8 +2308,8 @@ class Polygon(_BaseGeometricObject,_BaseShapelyObject):
         
         """
         if self.nD==2:
-            if isinstance(obj,_BaseShapelyObject):
-                return _BaseShapelyObject.intersection(self,obj)
+            if hasattr(obj,'_shapely'):
+                return GeometricObject.intersection(self,obj)
             elif isinstance(obj,Line):
                 return self._intersection_line_2D(obj)
             else:
@@ -2600,12 +2395,42 @@ class Polygon(_BaseGeometricObject,_BaseShapelyObject):
         else:
             raise ValueError
             
+            
+    def plot(self, ax=None, **kwargs):
+        """Plots the polygon on the supplied axes.
+        
+        :param ax: An 2D or 3D Axes instance.
+        :type ax:  matplotlib.axes._subplots.AxesSubplot, matplotlib.axes._subplots.Axes3DSubplot
+        :param kwargs: keyword arguments to be passed to the Axes.plot call.
+                   
+        :returns: The matplotlib axes.
+        :rtype: matplotlib.axes._subplots.AxesSubplot or 
+        matplotlib.axes._subplots.Axes3DSubplot
+    
+        """
+        if ax is None:
+            fig,ax=get_matplotlib_fig_ax(self.nD)
+            
+        if not 'color' in kwargs:
+            kwargs['color']='tab:blue'
+        
+        if self.nD==2:
+            for tri in self.triangles:
+                ax.fill(*zip(*tri.coordinates[0]), **kwargs)
+        elif self.nD==3:
+            verts=[tri.coordinates[0] for tri in self.triangles]
+            pc=Poly3DCollection(verts,**kwargs)
+            ax.add_collection3d(pc)
+                
+        return ax
+    
+    
     
     @property
     def points(self):
         """Returns the exterior points.
         """
-        return self._points
+        return self._items
             
             
     @property
@@ -2623,6 +2448,13 @@ class Polygon(_BaseGeometricObject,_BaseShapelyObject):
            
             
         """
+        return Polylines(Polyline(*(list(self.points) + [self.points[0]])), 
+                (*(Polyline(*(list(hole.points) + [hole.points[0]])) 
+                            for hole in self.holes))
+                )
+
+        
+        
         return (Polyline(*(list(self.points) + [self.points[0]])), 
                 Polylines(*(Polyline(*(list(hole.points) + [hole.points[0]])) 
                             for hole in self.holes))
@@ -2686,7 +2518,33 @@ class Polygon(_BaseGeometricObject,_BaseShapelyObject):
         return Polygon(*self._project_3D_exterior(plane,coordinate_index).points,
                        holes=[hole._project_3D_exterior(plane,coordinate_index)
                               for hole in self.holes])
+    
+
+
+    def render(self,
+           scene=None,
+           color=vpython.color.blue,
+           **kwargs
+           ):
+        ""
+        
+        if scene is None:
+            scene=get_render_scene()
+        
+        for tri in self.triangles:
+            vs=[]
+            for pt in tri.points:
+                v=vpython.vertex(pos=pt._vpython_vector, 
+                                 color=color,
+                                 **kwargs)
+                vs.append(v)
             
+            vpython.triangle(vs=vs)
+        
+        
+        return scene
+    
+        
     
     @property
     def reverse(self):
@@ -2733,7 +2591,7 @@ class Polygon(_BaseGeometricObject,_BaseShapelyObject):
             if len(self.holes)==0:
                 
                 vertices=self.coordinates[0]
-                segments=np.array([(x,x+1) for x in range(len(self.points))])
+                segments=[[x,x+1] for x in range(len(self.points))]
                 segments[-1][1]=0
                 A=dict(vertices=vertices,
                        segments=segments)
@@ -2756,7 +2614,7 @@ class Polygon(_BaseGeometricObject,_BaseShapelyObject):
                 for hole in self.holes:
                     vertices.extend(hole.coordinates[0])
                     n=len(segments)
-                    segments.extend(np.array([(x,x+1) for x in range(n,n+len(self.points))]))
+                    segments.extend([[x,x+1] for x in range(n,n+len(self.points))])
                     segments[-1][1]=n
                     holes.append(hole.exterior.triangles[0].centroid.coordinates)
                 # get triangles
@@ -2785,7 +2643,7 @@ class Polygon(_BaseGeometricObject,_BaseShapelyObject):
             
     
 
-class Polygons(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
+class Polygons(FiniteGeometricObject):
     """A sequence of polygons.    
     
     :param polygons: A sequence of Polygon instances. 
@@ -2818,7 +2676,89 @@ class Polygons(_BaseGeometricObject,_BaseSequence,_BaseShapelyObject):
             raise Exception  # only 2d for shapely polygons
 
 
-class Tetrahedron(_BaseGeometricObject,_BaseSequence):
+    @property
+    def bounds(self):
+        """Returns a tuple of float values that bounds the object.
+        
+        :returns: 2D - (minx, miny, maxx, maxy); 
+            3D - (minx, miny, minz, maxx, maxy, maxz) 
+        :rtype: tuple
+        
+        """
+        if self.nD==2:
+            return self._shapely.bounds
+        elif self.nD==3:
+            result=[]
+            a=list(zip(*self.points.coordinates))
+            result.extend([min(b) for b in a])
+            result.extend([max(b) for b in a])
+            return tuple(result)
+        else:
+            raise ValueError
+
+
+    def render(self,
+           scene=None,
+           color=vpython.color.blue,
+           **kwargs
+           ):
+        ""
+        
+        if scene is None:
+            scene=get_render_scene()
+        
+        for pg in self:
+            pg.render(scene=scene,
+                      color=color,
+                      **kwargs)
+        
+        return scene
+    
+    
+    def plot(self, ax=None, **kwargs):
+        """Plots the polygons on the supplied axes.
+        
+        :param ax: An 2D or 3D Axes instance.
+        :type ax:  matplotlib.axes._subplots.AxesSubplot, matplotlib.axes._subplots.Axes3DSubplot
+        :param kwargs: keyword arguments to be passed to the Axes.plot call.
+                   
+        :returns: The matplotlib axes.
+        :rtype: matplotlib.axes._subplots.AxesSubplot or 
+        matplotlib.axes._subplots.Axes3DSubplot
+    
+        """
+        return Polygon.plot(self,ax,**kwargs)
+            
+    
+    @property
+    def points(self):
+        """All polygon exterior points
+        """
+        result=[]
+        for pg in self:
+            result.extend(pg.points)
+        return Points(*result)   
+    
+    
+    @property
+    def polylines(self):
+        ""
+        result=[]
+        for pg in self:
+            result.extend(pg.polylines)
+        return Polylines(*result)    
+
+
+    @property
+    def triangles(self):
+        ""
+        result=[]
+        for pg in self:
+            result.extend(pg.triangles)
+        return Polygons(*result)   
+                
+                
+class Tetrahedron(FiniteGeometricObject):
     """A tetrahedron, situated on the xyz plane. 
     
     :param polygons: A sequence of polygons for the outer faces.
@@ -2885,7 +2825,7 @@ def tetrahedrons_from_extruded_triangle(triangle, extrud_vector):
     
     
     
-class ExtrudedPolyhedron(_BaseGeometricObject,_BaseSequence):
+class ExtrudedPolyhedron(FiniteGeometricObject):
     """
     """
     
@@ -2939,6 +2879,35 @@ class ExtrudedPolyhedron(_BaseGeometricObject,_BaseSequence):
         return self._tetrahedrons
 
     
+    
+def get_render_scene():
+    ""
+    scene=vpython.canvas()
+    scene.background=vpython.color.gray(0.95)
+    scene.height=200
+    scene.width=300
+    scene.forward=vpython.vector(0,1,-1)
+    scene.up=vpython.vector(0,0,1)
+
+    return scene
+
+
+def get_matplotlib_fig_ax(nD):
+    """
+    """
+    if nD==2:
+        fig, ax = plt.subplots()
+        
+    elif nD==3:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.set_zlabel('z-coordinate')
+    else:
+        raise Exception
+        
+    ax.set_xlabel('x-coordinate')
+    ax.set_ylabel('y-coordinate')
+    return fig,ax
     
     
     

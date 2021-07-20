@@ -18,9 +18,13 @@ Polygon
    ~crossproduct.crossproduct.Polygon.holes
    ~crossproduct.crossproduct.Polygon.intersection
    ~crossproduct.crossproduct.Polygon.nD
+   ~crossproduct.crossproduct.Polygon.next_index
    ~crossproduct.crossproduct.Polygon.plane
+   ~crossproduct.crossproduct.Polygon.points
    ~crossproduct.crossproduct.Polygon.polygons
-   ~crossproduct.crossproduct.Polygon.polyline
+   ~crossproduct.crossproduct.Polygon.polylines
    ~crossproduct.crossproduct.Polygon.project_2D
    ~crossproduct.crossproduct.Polygon.project_3D
+   ~crossproduct.crossproduct.Polygon.render
+   ~crossproduct.crossproduct.Polygon.reverse
    ~crossproduct.crossproduct.Polygon.triangles

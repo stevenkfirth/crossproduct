@@ -4,6 +4,15 @@ Vector
 .. autoclass:: crossproduct.crossproduct.Vector
    :show-inheritance:
 
+.. rubric:: Code Example
+
+.. code-block:: python
+
+   >>> from crossproduct import Vector
+   >>> v = Vector(1,2)
+   >>> print(v)
+   Vector(1.0, 2.0)
+
 .. Rubric:: Properties and Methods
 
 .. autosummary::
@@ -28,8 +37,7 @@ Vector
    ~crossproduct.crossproduct.Vector.opposite
    ~crossproduct.crossproduct.Vector.perp_product
    ~crossproduct.crossproduct.Vector.perp_vector
-   ~crossproduct.crossproduct.Vector.project_2D
-   ~crossproduct.crossproduct.Vector.project_3D
+   ~crossproduct.crossproduct.Vector.render
    ~crossproduct.crossproduct.Vector.triple_product
    ~crossproduct.crossproduct.Vector.x
    ~crossproduct.crossproduct.Vector.y

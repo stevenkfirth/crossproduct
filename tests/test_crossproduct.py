@@ -12,6 +12,7 @@ from crossproduct import Plane
 from crossproduct import Polygon, Polygons
 from crossproduct import Tetrahedron, tetrahedron_from_points
 from crossproduct import ExtrudedPolyhedron
+from crossproduct import GeometryObjects
 
 
 class Test_Point(unittest.TestCase):
@@ -23,7 +24,7 @@ class Test_Point(unittest.TestCase):
         pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
         #print(pt.difference(pg)); return
         self.assertEqual(pt.difference(pg),
-                         tuple())
+                         GeometryObjects())
         
         
     def test_intersection(self):
@@ -32,7 +33,48 @@ class Test_Point(unittest.TestCase):
         pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
         #print(pt.intersection(pg)); return
         self.assertEqual(pt.intersection(pg),
-                         (Point(0.5,0.5),))
+                         GeometryObjects(Point(0.5,0.5)))
+        
+        
+    def test_plot(self):
+        ""
+        return
+        pt=Point(0.5,0.5)
+        pt.plot()
+        
+        pt=Point(0.5,0.5,0.5)
+        pt.plot()
+    
+
+class Test_Points(unittest.TestCase):
+    ""
+    def test_plot(self):
+        ""
+        return
+        pts=Points(Point(0.5,0.5),Point(1.5,0.5))
+        pts.plot()
+        
+        
+class Test_Polyline(unittest.TestCase):
+    ""
+    
+    def test_plot(self):
+        ""
+        return
+        pl=Polyline(Point(0.5,0.5),Point(1.5,0.5))
+        pl.plot()
+
+
+class Test_Polylines(unittest.TestCase):
+    ""
+    
+    def test_plot(self):
+        ""
+        return
+        pls=Polylines(Polyline(Point(0.5,0.5),Point(1.5,0.5)),
+                      Polyline(Point(0.5,1.5),Point(1.5,1.5)))
+        pls.plot()
+
 
 
 class Test_Plane(unittest.TestCase):
@@ -137,7 +179,7 @@ class Test_Polygon(unittest.TestCase):
         pg1=Polygon(Point(0,2),Point(1,2),Point(1,3),Point(0,3))
         #print(pg.difference(pg1)); return
         self.assertEqual(pg.difference(pg1),
-                         (Polygon(Point(0,0),
+                         GeometryObjects(Polygon(Point(0,0),
                                   Point(0,1),
                                   Point(1,1),
                                   Point(1,0)),))
@@ -145,7 +187,7 @@ class Test_Polygon(unittest.TestCase):
         pg1=Polygon(Point(1,1),Point(2,1),Point(2,2),Point(1,2))
         #print(pg.difference(pg1)); return
         self.assertEqual(pg.difference(pg1),
-                         (Polygon(Point(1,1),
+                         GeometryObjects(Polygon(Point(1,1),
                                   Point(1,0),
                                   Point(0,0),
                                   Point(0,1)),))
@@ -153,7 +195,7 @@ class Test_Polygon(unittest.TestCase):
         pg1=Polygon(Point(0,1),Point(1,1),Point(1,2),Point(0,2))
         #print(pg.difference(pg1)); return
         self.assertEqual(pg.difference(pg1),
-                         (Polygon(Point(1,1),
+                         GeometryObjects(Polygon(Point(1,1),
                                   Point(1,0),
                                   Point(0,0),
                                   Point(0,1)),))
@@ -161,7 +203,7 @@ class Test_Polygon(unittest.TestCase):
         pg1=Polygon(Point(0.5,1),Point(1.5,1),Point(1.5,2),Point(0.5,2))
         #print(pg.difference(pg1)); return
         self.assertEqual(pg.difference(pg1),
-                         (Polygon(Point(1,1),
+                         GeometryObjects(Polygon(Point(1,1),
                                   Point(1,0),
                                   Point(0,0),
                                   Point(0,1),
@@ -170,7 +212,7 @@ class Test_Polygon(unittest.TestCase):
         pg1=Polygon(Point(0.25,1),Point(0.75,1),Point(0.75,2),Point(0.25,2))
         #print(pg.difference(pg1)); return
         self.assertEqual(pg.difference(pg1),
-                         (Polygon(Point(0.75,1),
+                         GeometryObjects(Polygon(Point(0.75,1),
                                   Point(1,1),
                                   Point(1,0),
                                   Point(0,0),
@@ -180,12 +222,12 @@ class Test_Polygon(unittest.TestCase):
         pg1=pg
         #print(pg.difference(pg1)); return
         self.assertEqual(pg.difference(pg1),
-                         tuple())
+                         GeometryObjects())
         # half intersection
         pg1=Polygon(Point(0.5,0),Point(1.5,0),Point(1.5,1),Point(0.5,1))
         #print(pg.difference(pg1)); return
         self.assertEqual(pg.difference(pg1),
-                         (Polygon(Point(0.5,0),
+                         GeometryObjects(Polygon(Point(0.5,0),
                                   Point(0,0),
                                   Point(0,1),
                                   Point(0.5,1)),))
@@ -193,7 +235,7 @@ class Test_Polygon(unittest.TestCase):
         pg1=Polygon(Point(0.5,0.5),Point(1.5,0.5),Point(1.5,1.5),Point(0.5,1.5))
         #print(pg.difference(pg1)); return
         self.assertEqual(pg.difference(pg1),
-                         (Polygon(Point(1.0,0.5),
+                         GeometryObjects(Polygon(Point(1.0,0.5),
                                   Point(1.0,0.0),
                                   Point(0.0,0.0),
                                   Point(0.0,1.0),
@@ -203,7 +245,7 @@ class Test_Polygon(unittest.TestCase):
         pg1=Polygon(Point(0.25,0),Point(0.75,0),Point(0.75,1),Point(0.25,1))
         #print(pg.difference(pg1)); return
         self.assertEqual(pg.difference(pg1),
-                         (Polygon(Point(0.25,0),
+                         GeometryObjects(Polygon(Point(0.25,0),
                                   Point(0,0),
                                   Point(0,1),
                                   Point(0.25,1)), 
@@ -215,7 +257,7 @@ class Test_Polygon(unittest.TestCase):
         pg1=Polygon(Point(0.25,0),Point(0.75,0),Point(0.75,0.5),Point(0.25,0.5))
         #print(pg.difference(pg1)); return
         self.assertEqual(pg.difference(pg1),
-                         (Polygon(Point(0.25,0.0),
+                         GeometryObjects(Polygon(Point(0.25,0.0),
                                   Point(0.0,0.0),
                                   Point(0.0,1.0),
                                   Point(1.0,1.0),
@@ -232,7 +274,7 @@ class Test_Polygon(unittest.TestCase):
                     Point(0.25,0.75))
         #print('---return---\n',pg.difference(pg1)); return
         self.assertEqual(pg.difference(pg1),
-                         (Polygon(Point(0.25,0.25),
+                         GeometryObjects(Polygon(Point(0.25,0.25),
                                   Point(0.0,0.25),
                                   Point(0.0,1.0),
                                   Point(1.0,1.0),
@@ -250,7 +292,7 @@ class Test_Polygon(unittest.TestCase):
                           Point(0.25,0.75))
         #print('---return---\n',pg.difference(pg1)); return
         self.assertEqual(pg.difference(pg1),
-                         (Polygon(Point(0.0,0.0),
+                         GeometryObjects(Polygon(Point(0.0,0.0),
                                   Point(0.0,1.0),
                                   Point(1.0,1.0),
                                   Point(1.0,0.0), 
@@ -263,7 +305,7 @@ class Test_Polygon(unittest.TestCase):
         pg1=Polygon(Point(-1,-1),Point(2,-1),Point(2,2),Point(-1,2))
         #print(pg.difference(pg1)); return
         self.assertEqual(pg.difference(pg1),
-                         tuple())
+                         GeometryObjects())
         
         
     def test_intersection_polygon_2d(self):
@@ -275,32 +317,32 @@ class Test_Polygon(unittest.TestCase):
         pg1=Polygon(Point(0,2),Point(1,2),Point(1,3),Point(0,3))
         #print(pg.intersection(pg1)); return
         self.assertEqual(pg.intersection(pg1),
-                         tuple())
+                         GeometryObjects())
         # point intersection
         pg1=Polygon(Point(1,1),Point(2,1),Point(2,2),Point(1,2))
         #print(pg.intersection(pg1)); return
         self.assertEqual(pg.intersection(pg1),
-                         (Point(1,1),))
+                         GeometryObjects(Point(1,1),))
         # full edge intersection
         pg1=Polygon(Point(0,1),Point(1,1),Point(1,2),Point(0,2))
         #print(pg.intersection(pg1)); return
         self.assertEqual(pg.intersection(pg1),
-                         (Polyline(Point(1,1),Point(0,1)),))
+                         GeometryObjects(Polyline(Point(1,1),Point(0,1)),))
         # half edge overlap intersection
         pg1=Polygon(Point(0.5,1),Point(1.5,1),Point(1.5,2),Point(0.5,2))
         #print(pg.intersection(pg1)); return
         self.assertEqual(pg.intersection(pg1),
-                         (Polyline(Point(1,1),Point(0.5,1)),))
+                         GeometryObjects(Polyline(Point(1,1),Point(0.5,1)),))
         # partial internal edge intersection
         pg1=Polygon(Point(0.25,1),Point(0.75,1),Point(0.75,2),Point(0.25,2))
         #print(pg.intersection(pg1)); return
         self.assertEqual(pg.intersection(pg1),
-                         (Polyline(Point(0.75,1),Point(0.25,1)),))
+                         GeometryObjects(Polyline(Point(0.75,1),Point(0.25,1)),))
         # full intersection
         pg1=pg
         #print(pg.intersection(pg1)); return
         self.assertEqual(pg.intersection(pg1),
-                         (Polygon(Point(1,0),
+                         GeometryObjects(Polygon(Point(1,0),
                                   Point(0,0),
                                   Point(0,1),
                                   Point(1,1)),))
@@ -308,7 +350,7 @@ class Test_Polygon(unittest.TestCase):
         pg1=Polygon(Point(0.5,0),Point(1.5,0),Point(1.5,1),Point(0.5,1))
         #print(pg.intersection(pg1)); return
         self.assertEqual(pg.intersection(pg1),
-                         (Polygon(Point(1,0),
+                         GeometryObjects(Polygon(Point(1,0),
                                   Point(0.5,0),
                                   Point(0.5,1),
                                   Point(1,1)),))
@@ -316,7 +358,7 @@ class Test_Polygon(unittest.TestCase):
         pg1=Polygon(Point(0.5,0.5),Point(1.5,0.5),Point(1.5,1.5),Point(0.5,1.5))
         #print(pg.intersection(pg1)); return
         self.assertEqual(pg.intersection(pg1),
-                         (Polygon(Point(0.5,1),
+                         GeometryObjects(Polygon(Point(0.5,1),
                                   Point(1,1),
                                   Point(1,0.5),
                                   Point(0.5,0.5)),))
@@ -324,7 +366,7 @@ class Test_Polygon(unittest.TestCase):
         pg1=Polygon(Point(0.25,0),Point(0.75,0),Point(0.75,1),Point(0.25,1))
         #print(pg.intersection(pg1)); return
         self.assertEqual(pg.intersection(pg1),
-                         (Polygon(Point(0.75,0.0),
+                         GeometryObjects(Polygon(Point(0.75,0.0),
                                   Point(0.25,0.0),
                                   Point(0.25,1.0),
                                   Point(0.75,1.0)),))
@@ -337,13 +379,13 @@ class Test_Polygon(unittest.TestCase):
         pg1=Polygon(Point(1,0),Point(2,0),Point(2,1),Point(1,1))
         #print(pg.intersection(pg1)); return
         self.assertEqual(pg.intersection(pg1),
-                         (Point(1.0,0.0),Point(1.0,1.0)))
+                         GeometryObjects(Point(1.0,0.0),Point(1.0,1.0)))
         
         # 2 polyline intersection
         pg1=Polygon(Point(1,0),Point(1,1),Point(0.5,0.5))
         #print(pg.intersection(pg1)); return
         self.assertEqual(pg.intersection(pg1),
-                         (Polyline(Point(1.0,0.0),
+                         GeometryObjects(Polyline(Point(1.0,0.0),
                                    Point(0.5,0.5)),
                           Polyline(Point(0.5,0.5),
                                    Point(1.0,1.0))))
@@ -352,7 +394,7 @@ class Test_Polygon(unittest.TestCase):
         pg1=Polygon(Point(0.5,0),Point(1,0),Point(1,1),Point(0.5,1))
         #print(pg.intersection(pg1)); return
         self.assertEqual(pg.intersection(pg1),
-                         (Polygon(Point(1.0,0.0),
+                         GeometryObjects(Polygon(Point(1.0,0.0),
                                   Point(0.5,0.0),
                                   Point(0.5,0.5)),
                           Polygon(Point(1.0,1.0),
@@ -365,7 +407,7 @@ class Test_Polygon(unittest.TestCase):
         pg1=Polygon(Point(1,0),Point(2,0),Point(2,2),Point(1,2))
         #print(pg.intersection(pg1)); return
         self.assertEqual(pg.intersection(pg1),
-                         (Point(1.0,0.0), 
+                         GeometryObjects(Point(1.0,0.0), 
                           Polyline(Point(1.0,1.0),
                                    Point(1.0,2.0))))
         
@@ -416,6 +458,15 @@ class Test_Polygon(unittest.TestCase):
         #print(pg.intersection(pg1)); return
         self.assertEqual(pg.intersection(pg1),
                          (Point(1,0.5,0),))       
+        
+        
+    def test_plot(self):
+        ""
+        pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        pg.plot()
+        
+        pg=Polygon(Point(0,0,0),Point(1,0,0),Point(1,1,0),Point(0,1,0))
+        pg.plot()
         
         
         
@@ -507,6 +558,33 @@ class Test_Polygons(unittest.TestCase):
                                                                      (1,0),
                                                                      (1,1)))
                                            ]))
+        
+        
+    def test_bounds(self):
+        ""
+        pgs=Polygons(Polygon(Point(0,0),Point(1,0),Point(1,1)),
+                     Polygon(Point(2,0),Point(2,1),Point(1,0))
+                     )
+        self.assertEqual(pgs.bounds,
+                         (0.0, 0.0, 2.0, 1.0))
+        
+        pgs=Polygons(Polygon(Point(0,0,0),Point(1,0,0),Point(1,1,0)),
+                     Polygon(Point(0,0,1),Point(0,1,1),Point(1,1,1))
+                     )
+        print(pgs.bounds)
+        
+        
+    def test_plot(self):
+        ""
+        pgs=Polygons(Polygon(Point(0,0),Point(1,0),Point(1,1)),
+                     Polygon(Point(2,0),Point(2,1),Point(1,0))
+                     )
+        pgs.plot()
+        
+        pgs=Polygons(Polygon(Point(0,0,0),Point(1,0,0),Point(1,1,0)),
+                     Polygon(Point(0,0,1),Point(0,1,1),Point(1,1,1))
+                     )
+        pgs.plot()
         
         
 class Test_Tetrahedron(unittest.TestCase):
