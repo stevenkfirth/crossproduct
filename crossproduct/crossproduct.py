@@ -239,7 +239,11 @@ class FiniteGeometricObject(GeometricObject, SequenceObject):
         if self.nD==2:
             return self._shapely.bounds
         elif self.nD==3:
-            raise Exception  # shapely doesn't work for 3d
+            result=[]
+            a=list(zip(*self.points.coordinates))
+            result.extend([min(b) for b in a])
+            result.extend([max(b) for b in a])
+            return tuple(result)
         else:
             raise ValueError
             
@@ -2056,6 +2060,7 @@ class Polygon(FiniteGeometricObject):
             self._holes=Polygons(*holes)
         
         
+        
     def __repr__(self):
         ""
         return '%s(%s%s)' % (self.__class__.__name__,
@@ -2086,17 +2091,18 @@ class Polygon(FiniteGeometricObject):
         
         """
         if self.nD==2:
-            return float(self._shapely.area)
+            return abs(float(self._shapely.area))
         elif self.nD==3:
             plane=self.plane
+            N=plane.N
             i=plane.N.index_largest_absolute_coordinate
             self_2D=self.project_2D(i)
             if i==0:
-                return self_2D.signed_area*(plane.N.length/(N.x))
+                return abs(self_2D.area*(N.length/(N.x)))
             elif i==1:
-                return self_2D.signed_area*(plane.N.length/(N.y))
+                return abs(self_2D.area*(N.length/(N.y)))
             elif i==2:
-                return self_2D.signed_area*(plane.N.length/(N.z))
+                return abs(self_2D.area*(N.length/(N.z)))
             else:
                 raise Exception
         else:
@@ -2389,14 +2395,17 @@ class Polygon(FiniteGeometricObject):
         
         """
         if self.nD==3:
-            P0,P1,P2=self.points[:3]
-            N=(P1-P0).cross_product(P2-P1)
-            return Plane(P0,N)
+            for i in range(0,len(self)+1-3):
+                P0,P1,P2=self.points[i:i+3]
+                N=(P1-P0).cross_product(P2-P1)
+                if N.length>ABS_TOL:
+                    return Plane(P0,N)
         else:
             raise ValueError
+        raise ValueError('3D polygon has no plane')
             
             
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax=None, set_lims=False, **kwargs):
         """Plots the polygon on the supplied axes.
         
         :param ax: An 2D or 3D Axes instance.
@@ -2411,17 +2420,28 @@ class Polygon(FiniteGeometricObject):
         if ax is None:
             fig,ax=get_matplotlib_fig_ax(self.nD)
             
-        if not 'color' in kwargs:
-            kwargs['color']='tab:blue'
+        kwargs['color']=kwargs.get('color','tab:blue')
+        kwargs['linewidth']=kwargs.get('linewidth',0)
         
         if self.nD==2:
-            for tri in self.triangles:
+            for tri in self.polygons:
                 ax.fill(*zip(*tri.coordinates[0]), **kwargs)
         elif self.nD==3:
-            verts=[tri.coordinates[0] for tri in self.triangles]
+            verts=[tri.coordinates[0] for tri in self.polygons]
             pc=Poly3DCollection(verts,**kwargs)
             ax.add_collection3d(pc)
                 
+        if set_lims:
+            if self.nD==2:
+                minx,miny,maxx,maxy=self.bounds        
+                ax.set_xlim(minx,maxx)
+                ax.set_ylim(miny,maxy)
+            elif self.nD==3:
+                minx,miny,minz,maxx,maxy,maxz=self.bounds        
+                ax.set_xlim(minx,maxx)
+                ax.set_ylim(miny,maxy)
+                ax.set_zlim(minz,maxz)
+            
         return ax
     
     
@@ -2479,11 +2499,14 @@ class Polygon(FiniteGeometricObject):
                 
         elif self.nD==3:
             
-            plane=self.plane
-            i=plane.N.index_largest_absolute_coordinate
-            self_2D=self.project_2D(i)
-            result=self_2D.polygons
-            return Polygons(*(x.project_3D(plane,i) for x in result))
+            if len(self.holes)==0:
+                return Polygons(self)
+            else:
+                plane=self.plane
+                i=plane.N.index_largest_absolute_coordinate
+                self_2D=self.project_2D(i)
+                result=self_2D.polygons
+                return Polygons(*(x.project_3D(plane,i) for x in result))
             
         else:
             
@@ -2599,7 +2622,7 @@ class Polygon(FiniteGeometricObject):
                 tris=[]
                 if 'triangles' in B:
                     for x in B['triangles']:
-                        tri=Polygon(*(Point(*vertices[y]) for y in x))
+                        tri=Polygon(*(Point(*B['vertices'][y]) for y in x))
                         tris.append(tri)
                 return Polygons(*tris)
             
@@ -2621,11 +2644,16 @@ class Polygon(FiniteGeometricObject):
                 A=dict(vertices=vertices,
                        segments=segments,
                        holes=holes)
+                #print(A)
                 B=tr.triangulate(A,'p')
+                #print(B['triangles'])
+                #print(len(vertices))
+                #print(B)
+                #print(len(B['vertices']))
                 tris=[]
                 if 'triangles' in B:
                     for x in B['triangles']:
-                        tri=Polygon(*(Point(*vertices[y]) for y in x))
+                        tri=Polygon(*(Point(*B['vertices'][y]) for y in x))
                         tris.append(tri)
                 return Polygons(*tris)  #  each polygon is a triangle with no holes
             
@@ -2676,27 +2704,6 @@ class Polygons(FiniteGeometricObject):
             raise Exception  # only 2d for shapely polygons
 
 
-    @property
-    def bounds(self):
-        """Returns a tuple of float values that bounds the object.
-        
-        :returns: 2D - (minx, miny, maxx, maxy); 
-            3D - (minx, miny, minz, maxx, maxy, maxz) 
-        :rtype: tuple
-        
-        """
-        if self.nD==2:
-            return self._shapely.bounds
-        elif self.nD==3:
-            result=[]
-            a=list(zip(*self.points.coordinates))
-            result.extend([min(b) for b in a])
-            result.extend([max(b) for b in a])
-            return tuple(result)
-        else:
-            raise ValueError
-
-
     def render(self,
            scene=None,
            color=vpython.color.blue,
@@ -2727,7 +2734,11 @@ class Polygons(FiniteGeometricObject):
         matplotlib.axes._subplots.Axes3DSubplot
     
         """
-        return Polygon.plot(self,ax,**kwargs)
+        for pg in self:
+            ax=pg.plot(ax,**kwargs)
+        return ax
+            
+        #return Polygon.plot(self,ax,**kwargs)
             
     
     @property

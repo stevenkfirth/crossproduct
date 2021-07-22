@@ -462,6 +462,7 @@ class Test_Polygon(unittest.TestCase):
         
     def test_plot(self):
         ""
+        return
         pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
         pg.plot()
         
@@ -529,6 +530,69 @@ class Test_Polygon(unittest.TestCase):
                                            Point(2.0,2.0),
                                            Point(0.0,2.0))))
         
+        #return
+        # example
+        #print('test')
+        pg=Polygon(Point(221.7423, -84.20669, 6.0),
+                   Point(221.7423, -53.63377, 6.0),
+                   Point(221.7423, -53.63377, 14.0),
+                   Point(221.7423, -54.0921, 14.0),
+                   Point(221.7423, -54.0921, 9.02132),
+                   Point(221.7423, -60.6546, 9.02132),
+                   Point(221.7423, -60.6546, 14.0),
+                   Point(221.7423, -63.91502, 14.0),
+                   Point(221.7423, -63.91502, 9.02132),
+                   Point(221.7423, -70.83169, 9.02132),
+                   Point(221.7423, -70.83169, 14.0),
+                   Point(221.7423, -73.91502, 14.0),
+                   Point(221.7423, -73.91502, 9.02132),
+                   Point(221.7423, -80.83169, 9.02132),
+                   Point(221.7423, -80.83169, 14.0),
+                   Point(221.7423, -84.20669, 14.0), 
+           holes=Polygons(Polygon(Point(221.7423, -80.68064, 8.969236),
+                                  Point(221.7423, -74.06606, 8.969236),
+                                  Point(221.7423, -74.06606, 9.02132),
+                                  Point(221.7423, -80.68064, 9.02132)), 
+                          Polygon(Point(221.7423, -70.68064, 8.969236),
+                                  Point(221.7423, -64.06606, 8.969236),
+                                  Point(221.7423, -64.06606, 9.02132),
+                                  Point(221.7423, -70.68064, 9.02132)), 
+                          Polygon(Point(221.7423, -60.68064, 8.969236),
+                                  Point(221.7423, -54.06606, 8.969236),
+                                  Point(221.7423, -54.06606, 14.0),
+                                  Point(221.7423, -54.0921, 14.0),
+                                  Point(221.7423, -54.0921, 9.02132),
+                                  Point(221.7423, -60.6546, 9.02132),
+                                  Point(221.7423, -60.6546, 14.0),
+                                  Point(221.7423, -60.68064, 14.0))))
+        return
+        pg.polylines[0].plot()
+        pg.holes[0].polylines.plot()
+        pg.holes[1].polylines.plot()
+        pg.holes[2].polylines.plot()
+        
+        print(pg.holes[0].reverse.area)
+        print(pg.holes[1].area)
+        print(pg.holes[2].area)
+        
+        
+        print(pg.holes[0].intersection(pg.exterior)[0].area)
+        print(pg.holes[1].intersection(pg.exterior)[0].area)
+        print(pg.holes[2].intersection(pg.exterior)[0].area)
+        
+        return
+        print(pg.triangles); return
+        
+        #return
+        
+        pg=Polygon(Point(220.7528, -63.91502, 9.02132),
+                   Point(221.7423, -63.91502, 9.02132),
+                   Point(221.7423, -63.91502, 14.0),
+                   Point(220.7528, -63.91502, 14.0))
+        #print(pg.triangles); return
+        
+        pg=Polygon(Point(221.7423, -84.20669, 6.0),Point(221.7423, -53.63377, 6.0),Point(221.7423, -53.63377, 14.0),Point(221.7423, -54.0921, 14.0),Point(221.7423, -54.0921, 9.02132),Point(221.7423, -60.6546, 9.02132),Point(221.7423, -60.6546, 14.0),Point(221.7423, -63.91502, 14.0),Point(221.7423, -63.91502, 9.02132),Point(221.7423, -70.83169, 9.02132),Point(221.7423, -70.83169, 14.0),Point(221.7423, -73.91502, 14.0),Point(221.7423, -73.91502, 9.02132),Point(221.7423, -80.83169, 9.02132),Point(221.7423, -80.83169, 14.0),Point(221.7423, -84.20669, 14.0), holes=Polygons(Polygon(Point(221.7423, -80.68064, 8.969236),Point(221.7423, -74.06606, 8.969236),Point(221.7423, -74.06606, 9.02132),Point(221.7423, -80.68064, 9.02132)), Polygon(Point(221.7423, -70.68064, 8.969236),Point(221.7423, -64.06606, 8.969236),Point(221.7423, -64.06606, 9.02132),Point(221.7423, -70.68064, 9.02132)), Polygon(Point(221.7423, -60.68064, 8.969236),Point(221.7423, -54.06606, 8.969236),Point(221.7423, -54.06606, 14.0),Point(221.7423, -54.0921, 14.0),Point(221.7423, -54.0921, 9.02132),Point(221.7423, -60.6546, 9.02132),Point(221.7423, -60.6546, 14.0),Point(221.7423, -60.68064, 14.0))))
+        print(pg.triangles); return
         
 class Test_Polygons(unittest.TestCase):
     ""
@@ -571,11 +635,13 @@ class Test_Polygons(unittest.TestCase):
         pgs=Polygons(Polygon(Point(0,0,0),Point(1,0,0),Point(1,1,0)),
                      Polygon(Point(0,0,1),Point(0,1,1),Point(1,1,1))
                      )
-        print(pgs.bounds)
+        self.assertEqual(pgs.bounds,
+                         (0.0, 0.0, 0.0, 1.0, 1.0, 1.0))
         
         
     def test_plot(self):
         ""
+        return
         pgs=Polygons(Polygon(Point(0,0),Point(1,0),Point(1,1)),
                      Polygon(Point(2,0),Point(2,1),Point(1,0))
                      )
