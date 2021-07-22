@@ -12,6 +12,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 # for external geometric calculations
 import shapely.geometry
+import shapely.ops
 import triangle as tr
 
 # for rendering
@@ -26,7 +27,12 @@ class SequenceObject(collections.abc.Sequence):
     """
     def __getitem__(self,index):
         ""
-        return self._items[index]
+        if isinstance(index, slice):
+            indices = range(*index.indices(len(self._items)))
+            return self.__class__(*[self._items[i] for i in indices])
+        else:
+            return self._items[index]
+        
     
    
     def __init__(self,*items):
@@ -129,6 +135,54 @@ class GeometricObject(GeometricEntity):
             a=self._shapely
             b=obj._shapely
             result=a.intersection(b)
+            return GeometryObjects(*self._shapely_to_objs(result))
+                
+        elif self.nD==3:
+            
+            raise Exception  # shapely doesn't work for 3d
+            
+        else:
+            
+            raise ValueError
+            
+            
+    def intersects(self,obj):
+        """Returns True if self and obj intersect in any way
+        
+        :param obj: A geometric object.
+        
+        :rtype: bool
+        
+        """
+        if self.nD==2:
+            
+            a=self._shapely
+            b=obj._shapely
+            return a.intersects(b)
+                
+        elif self.nD==3:
+            
+            raise Exception  # shapely doesn't work for 3d
+            
+        else:
+            
+            raise ValueError
+            
+            
+    def split(self,obj):
+        """The geometric split between self and obj.
+        
+        :param obj: A geometric object.
+        
+        :returns: The split objects.
+        :rtype: GeometryObjects
+        
+        """
+        if self.nD==2:
+            
+            a=self._shapely
+            b=obj._shapely
+            result=shapely.ops.split(a,b)
             return GeometryObjects(*self._shapely_to_objs(result))
                 
         elif self.nD==3:
@@ -1075,6 +1129,92 @@ class Line(InfiniteGeometricObject):
         return 'Line(%s, %s)' % (self.P0,self.vL)
     
     
+    def _intersection_line_skew(self,skew_line):
+        """Returns the point of intersection of this line and the supplied skew line
+        """
+        #2D
+        if self.nD==2:
+            return self._intersection_line_skew_2D(skew_line)
+        #3D
+        elif self.nD==3:
+            return self._intersection_line_skew_3D(skew_line)
+        else:
+            raise Exception # must be either 2D or 3D
+
+    
+    def _intersection_line_skew_2D(self,skew_line):
+        """Returns the point of intersection of this line and the supplied skew line
+        """
+        u=self.vL
+        v=skew_line.vL
+        w=self.P0-skew_line.P0 
+        t=-v.perp_product(w) / v.perp_product(u)
+        return GeometryObjects(self.calculate_point(t))
+        
+
+    def _intersection_line_skew_3D(self,skew_line):
+        """Returns the point of intersection of this line and the supplied (skew) line
+        
+        - return value can be:
+            - None -> no intersection (for skew lines which do not intersect in 3D space)
+            - Point -> a point (for skew lines which intersect)
+        
+        """
+        if not self.is_parallel(skew_line):
+        
+            # find the coordinate to ignore for the projection
+            cp=self.vL.cross_product(skew_line.vL)
+            absolute_coords=[abs(x) for x in cp] 
+            i=absolute_coords.index(max(absolute_coords)) % 3 # the coordinate to ignore for projection
+                    
+            # project 3D lines to 2D
+            self2D=self.project_2D(i)
+            skew_line2D=skew_line.project_2D(i)
+            
+            # find intersection point for 2D lines
+            ipt=self2D._intersection_line_skew_2D(skew_line2D)[0]
+            
+            # find t values for the intersection point on each 2D line
+            t1=self2D.calculate_t_from_coordinates(*ipt)
+            t2=skew_line2D.calculate_t_from_coordinates(*ipt)
+            
+            # calculate the 3D intersection points from the t values
+            ipt1=self.calculate_point(t1)
+            ipt2=skew_line.calculate_point(t2)
+            
+            if ipt1==ipt2: # test the two 3D intersection points are the same
+                return GeometryObjects(ipt1)
+            else:
+                return GeometryObjects()
+        
+        else:
+            raise ValueError('%s and %s are not skew lines' % (self,skew_line))
+    
+    
+    
+    def _intersection_line(self,line):
+        """Returns the intersection of this line with the supplied line. 
+        
+        """
+        if self==line: # test for collinear lines
+            return GeometryObjects(self)
+        elif self.is_parallel(line): # test for parallel lines
+            return GeometryObjects()
+        else: # a skew line
+            return self._intersection_line_skew(line)
+        
+        
+    def intersection(self,obj):
+        """The intersection of this line with obj
+        
+        :rtype: GeometryObjects
+        
+        """
+        if isinstance(obj,Line):
+            return self._intersection_line(obj)
+        
+        
+    
     def calculate_point(self,t):
         """Returns a point on the line for a given t value. 
         
@@ -1143,8 +1283,8 @@ class Line(InfiniteGeometricObject):
         raise Exception()
     
     
-    def contains(self,obj):
-        """Tests if the line contains the object.
+    def intersects(self,obj):
+        """Tests if the line intersects with the object.
         
         :param obj: A point, halfline or segment.
         :type obj: Point, Halfline, Segment
@@ -1156,25 +1296,6 @@ class Line(InfiniteGeometricObject):
             the halfline vector is collinear to the line vector; otherwise False. 
             For segment, True if the segment start and endpoints are on the line; otherwise False. 
         :rtype: bool
-        
-        .. rubric:: Code Example
-    
-        .. code-block:: python
-           
-           # 2D example
-           >>> from crossproduct import Point, Vector, Line
-           >>> l = Line(Point(0,0), Vector(1,0))
-           >>> result = Point(2,0) in l
-           >>> print(result)
-           True
-           
-           # 3D example
-           >>> from crossproduct import Point, Vector, Line
-           >>> l = Line(Point(0,0,0), Vector(1,0,0))
-           >>> hl = Halfline(Point(0,0,0), Vector(-1,0,0))
-           >>> result = hl in l
-           >>> print(result)
-           True
             
         """
         if isinstance(obj,Point):
@@ -1246,9 +1367,24 @@ class Line(InfiniteGeometricObject):
            
         """
         if isinstance(line,Line):
-            return self.contains(line.P0) and self.vL.is_collinear(line.vL)
+            return self.intersects(line.P0) and self.vL.is_collinear(line.vL)
         else:
             raise TypeError('Line.__eq__ should be used with a Line instance')
+    
+    
+    def is_parallel(self,line):
+        """Tests if this line and the supplied line are parallel. 
+        
+        :param obj: A line.
+        :type obj: Line
+        
+        :return: Returns True if the lines are parallel (this includes the
+            case of collinear lines); 
+            otherwise False. 
+        :rtype: bool
+            
+        """
+        return self.vL.is_collinear(line.vL)
     
     
     @property
@@ -1374,7 +1510,7 @@ class Polyline(FiniteGeometricObject):
             raise Exception  # only 2d for shapely polygons
 
 
-    def contains(self,obj):
+    def intersects(self,obj):
         ""
         if isinstance(obj,Point):
             
@@ -1393,7 +1529,7 @@ class Polyline(FiniteGeometricObject):
 
     def _intersection_point_3D(self,point):
         ""
-        if self.contains(point):
+        if self.intersects(point):
             return (point,)
         else:
             return tuple()
@@ -1416,6 +1552,29 @@ class Polyline(FiniteGeometricObject):
                     
         return tuple(result)
                 
+
+    def equals(self,polyline):
+        """Tests if this polyline and the supplied polyline are equal.
+        
+        :param polyline: A polyline.
+        :type polyline: Polyline
+        
+        :return: True if the polylines have the same points in the same order, 
+            either as supplied or in reverse;
+            otherwise False.
+        :rtype: bool
+        
+        """
+        
+        if isinstance(polyline,Polyline):
+            
+            if self.points==polyline.points or self.points==polyline.reverse.points:
+                return True
+            else:
+                return False
+            
+        else:
+            return False
 
 
     def intersection(self,obj):
@@ -1482,6 +1641,13 @@ class Polyline(FiniteGeometricObject):
         
         ax.plot(*zip(*self.coordinates), **kwargs)
         return ax
+    
+    
+    @property
+    def points(self):
+        """Returns the polyline points.
+        """
+        return self._items
     
 
     @property
@@ -1751,7 +1917,7 @@ class Plane(InfiniteGeometricObject):
         :return: Returns None for parallel, non-coplanar planes.
             Returns a plane for two coplanar planes.
             Returns a line for non-parallel planes.
-        :rtype: tuple   
+        :rtype: GeometryObjects  
         
         .. rubric:: Code Example
     
@@ -1765,9 +1931,9 @@ class Plane(InfiniteGeometricObject):
     
         """
         if plane.equals(self):
-            return (self,)
+            return GeometryObjects(self)
         elif plane.N.is_collinear(self.N):
-            return tuple()
+            return GeometryObjects()
         else:
             n1=self.N
             d1=-n1.dot(self.P0-Point(0,0,0))
@@ -1776,7 +1942,7 @@ class Plane(InfiniteGeometricObject):
             n3=n1.cross_product(n2)
             P0=Point(0,0,0) + ((n1*d2-n2*d1).cross_product(n3) * (1 / (n3.length**2)))
             u=n3
-            return (Line(P0,u),)
+            return GeometryObjects(Line(P0,u))
     
     
     def equals(self,plane):
@@ -2172,11 +2338,17 @@ class Polygon(FiniteGeometricObject):
         
     def _difference_polygons_3D(self,polygons):
         ""
-        result=set()
-        for pg in polygons:
-            x=self.difference(pg)
-            result.update(x)
-        return tuple(result)
+        if len(polygons)==0:
+            return GeometryObjects(self)
+        else:
+            raise Exception ## to do
+            result=[]
+            for pg in self.polygons:
+                for pg1 in polygons:
+                    x=self.difference(pg)
+                    print(x)
+                    result.update(x)  # does this work?
+            return GeometryObjects(result)
         
 
     def difference(self,obj):
@@ -2331,10 +2503,63 @@ class Polygon(FiniteGeometricObject):
                 return self._intersection_polygons_3D(obj)
             else:
                 raise Exception  # not implemented yet
+        
+        else:
+            raise ValueError
+            
+            
+    def intersects(self,obj):
+        """Returns True if self intersects in any way with obj
+        
+        
+        
+        
+        """
+        if self.nD==2:
+            if hasattr(obj,'_shapely'):
+                return GeometricObject.intersects(self,obj)
+            else:
+                raise Exception('%s' % obj.__class__)
+        
+        elif self.nD==3:
+            plane=self.plane
+            i=plane.N.index_largest_absolute_coordinate
+            self_2D=self.project_2D(i)
+            obj_2D=self.project_2D(i)
+            return self_2D.intersects(obj_2D)
+            
             
         else:
             raise ValueError
             
+            
+    @property
+    def leftmost_lowest_vertex(self):
+        """Returns the index of the leftmost lowest point of the polygon.
+        
+        :rtype: int
+        
+        :Example:
+    
+        .. code-block:: python
+           
+           
+        """
+        if self.nD==2:
+        
+            min_i=0
+            for i in range(1,len(self)):
+                if self[i].y>self[min_i].y:
+                    continue
+                if (self[i].y==self[min_i].y) and (self[i].x > self[min_i].x):
+                    continue
+                min_i=i
+            return min_i
+    
+        else:
+            raise ValueError
+    
+    
             
     @property
     def nD(self):
@@ -2452,6 +2677,12 @@ class Polygon(FiniteGeometricObject):
         """
         return self._items
             
+    @property
+    def polyline(self):
+        """returns a polyline of the polygon exterior
+        """
+        return Polyline(*(list(self.points) + [self.points[0]]))
+    
             
     @property
     def polylines(self):
@@ -2460,7 +2691,7 @@ class Polygon(FiniteGeometricObject):
         :return: A polyline of the polygon points which starts and ends at 
             the first polygon point.
             tuple (exterior polyline, hole polylines)
-        :rtype: tuple     
+        :rtype: Polylines     
         
         :Example:
     
@@ -2495,7 +2726,26 @@ class Polygon(FiniteGeometricObject):
             if len(self.holes)==0:
                 return Polygons(self)
             else:
-                return self.triangles
+                #print(self)
+                #print(self.holes)
+                
+                pgs=[self]  # polygons to be split by hole lines
+                for hole in self.holes:
+                    l=hole.polyline.lines[0]
+                    #print(l)
+                    x=[]
+                    for pg in pgs:
+                        x.extend(pg.exterior.split(l))
+                    pgs=x
+                #print(pgs)
+                
+                result=[]
+                for pg in pgs:
+                    result.extend(pg.difference(self.holes))
+                return Polygons(*result)
+                
+                #return Polygons(*self.exterior.difference(self.holes))
+                #return self.triangles  # or self.difference(self.holes) ??
                 
         elif self.nD==3:
             
@@ -2594,7 +2844,59 @@ class Polygon(FiniteGeometricObject):
         points=[self.points[i] 
                 for i in range(len(self.points)-1,-1,-1)]
         return self.__class__(*points, holes=self.holes)
+           
+    
+    
+    def _split_line_3D(self,line):
+        ""
+        a=self.plane.intersection(line) # returns () or (Point,) or (Line,)
+        #print(a)
+        if len(a)==0: # line does not intersect polygon plane
+            return self
+        
+        elif isinstance(a[0],Point): # line is skew to polygon plane
+            return self
+        
+        elif isinstance(a[0],Line):  # line is on the same plane as polygon
             
+            i=self.plane.N.index_largest_absolute_coordinate
+            self_2D=self.project_2D(i)
+            line_2D=line.project_2D(i)
+            result=self_2D.split(line_2D)
+            return GeometryObjects(*(x.project_3D(self.plane,i) for x in result))
+        
+        else:
+            raise Exception
+    
+    
+    
+    def split(self,obj):
+        """
+        
+        
+        """
+        if self.nD==2:
+            if hasattr(obj,'_shapely'):
+                return GeometricObject.split(self,obj)
+            elif isinstance(obj,Line):
+                minx,miny,maxx,maxy=self.bounds
+                t0=obj.calculate_t_from_coordinates(minx,miny)
+                t1=obj.calculate_t_from_coordinates(maxx,maxy)
+                P0=obj.calculate_point(t0)
+                P1=obj.calculate_point(t1)
+                return self.split(Polyline(P0,P1))
+            else:
+                raise Exception('%s' % obj.__class__)
+        
+        elif self.nD==3:
+            
+            if isinstance(obj,Line):
+                return self._split_line_3D(obj)
+            else:
+                raise Exception  # not implemented yet
+            
+        else:
+            raise ValueError
     
     @property
     def triangles(self):
@@ -2627,6 +2929,12 @@ class Polygon(FiniteGeometricObject):
                 return Polygons(*tris)
             
             else:
+                
+                pgs=self.polygons
+                result=[]
+                for pg in pgs:
+                    result.extend(pg.triangles)
+                return Polygons(*result)
                 
                 # exterior vertices and segments
                 vertices=list(self.coordinates[0])
@@ -2722,7 +3030,7 @@ class Polygons(FiniteGeometricObject):
         return scene
     
     
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax=None, set_lims=False, **kwargs):
         """Plots the polygons on the supplied axes.
         
         :param ax: An 2D or 3D Axes instance.
@@ -2736,6 +3044,18 @@ class Polygons(FiniteGeometricObject):
         """
         for pg in self:
             ax=pg.plot(ax,**kwargs)
+            
+        if set_lims:
+            if self.nD==2:
+                minx,miny,maxx,maxy=self.bounds        
+                ax.set_xlim(minx,maxx)
+                ax.set_ylim(miny,maxy)
+            elif self.nD==3:
+                minx,miny,minz,maxx,maxy,maxz=self.bounds        
+                ax.set_xlim(minx,maxx)
+                ax.set_ylim(miny,maxy)
+                ax.set_zlim(minz,maxz)
+            
         return ax
             
         #return Polygon.plot(self,ax,**kwargs)
@@ -2752,13 +3072,39 @@ class Polygons(FiniteGeometricObject):
     
     
     @property
+    def polyline(self):
+        ""
+        result=[]
+        for pg in self:
+            result.append(pg.polyline)
+        return Polylines(*result)   
+    
+    
+    @property
     def polylines(self):
         ""
         result=[]
         for pg in self:
             result.extend(pg.polylines)
-        return Polylines(*result)    
+        return Polylines(*result)   
+    
+    
+    @property
+    def polygons(self):
+        ""
+        result=[]
+        for pg in self:
+            result.extend(pg.polygons)
+        return Polygons(*result)   
 
+
+    # def split(self,obj):
+    #     ""
+    #     result=[]
+    #     for pg in self:
+    #         result.extend(pg.split(obj))
+    #     return Polygons(*result) 
+    
 
     @property
     def triangles(self):
@@ -2785,9 +3131,43 @@ class Tetrahedron(FiniteGeometricObject):
         
         
     @property
+    def points(self):
+        ""
+        pts=list(self[0])
+        for pt in self[1]:
+            if not pt in pts:
+                pts.append(pt)
+        return Points(*pts)
+        
+    @property
     def polygons(self):
         ""
         return self._items
+    
+    
+    @property
+    def v0(self):
+        ""
+        return self[0][1]-self[0][0]
+    
+    
+    @property
+    def v1(self):
+        ""
+        return self[0][2]-self[0][0]
+    
+    
+    @property
+    def v2(self):
+        ""
+        return self.points[3]-self[0][0]
+    
+    
+    @property
+    def volume(self):
+        ""
+        return abs((self.v0.dot(self.v1.cross_product(self.v2)))/6.0)
+    
         
         
 def tetrahedron_from_points(P0,P1,P2,P3):
@@ -2836,7 +3216,7 @@ def tetrahedrons_from_extruded_triangle(triangle, extrud_vector):
     
     
     
-class ExtrudedPolyhedron(FiniteGeometricObject):
+class ExtrudedPolyhedron(FiniteGeometricObject,SequenceObject):
     """
     """
     

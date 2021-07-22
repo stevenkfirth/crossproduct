@@ -87,29 +87,29 @@ class Test_Plane(unittest.TestCase):
         
         # coplanar plane
         self.assertEqual(pl.intersection(pl),
-                         (pl,))
+                         GeometryObjects(pl))
         
         # parallel, non-coplanar planes
         self.assertEqual(pl.intersection(Plane(P0+N,N)),
-                         tuple())
+                         GeometryObjects())
         
         # intersecting planes - same P0
         self.assertEqual(pl.intersection(Plane(P0,Vector(1,0,0))),
-                         (Line(Point(0,0,0), Vector(0,1,0)),))
+                         GeometryObjects(Line(Point(0,0,0), Vector(0,1,0))))
         
         self.assertEqual(pl.intersection(Plane(P0,Vector(0,1,0))),
-                         (Line(Point(0,0,0), Vector(-1,0,0)),))
+                         GeometryObjects(Line(Point(0,0,0), Vector(-1,0,0))))
         
         self.assertEqual(pl.intersection(Plane(P0,Vector(1,1,0))),
-                         (Line(Point(0,0,0), Vector(-1,1,0)),))
+                         GeometryObjects(Line(Point(0,0,0), Vector(-1,1,0))))
         
         self.assertEqual(pl.intersection(Plane(P0,Vector(0,1,1))),
-                         (Line(Point(0,0,0), Vector(-1,0,0)),))
+                         GeometryObjects(Line(Point(0,0,0), Vector(-1,0,0))))
         
         # intersecting planes - different P0
         self.assertEqual(pl.intersection(Plane(P0+ Vector(1,0,0),
                                          Vector(1,0,0))),
-                         (Line(Point(1,0,0), Vector(0,1,0)),))
+                         GeometryObjects(Line(Point(1,0,0), Vector(0,1,0))))
         
 
 
@@ -486,18 +486,78 @@ class Test_Polygon(unittest.TestCase):
                    holes=[hole])
         #print(pg.polygons); return
         self.assertEqual(pg.polygons,
-                         Polygons(Polygon(Point(0,1),
-                                          Point(0,0.5),
-                                          Point(0.5,0.5)),
-                                  Polygon(Point(0.5,0),
-                                          Point(1,0),
-                                          Point(0.5,0.5)),
-                                  Polygon(Point(0.5,0.5),
-                                          Point(1,1),
-                                          Point(0,1)),
-                                  Polygon(Point(1,1),
-                                          Point(0.5,0.5),
-                                          Point(1,0))))
+                         Polygons(Polygon(Point(1.0, 0.0),
+                                          Point(0.5, 0.0),
+                                          Point(0.5, 0.5),
+                                          Point(0.0, 0.5),
+                                          Point(0.0, 1.0),
+                                          Point(1.0, 1.0))))
+        
+        hole=Polygon(Point(0.25,0.25),Point(0.75,0.25),Point(0.75,0.75),Point(0.25,0.75))
+        pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1),
+                   holes=[hole])
+        #print(pg.polygons); return
+        self.assertEqual(pg.polygons,
+                         Polygons(Polygon(Point(1.0, 0.25),
+                                          Point(1.0, 0.0),
+                                          Point(0.0, 0.0),
+                                          Point(0.0, 0.25),
+                                          Point(0.25, 0.25),
+                                          Point(0.75, 0.25)), 
+                                  Polygon(Point(0.0, 0.25),
+                                          Point(0.0, 1.0),
+                                          Point(1.0, 1.0),
+                                          Point(1.0, 0.25),
+                                          Point(0.75, 0.25),
+                                          Point(0.75, 0.75),
+                                          Point(0.25, 0.75),
+                                          Point(0.25, 0.25))))
+        
+        
+        
+        
+    def test_split(self):
+        ""
+        # 2d
+        pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        pl=Polyline(Point(0.5,0),Point(0.5,1))
+        self.assertEqual(pg.split(pl),
+                         GeometryObjects(Polygon(Point(0.5, 0.0),
+                                                 Point(0.0, 0.0),
+                                                 Point(0.0, 1.0),
+                                                 Point(0.5, 1.0)), 
+                                         Polygon(Point(0.5, 1.0),
+                                                 Point(1.0, 1.0),
+                                                 Point(1.0, 0.0),
+                                                 Point(0.5, 0.0))))
+        
+        pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
+        l=Line(Point(0.5,0),Vector(0,1))
+        self.assertEqual(pg.split(l),
+                         GeometryObjects(Polygon(Point(0.5, 0.0),
+                                                 Point(0.0, 0.0),
+                                                 Point(0.0, 1.0),
+                                                 Point(0.5, 1.0)), 
+                                         Polygon(Point(0.5, 1.0),
+                                                 Point(1.0, 1.0),
+                                                 Point(1.0, 0.0),
+                                                 Point(0.5, 0.0))))
+        
+        # 3d
+        pg=Polygon(Point(0,0,1),Point(1,0,1),Point(1,1,1),Point(0,1,1))
+        l=Line(Point(0.5,0,1),Vector(0,1,0))
+        #print(pg.split(l)); return
+        self.assertEqual(pg.split(l),
+                         GeometryObjects(Polygon(Point(0.5, 0.0, 1.0),
+                                                 Point(0.0, 0.0, 1.0),
+                                                 Point(0.0, 1.0, 1.0),
+                                                 Point(0.5, 1.0, 1.0)), 
+                                         Polygon(Point(0.5, 1.0, 1.0),
+                                                 Point(1.0, 1.0, 1.0),
+                                                 Point(1.0, 0.0, 1.0),
+                                                 Point(0.5, 0.0, 1.0))))
+        
+        
         
         
     def test_triangles(self):
@@ -566,6 +626,10 @@ class Test_Polygon(unittest.TestCase):
                                   Point(221.7423, -60.6546, 14.0),
                                   Point(221.7423, -60.68064, 14.0))))
         return
+        pg.plot(set_lims=True)
+        pg.triangles.plot(set_lims=True)
+        print(pg.triangles); return
+        return
         pg.polylines[0].plot()
         pg.holes[0].polylines.plot()
         pg.holes[1].polylines.plot()
@@ -581,7 +645,7 @@ class Test_Polygon(unittest.TestCase):
         print(pg.holes[2].intersection(pg.exterior)[0].area)
         
         return
-        print(pg.triangles); return
+        
         
         #return
         
@@ -714,6 +778,8 @@ class Test_ExtrudedPolyhedron(unittest.TestCase):
 if __name__=='__main__':
     
     unittest.main()
+    #unittest.main(Test_Polygon,'test_polygons')
+    #unittest.main(Test_Polygon,'test_split')
     #unittest.main(Test_Polygon,'test_triangles')
     #unittest.main(Test_Polygons,'test__shapely')
         
