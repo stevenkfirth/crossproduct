@@ -10,8 +10,10 @@ from crossproduct import Line
 from crossproduct import Polyline, Polylines
 from crossproduct import Plane
 from crossproduct import Polygon, Polygons
-from crossproduct import Tetrahedron, tetrahedron_from_points
-from crossproduct import ExtrudedPolyhedron
+from crossproduct import Polyhedron, Polyhedrons
+from crossproduct import tetrahedron_from_points
+from crossproduct import tetrahedrons_from_extruded_triangle
+from crossproduct import polyhedron_from_base_polygon_and_extrud_vector
 from crossproduct import GeometryObjects
 
 
@@ -160,15 +162,13 @@ class Test_Polygon(unittest.TestCase):
         pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1))
         #print(pg.coordinates); return
         self.assertEqual(pg.coordinates,
-                         (((0, 0), (1, 0), (1, 1), (0, 1)), ()))
+                         ((0, 0), (1, 0), (1, 1), (0, 1)))
         
         pg=Polygon(Point(0,0),Point(1,0),Point(1,1),Point(0,1),
                     holes=[Polygon(Point(0,0),Point(0.5,0),Point(0.5,0.5),Point(0,0.5))])
         #print(pg.coordinates); return
         self.assertEqual(pg.coordinates,
-                         (((0, 0), (1, 0), (1, 1), (0, 1)), 
-                          (((0, 0), (0.5, 0), (0.5, 0.5), (0, 0.5)),))
-                         )
+                         ((0, 0), (1, 0), (1, 1), (0, 1)))
         
         
     def test_difference_polygon_2d(self):
@@ -717,32 +717,101 @@ class Test_Polygons(unittest.TestCase):
         pgs.plot()
         
         
-class Test_Tetrahedron(unittest.TestCase):
+class Test_Polyhedron(unittest.TestCase):
+    "" 
+        
+    
+    def test___init__(self):
+        ""
+        ph=Polyhedron(Polygon(Point(0,1,0),Point(1,1,0),Point(0,0,0)),
+                      Polygon(Point(0,0,0),Point(1,1,0),Point(0,1,1)),
+                      Polygon(Point(0,1,1),Point(0,1,0),Point(0,0,0)),
+                      Polygon(Point(1,1,0),Point(0,1,0),Point(0,1,1)))
+        self.assertIsInstance(ph,
+                              Polyhedron)
+        
+    def test_points(self):
+        ""
+        ph=Polyhedron(Polygon(Point(0,1,0),Point(1,1,0),Point(0,0,0)),
+                      Polygon(Point(0,0,0),Point(1,1,0),Point(0,1,1)),
+                      Polygon(Point(0,1,1),Point(0,1,0),Point(0,0,0)),
+                      Polygon(Point(1,1,0),Point(0,1,0),Point(0,1,1)))
+        self.assertEqual(ph.points,
+                         Points(Point(0.0, 1.0, 0.0), 
+                                Point(1.0, 1.0, 0.0), 
+                                Point(0.0, 0.0, 0.0), 
+                                Point(0.0, 1.0, 1.0)))
+        
+    def test_polylines(self):
+        ""
+        ph=Polyhedron(Polygon(Point(0,1,0),Point(1,1,0),Point(0,0,0)),
+                      Polygon(Point(0,0,0),Point(1,1,0),Point(0,1,1)),
+                      Polygon(Point(0,1,1),Point(0,1,0),Point(0,0,0)),
+                      Polygon(Point(1,1,0),Point(0,1,0),Point(0,1,1)))
+        self.assertEqual(ph.polylines,
+                         Polylines(Polyline(Point(0.0, 1.0, 0.0), 
+                                            Point(1.0, 1.0, 0.0)), 
+                                   Polyline(Point(1.0, 1.0, 0.0), 
+                                            Point(0.0, 0.0, 0.0)), 
+                                   Polyline(Point(0.0, 0.0, 0.0), 
+                                            Point(0.0, 1.0, 0.0)), 
+                                   Polyline(Point(1.0, 1.0, 0.0), 
+                                            Point(0.0, 1.0, 1.0)), 
+                                   Polyline(Point(0.0, 1.0, 1.0), 
+                                            Point(0.0, 0.0, 0.0)), 
+                                   Polyline(Point(0.0, 1.0, 1.0), 
+                                            Point(0.0, 1.0, 0.0))))
+        
+        
+        
+    def test_base_polygon_and_extrud_vector(self):
+        ""
+        ph=polyhedron_from_base_polygon_and_extrud_vector(
+                Polygon(Point(0,0,0),
+                        Point(1,0,0),
+                        Point(1,1,0),
+                        Point(0,1,0)),
+                Vector(0,0,1))
+        self.assertEqual(ph.base_polygon_and_extrud_vector,
+                         (Polygon(Point(0.0, 1.0, 0.0),
+                                  Point(1.0, 1.0, 0.0),
+                                  Point(1.0, 0.0, 0.0),
+                                  Point(0.0, 0.0, 0.0)), 
+                          Vector(-0.0, -0.0, 1.0)))
+       
+        
+       
+class Test_Polyhedrons(unittest.TestCase):
+    ""  
+    
+    
+    
+       
+        
+class Test_polyhedron_functions(unittest.TestCase):
     ""
     
     def test_tetrahedron_from_points(self):
         ""
-        t=tetrahedron_from_points(Point(0,0,0),Point(1,1,0),Point(0,1,0),Point(0,1,1))
-        self.assertIsInstance(t,
-                              Tetrahedron)
-        self.assertEqual(t.polygons,
+        ph=tetrahedron_from_points(Point(0,0,0),Point(1,1,0),Point(0,1,0),Point(0,1,1))
+        self.assertIsInstance(ph,
+                              Polyhedron)
+        self.assertEqual(ph.polygons,
                          Polygons(Polygon(Point(0,1,0),Point(1,1,0),Point(0,0,0)),
                                   Polygon(Point(0,0,0),Point(1,1,0),Point(0,1,1)),
                                   Polygon(Point(0,1,1),Point(0,1,0),Point(0,0,0)),
                                   Polygon(Point(1,1,0),Point(0,1,0),Point(0,1,1))))
         
         
-class Test_ExtrudedPolyhedron(unittest.TestCase):
-    ""
-    
-    def test___init__(self):
+    def test_polyhedron_from_base_polygon_and_extrud_vector(self):
         ""
-        ep=ExtrudedPolyhedron(Polygon(Point(0,0,0),
-                                      Point(1,0,0),
-                                      Point(1,1,0),
-                                      Point(0,1,0)),
-                              Vector(0,0,1))
-        self.assertEqual(ep.polygons,
+        ph=polyhedron_from_base_polygon_and_extrud_vector(
+            Polygon(Point(0,0,0),
+                    Point(1,0,0),
+                    Point(1,1,0),
+                    Point(0,1,0)),
+            Vector(0,0,1))
+        self.assertEqual(ph.polygons,
                          Polygons(Polygon(Point(0,1,0),
                                             Point(1,1,0),
                                             Point(1,0,0),
@@ -767,10 +836,11 @@ class Test_ExtrudedPolyhedron(unittest.TestCase):
                                             Point(0,1,1),
                                             Point(0,1,0),
                                             Point(0,0,0))))
-        self.assertEqual(len(ep.base_polygon.triangles),
+        self.assertEqual(len(ph.polygons[0].triangles),
                          2)
-        self.assertEqual(len(ep.tetrahedrons),
+        self.assertEqual(len(ph.tetrahedrons),
                          6)
+        
         
         
         

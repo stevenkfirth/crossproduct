@@ -1861,7 +1861,7 @@ class Plane(InfiniteGeometricObject):
         return tuple(self.P0), tuple(self.N)
          
     
-    def _intersect_line(self,line):
+    def _intersection_line(self,line):
         """Returns the intersection of this plane and a line.
         
         :param line: A 3D line. 
@@ -1884,14 +1884,14 @@ class Plane(InfiniteGeometricObject):
         
         """
         if self.contains(line): # plane and line are collinear
-            return (line,)
+            return GeometryObjects(line)
         elif self.N.is_perpendicular(line.vL): # plane and line are parallel 
-            return tuple()
+            return GeometryObjects()
         else:
             return self._intersect_line_skew(line)
     
     
-    def _intersect_line_skew(self,skew_line):
+    def _intersection_line_skew(self,skew_line):
         """Returns the intersection of this plane and a skew line.
         
         :param skew_line: A 3D line which is skew to the plane.
@@ -1905,7 +1905,7 @@ class Plane(InfiniteGeometricObject):
         u=skew_line.vL
         w=skew_line.P0-self.P0
         t=-n.dot(w) / n.dot(u)
-        return (skew_line.calculate_point(t),)
+        return GeometryObjects(skew_line.calculate_point(t))
        
     
     def _intersection_plane(self,plane):
@@ -1944,6 +1944,86 @@ class Plane(InfiniteGeometricObject):
             u=n3
             return GeometryObjects(Line(P0,u))
     
+    @property
+    def axes(self):
+        """Returns 'x' and 'y' axes for a plane.
+        
+        Used when using 2D coordinates within a 3D polygon.
+        
+        :returns: vx, vy - two vectors
+        :rtype: tuple
+        
+        """
+        
+        # x-vector
+        x=self.intersection(Plane(Point(0,0,0),Vector(0,0,-1)))
+        #print('---',x)
+        if len(x)>0 and isinstance(x[0],Line):
+            vx=x[0].vL.normalise
+        else:
+            vx=self.N.cross_product(Vector(0,-1,0)).normalise
+        #print('vx',vx)
+        
+        # y-vector
+        vy=vx.cross_product(self.N).normalise.opposite
+        #print('vy',vy)
+        
+        return vx, vy
+    
+    
+    def point_on_axes(self,point,vx,vy):
+        """Returns x and y coordinates of a 3D point on a 3D plane.
+        
+        Relative to the plane start point (P0) and the plane 'x and y' axes.
+        
+        :param plane: A plane.
+        :param point: A 3D point on the plane
+        
+        vx, vy from 'axes' method
+        
+        :rtype: Point
+        
+        """
+    
+        if not self.intersects(point):
+            raise ValueError
+    
+        #vx, vy = plane_axes(plane)
+        
+        #print('point',point)
+        a=Line(self.P0,vx)
+        #print('a',a)
+        b=Line(point,vy.opposite)
+        #print('b',b)
+        x=a.intersection(b)[0]
+        #print('x',x)
+        t_a=a.calculate_t_from_coordinates(*x)
+        t_b=b.calculate_t_from_coordinates(*x)
+        #print(t_a,t_b)
+        return Point(t_a,t_b)
+    
+    
+    def polygon_on_axes(self,polygon,vx,vy):
+        """Returns a 2D polygon of a 3D polygon on the plane axes.
+        
+        Relative to the plane start point (P0) and the plane 'x and y' axes.
+        
+        :param polygon: A polygon.
+        
+        :rtype: Polygon
+        
+        """
+        if polygon.nD==2:
+            raise ValueError
+        elif polygon.nD==3:
+            pts=[]
+            for pt in polygon:
+                pts.append(self.point_on_axes(pt,vx,vy))
+            return Polygon(*pts)
+        else:
+            raise Exception
+    
+    
     
     def equals(self,plane):
         """Tests if this plane and the supplied plane occupy the same geometric space.
@@ -1974,13 +2054,24 @@ class Plane(InfiniteGeometricObject):
             return False
     
     
+    def intersects(self,obj):
+        """
+        """
+        
+        if isinstance(obj,Point):
+            return self.N.is_perpendicular(obj-self.P0)
+            
+        else:
+            raise Exception
+    
+    
     def intersection(self,obj):
         """
         """
         if isinstance(obj,Plane):
             return self._intersection_plane(obj)
         elif isinstance(obj,Line):
-            return self._intersect_line(obj)
+            return self._intersection_line(obj)
         else:
             raise Exception  # not implemented yet
     
@@ -2162,6 +2253,9 @@ class Plane(InfiniteGeometricObject):
 class Polygon(FiniteGeometricObject):
     """A polygon, situated on an xy or xyz plane. 
     
+    In *crossproduct* a Polygon object is a immutable sequence. 
+    Iterating over a Polygon will provide its exterior Point instances.
+    
     This polygon cannot be self-intersecting, and can be concave or convex.
     
     :param points: Argument list of the Point instances of the vertices 
@@ -2243,7 +2337,7 @@ class Polygon(FiniteGeometricObject):
         
         """
         if self.nD==2:
-            x=[shapely.geometry.Polygon(pg.coordinates[0]) for pg in self.polygons]
+            x=[shapely.geometry.Polygon(pg.coordinates) for pg in self.polygons]
             return shapely.geometry.MultiPolygon(x)
         else:
             raise Exception  # only 2d for shapely polygons
@@ -2276,6 +2370,35 @@ class Polygon(FiniteGeometricObject):
 
 
     @property
+    def azimuth(self):
+        """The azimuth angle of the polygon from the y axis.
+        
+        :type polygon: crossproduct.SimplePolygon
+        
+        :returns: The azimuth angle in degrees where 0 degrees is the direction 
+            of the y axis and a positive angle is clockwise.
+            If the surface is horizontal, then returns None.
+        :rtype: float, None
+            
+        """
+        if self.nD==2:
+            raise ValueError  # not possible for 2D
+        elif self.nD==3:
+            N=self.plane.N
+            v=Vector(N.x,N.y)
+            if v.length==0:
+                return None
+            y_axis=Vector(0,1)
+            angle=math.degrees(v.angle(y_axis))
+            if v.perp_product(y_axis)>=0: # if y_axis is on the left of v
+                return angle
+            else: # y_axis is on the right of v
+                return angle * -1
+        else:
+            raise Exception
+
+
+    @property
     def centroid(self):
         """The centroid of the polygon.
         
@@ -2295,7 +2418,7 @@ class Polygon(FiniteGeometricObject):
 
     @property
     def coordinates(self):
-        """Returns a tuple representation of the polygon.
+        """Returns a tuple representation of the polygon exterior.
         
         :returns: The exterior and holes coordinates as a tuple. 
             
@@ -2310,9 +2433,7 @@ class Polygon(FiniteGeometricObject):
             (((0, 0), (1, 0), (1, 1), (0, 1)), ())
         
         """
-        return (tuple(pt.coordinates for pt in self.points),
-                tuple(tuple(pt.coordinates for pt in hole.points) 
-                      for hole in self.holes))
+        return tuple(pt.coordinates for pt in self.points)
 
 
     def _difference_polygon_3D(self,polygon):
@@ -2650,9 +2771,9 @@ class Polygon(FiniteGeometricObject):
         
         if self.nD==2:
             for tri in self.polygons:
-                ax.fill(*zip(*tri.coordinates[0]), **kwargs)
+                ax.fill(*zip(*tri.coordinates), **kwargs)
         elif self.nD==3:
-            verts=[tri.coordinates[0] for tri in self.polygons]
+            verts=[tri.coordinates for tri in self.polygons]
             pc=Poly3DCollection(verts,**kwargs)
             ax.add_collection3d(pc)
                 
@@ -2684,32 +2805,32 @@ class Polygon(FiniteGeometricObject):
         return Polyline(*(list(self.points) + [self.points[0]]))
     
             
-    @property
-    def polylines(self):
-        """Returns polylines of the polygon exterior and the polygon holes.
+    # @property
+    # def polylines(self):
+    #     """Returns polylines of the polygon exterior and the polygon holes.
         
-        :return: A polyline of the polygon points which starts and ends at 
-            the first polygon point.
-            tuple (exterior polyline, hole polylines)
-        :rtype: Polylines     
+    #     :return: A polyline of the polygon points which starts and ends at 
+    #         the first polygon point.
+    #         tuple (exterior polyline, hole polylines)
+    #     :rtype: Polylines     
         
-        :Example:
+    #     :Example:
     
-        .. code-block:: python
+    #     .. code-block:: python
            
             
-        """
-        return Polylines(Polyline(*(list(self.points) + [self.points[0]])), 
-                (*(Polyline(*(list(hole.points) + [hole.points[0]])) 
-                            for hole in self.holes))
-                )
+    #     """
+    #     return Polylines(Polyline(*(list(self.points) + [self.points[0]])), 
+    #             (*(Polyline(*(list(hole.points) + [hole.points[0]])) 
+    #                         for hole in self.holes))
+    #             )
 
         
         
-        return (Polyline(*(list(self.points) + [self.points[0]])), 
-                Polylines(*(Polyline(*(list(hole.points) + [hole.points[0]])) 
-                            for hole in self.holes))
-                )
+    #     return (Polyline(*(list(self.points) + [self.points[0]])), 
+    #             Polylines(*(Polyline(*(list(hole.points) + [hole.points[0]])) 
+    #                         for hole in self.holes))
+    #             )
 
 
     @property
@@ -2898,6 +3019,19 @@ class Polygon(FiniteGeometricObject):
         else:
             raise ValueError
     
+    
+    @property
+    def tilt(self):
+        """The tilt angle of the polygon from the horizontal.
+        
+        :returns: The tilt angle in degrees where vertically up is 0 degrees and 
+            face down is 180 degrees.
+        :rtype: float
+            
+        """
+        return math.degrees(self.plane.N.angle(Vector(0,0,1)))
+    
+    
     @property
     def triangles(self):
         """Returns a Polygons sequence of triangles which when combined have 
@@ -2915,7 +3049,7 @@ class Polygon(FiniteGeometricObject):
             
             if len(self.holes)==0:
                 
-                vertices=self.coordinates[0]
+                vertices=self.coordinates
                 segments=[[x,x+1] for x in range(len(self.points))]
                 segments[-1][1]=0
                 A=dict(vertices=vertices,
@@ -2937,13 +3071,13 @@ class Polygon(FiniteGeometricObject):
                 return Polygons(*result)
                 
                 # exterior vertices and segments
-                vertices=list(self.coordinates[0])
+                vertices=list(self.coordinates)
                 segments=[[x,x+1] for x in range(len(self.points))]
                 segments[-1][1]=0
                 holes=[]
                 # holes vertices and segments
                 for hole in self.holes:
-                    vertices.extend(hole.coordinates[0])
+                    vertices.extend(hole.coordinates)
                     n=len(segments)
                     segments.extend([[x,x+1] for x in range(n,n+len(self.points))])
                     segments[-1][1]=n
@@ -2977,6 +3111,63 @@ class Polygon(FiniteGeometricObject):
             
             raise ValueError
             
+            
+            
+    def relative_2D_polygon(self,inner_polygon3D):
+        """
+        
+        Used in to_python to find the 2D polygon input for an opening
+        
+        
+        :returns: A 2D polygon
+        
+        """
+        if self.nD==2:
+            raise ValueError
+        elif self.nD==3:
+            vx, vy = self.plane.axes
+            self_2D=self.plane.polygon_on_axes(self,vx,vy)
+            start_point_2D=self_2D[self_2D.leftmost_lowest_vertex]
+            
+            pts=[]
+            for pt in inner_polygon3D:
+                a=self.plane.point_on_axes(pt,vx,vy)
+                #print(a)
+                b=Point(*(a-start_point_2D))
+                #print(b)
+                pts.append(b)
+            return Polygon(*pts)
+        
+        else:
+            raise Exception
+            
+            
+    def relative_3D_polygon(self,inner_polygon2D):
+        """Given a 2D polygon within a 'relative polygon' returns the 3D polygon.
+        
+        Relative to the lowest le:ftmost vertex (2D) and the plane 'x and y' axes.
+        
+        :param polygon2D: A 2D polygon that sits within a 3D polygon.
+        :param polygon3D: The 3D polygon.
+        
+        :returns: A 3D polygon
+        :rtype: Polygon
+        
+        """
+        if self.nD==2:
+            raise ValueError
+        elif self.nD==3:
+            vx, vy = self.plane.axes
+            self_2D=self.plane.polygon_on_axes(self,vx,vy)
+            start_point_3D=self[self_2D.leftmost_lowest_vertex]
+            
+            pg=Polygon(*(start_point_3D+vx*pt.x+vy*pt.y 
+                         for pt in inner_polygon2D))
+            if not pg.plane.N.is_codirectional(self.plane.N):
+                pg=pg.reverse
+            return pg 
+        else:
+            raise Exception
     
 
 class Polygons(FiniteGeometricObject):
@@ -3004,7 +3195,7 @@ class Polygons(FiniteGeometricObject):
     def _shapely(self):
         ""
         if len(self)==0 or self.nD==2:
-            x=[shapely.geometry.Polygon(pg1.coordinates[0]) 
+            x=[shapely.geometry.Polygon(pg1.coordinates) 
                for pg in self
                for pg1 in pg.polygons]
             return shapely.geometry.MultiPolygon(x)
@@ -3113,32 +3304,119 @@ class Polygons(FiniteGeometricObject):
         for pg in self:
             result.extend(pg.triangles)
         return Polygons(*result)   
-                
-                
-class Tetrahedron(FiniteGeometricObject):
+         
+
+class Polyhedron(FiniteGeometricObject):
     """A tetrahedron, situated on the xyz plane. 
     
     :param polygons: A sequence of polygons for the outer faces.
         All polygons should not have any holes. 
         All polygons must have outward facing normals.
     :type polygons: Polygons or other sequence.
+    :param tetrahedrons: A list of equivalent tetrahedrons with the
+        same combined shape as the polygons
+    :type tetrahedrons: Polyhedrons
     
     """
     
-    def __init__(self,*polygons):
+    def __init__(self,*polygons,tetrahedrons=None):
         ""
         self._items=Polygons(*polygons)
         
         
+        if not tetrahedrons is None:
+            self._tetrahedrons=tetrahedrons
+        elif len(polygons)==4:
+            self._tetrahedrons=Polyhedrons(self)
+        else:
+            self._tetrahedrons=None
+            
+            
+    @property
+    def base_polygon_and_extrud_vector(self):
+        """Creates a floor polygon and extrud vector by decomposing a polyhedron.
+        
+        :param polyhedron: A 3D polyhedron with all faces with outward pointing normals
+        :type polyhedron: crossproduct.Polyhedron
+        
+        :raises ValueError: 
+            - If polyhedron does not have six polygon faces.    
+        
+        :returns: A tuple of:
+            - floor_polygon (crossproduct.Polygon): 
+                A 3D polygon which acts as the base of the polygon.
+            - extrud_vector (crossproduct.Vector): 
+                A 3D vector in a direction behind the plane of the floor_polygon.
+        :rtype: tuple
+        
+        """
+    
+        # loop through polygons
+        for pg in self:
+            #print(pg)
+            
+            # find a parallel polygon (i.e. the opposite face) - if nto then continue
+            for pg1 in self:
+                if pg==pg1:
+                    continue  # continue on this loop
+                elif pg.plane.N.is_collinear(pg1.plane.N):
+                    opposite_pg=pg1
+                    break  # continue on main loop
+            else:
+                continue  # continue with main loop if no opposite polygon is found
+            #print(opposite_pg)
+            
+            # find single polylines not on the two facing polygons
+            pls=[pl for pl in self.polylines 
+                      if not any(pl.equals(pl1) 
+                                 for pl1 in pg.polyline.polylines)
+                      and not any(pl.equals(pl1) 
+                                  for pl1 in opposite_pg.polyline.polylines)]
+            
+            # are all the polylines collinear and of the same length? - if not the continue
+            v0=pls[0][1]-pls[0][0]
+            for pl in pls[1:]:
+                v=pl.lines[0].vL
+                if not v.is_collinear(v0) or not v.length==v0.length:
+                    continue  # continue on main loop
+            
+            floor_polygon=pg
+            extrud_vector=v0
+            
+            # is extrud vector pointing the opposite direction to the polygon normal
+            #   - if not then the extrud vector is reversed
+            if floor_polygon.plane.N.dot(extrud_vector)>0:  # if angle is less than 90
+                extrud_vector=extrud_vector.opposite
+            
+            return floor_polygon, extrud_vector
+            
+        raise ValueError('Polyhedron cannot be decomposed')
+            
+            
+            
+            
     @property
     def points(self):
-        ""
-        pts=list(self[0])
-        for pt in self[1]:
-            if not pt in pts:
-                pts.append(pt)
-        return Points(*pts)
-        
+        "Unique points"
+        result=[]
+        for pg in self:
+            for pt in pg:
+                if not any(x.equals(pt) for x in result):
+                    result.append(pt)
+        return Points(*result)
+    
+    
+    @property
+    def polylines(self):
+        "Unique polylines (length=1)"
+        result=[]
+        for pg in self:
+            for pl in pg.polyline.polylines:
+                if not any(x.equals(pl) for x in result):
+                    result.append(pl)
+        return Polylines(*result)
+            
+            
     @property
     def polygons(self):
         ""
@@ -3146,29 +3424,32 @@ class Tetrahedron(FiniteGeometricObject):
     
     
     @property
-    def v0(self):
+    def tetrahedrons(self):
         ""
-        return self[0][1]-self[0][0]
+        return self._tetrahedrons
     
     
     @property
-    def v1(self):
+    def _volume_tetrahedron(self):
         ""
-        return self[0][2]-self[0][0]
-    
-    
-    @property
-    def v2(self):
-        ""
-        return self.points[3]-self[0][0]
+        P0,P1,P2,P3=self.points
+        v0,v1,v2=P1-P0,P2-P0,P3-P0
+        return abs((v0.dot(v1.cross_product(v2)))/6.0)
     
     
     @property
     def volume(self):
         ""
-        return abs((self.v0.dot(self.v1.cross_product(self.v2)))/6.0)
+        return sum(th._volume_tetrahedron for th in self.tetrahedrons)
     
-        
+    
+    
+class Polyhedrons(FiniteGeometricObject):
+    """
+    """
+    
+    
+    
         
 def tetrahedron_from_points(P0,P1,P2,P3):
     """Forms a tetrahedron from the specified points.
@@ -3190,7 +3471,7 @@ def tetrahedron_from_points(P0,P1,P2,P3):
         else:
             result.append(pg)
         
-    return Tetrahedron(*result)
+    return Polyhedron(*result)
     
 
 def tetrahedrons_from_extruded_triangle(triangle, extrud_vector):
@@ -3209,66 +3490,35 @@ def tetrahedrons_from_extruded_triangle(triangle, extrud_vector):
                                 triangle.points[1]+extrud_vector,
                                 triangle.points[2]+extrud_vector,
                                 triangle.points[2])
-    return [th0,th1,th2]
+    return Polyhedrons(th0,th1,th2)
     
     
-    
-    
-    
-    
-class ExtrudedPolyhedron(FiniteGeometricObject,SequenceObject):
+def polyhedron_from_base_polygon_and_extrud_vector(base_polygon,
+                                                   extrud_vector):
     """
     """
+    # polygons
+    if base_polygon.plane.N.dot(extrud_vector)>0:  # if angle is less than 90
+        base_polygon=base_polygon.reverse
+    top_polygon=Polygon(*(pt+extrud_vector for pt in base_polygon.reverse.points))
+    side_polygons=[]
+    for i in range(len(base_polygon.points)):
+        pg=Polygon(base_polygon.points[i]+extrud_vector,
+                   base_polygon.points[base_polygon.next_index(i)]+extrud_vector,
+                   base_polygon.points[base_polygon.next_index(i)],
+                   base_polygon.points[i])
+        side_polygons.append(pg)
+    polygons=Polygons(base_polygon, top_polygon, *side_polygons)
     
-    def __init__(self,base_polygon,extrud_vector):
-        ""
-        self._base_polygon=base_polygon
-        self._extrud_vector=extrud_vector
-        self._items=None
-        self._tetrahedrons=None
-        
-        # _items
-        if base_polygon.plane.N.dot(extrud_vector)>0:  # if angle is less than 90
-            base_polygon=base_polygon.reverse
-        top_polygon=Polygon(*(pt+extrud_vector for pt in base_polygon.reverse.points))
-        side_polygons=[]
-        for i in range(len(base_polygon.points)):
-            pg=Polygon(base_polygon.points[i]+extrud_vector,
-                       base_polygon.points[base_polygon.next_index(i)]+extrud_vector,
-                       base_polygon.points[base_polygon.next_index(i)],
-                       base_polygon.points[i])
-            side_polygons.append(pg)
-        self._items=Polygons(base_polygon, top_polygon, *side_polygons)
-        
-        # _tetrahedrons
-        result=[]
-        for triangle in base_polygon.triangles:
-            result.extend(tetrahedrons_from_extruded_triangle(triangle, extrud_vector))
-        self._tetrahedrons=result
-        
-        
-    @property
-    def base_polygon(self):
-        ""
-        return self._base_polygon
+    # tetrahedrons
+    result=[]
+    for triangle in base_polygon.triangles:
+        result.extend(tetrahedrons_from_extruded_triangle(triangle, extrud_vector))
+    tetrahedrons=Polyhedrons(*result)
     
-    
-    def extrud_vector(self):
-        ""
-        return self._extrud_vector
+    return Polyhedron(*polygons,tetrahedrons=tetrahedrons)
         
-        
-    @property
-    def polygons(self):
-        ""
-        return self._items
     
-    
-    @property
-    def tetrahedrons(self):
-        ""
-        return self._tetrahedrons
-
     
     
 def get_render_scene():
