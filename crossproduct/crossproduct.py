@@ -2462,14 +2462,12 @@ class Polygon(FiniteGeometricObject):
         if len(polygons)==0:
             return GeometryObjects(self)
         else:
-            raise Exception ## to do
-            result=[]
+            #raise Exception ## to do
+            x=Polygons(self)
             for pg in self.polygons:
                 for pg1 in polygons:
-                    x=self.difference(pg)
-                    print(x)
-                    result.update(x)  # does this work?
-            return GeometryObjects(result)
+                    x=Polygons(*x.difference(pg))
+            return GeometryObjects(*x)
         
 
     def difference(self,obj):
@@ -3201,6 +3199,51 @@ class Polygons(FiniteGeometricObject):
             return shapely.geometry.MultiPolygon(x)
         else:
             raise Exception  # only 2d for shapely polygons
+
+
+    def _difference_polygon_3D(self,polygon):
+        ""
+        result=[]
+        for pg in self:
+            result.extend(pg.difference(polygon))
+        return GeometryObjects(*result)
+
+
+
+    def difference(self,obj):
+        """The geometric difference between self and obj.
+        
+        :param obj: A geometric object.
+        
+        :returns: A tuple of the difference objects.
+        :rtype: tuple
+        
+        """
+        if self.nD==2:
+            if hasattr(obj,'_shapely'):
+                return GeometricObject.difference(self,obj)
+            else:
+                raise Exception('%s' % obj.__class__)
+        
+        elif self.nD==3:
+            
+            if isinstance(obj,Point):
+                return tuple([self])
+            elif isinstance(obj,Points):
+                return tuple([self])
+            elif isinstance(obj,Polyline):
+                return tuple([self])
+            elif isinstance(obj,Polylines):
+                return tuple([self])
+            elif isinstance(obj,Polygon):
+                return self._difference_polygon_3D(obj)
+            #elif isinstance(obj,Polygons):
+            #    return self._difference_polygons_3D(obj)
+            else:
+                raise Exception  # not implemented yet
+            
+        else:
+            raise ValueError
 
 
     def render(self,
