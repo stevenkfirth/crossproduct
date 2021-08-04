@@ -351,7 +351,7 @@ class GeometryObjects(GeometricObject, SequenceObject):
  
 
 class Point(FiniteGeometricObject):
-    """A point, as described by xy or xyz coordinates.
+    """A 2D or 3D point, as described by xy or xyz coordinates.
     
     In *crossproduct* a `Point` object is a immutable sequence. 
     Iterating over a `Point` will provide its coordinates.
@@ -626,7 +626,7 @@ class Point(FiniteGeometricObject):
 
 
 class Points(FiniteGeometricObject):
-    """A collection of points.    
+    """A collection of 2D or 3D points.    
     
     In *crossproduct* a `Points` object is a immutable sequence. 
     Iterating over a `Points` will provide its Point objects.
@@ -707,7 +707,7 @@ class Points(FiniteGeometricObject):
             
 
 class Vector(GeometricEntity, SequenceObject):
-    """A vector, as described by xy or xyz coordinates.
+    """A 2D or 3D vector, as described by xy or xyz coordinates.
     
     In *crossproduct* a Vector object is a immutable sequence. 
     Iterating over a Vector will provide its coordinates.
@@ -1082,7 +1082,7 @@ class Vector(GeometricEntity, SequenceObject):
     
 
 class Line(InfiniteGeometricObject):
-    """A 2D or 3D line, as described by a point and a vector.
+    """A 2D or 3D line, as defined by a point on the plane and a vector.
     
     Equation of the line is P(t) = P0 + vL*t where:
     
@@ -1481,7 +1481,7 @@ class Line(InfiniteGeometricObject):
     
 
 class Polyline(FiniteGeometricObject):
-    """A 2D or 3D polyline.
+    """A 2D or 3D collection of adjoining segments, as described by a sequence of points.
     
     A polyline is a series of joined segments which are defined as a series of points.
     
@@ -1699,7 +1699,7 @@ class Polyline(FiniteGeometricObject):
 
 
 class Polylines(FiniteGeometricObject):
-    """A sequence of polylines.    
+    """A colelction of 2D or 3D polylines.    
     
     In *crossproduct* a Polylines object is a mutable sequence. 
     Iterating over a Polylines object will provide its Polyline instances.
@@ -1775,7 +1775,7 @@ class Polylines(FiniteGeometricObject):
 
 
 class Plane(InfiniteGeometricObject):
-    """A three dimensional plane, situated on an x, y, z plane.
+    """A 3D plane, as defined by a point on the plane and a normal vector.
     
     Equation of plane: N . (P - P0) = 0 where:
         
@@ -2251,7 +2251,7 @@ class Plane(InfiniteGeometricObject):
     
 
 class Polygon(FiniteGeometricObject):
-    """A polygon, situated on an xy or xyz plane. 
+    """An enclosed region of 2D or 3D space, as described by a set of exterior points and zero or more holes. 
     
     In *crossproduct* a Polygon object is a immutable sequence. 
     Iterating over a Polygon will provide its exterior Point instances.
@@ -3169,7 +3169,7 @@ class Polygon(FiniteGeometricObject):
     
 
 class Polygons(FiniteGeometricObject):
-    """A sequence of polygons.    
+    """A collection of 2D or 3D polygons.    
     
     :param polygons: A sequence of Polygon instances. 
         
@@ -3350,7 +3350,7 @@ class Polygons(FiniteGeometricObject):
          
 
 class Polyhedron(FiniteGeometricObject):
-    """A tetrahedron, situated on the xyz plane. 
+    """A volume of 3D space, as described by a set of exterior 3D polygons. 
     
     :param polygons: A sequence of polygons for the outer faces.
         All polygons should not have any holes. 
@@ -3488,7 +3488,7 @@ class Polyhedron(FiniteGeometricObject):
     
     
 class Polyhedrons(FiniteGeometricObject):
-    """
+    """A collection of 3D polyhedra.
     """
     
     
