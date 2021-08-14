@@ -75,6 +75,33 @@ class GeometricEntity():
         else:
             return False
         
+        
+    def _matplotlib_set_lims(self,ax):
+        """
+        """
+        if self.nD==2:
+            minx,miny,maxx,maxy=self.bounds   
+            rng=max(maxx-minx,maxy-miny)
+            x_mean=(maxx+minx)/2
+            y_mean=(maxy+miny)/2
+            ax.set_xlim(x_mean-rng/2,x_mean+rng/2)
+            ax.set_ylim(y_mean-rng/2,y_mean+rng/2)
+        elif self.nD==3:
+            minx,miny,minz,maxx,maxy,maxz=self.bounds   
+            rng=max(maxx-minx,maxy-miny,maxz-minz)
+            x_mean=(maxx+minx)/2
+            y_mean=(maxy+miny)/2
+            z_mean=(maxz+minz)/2
+            ax.set_xlim(x_mean-rng/2,x_mean+rng/2)
+            ax.set_ylim(y_mean-rng/2,y_mean+rng/2)
+            ax.set_zlim(z_mean-rng/2,z_mean+rng/2)
+        else:
+            raise Exception
+            
+        return ax
+    
+    
+        
     
 
 class GeometricObject(GeometricEntity):
@@ -3280,15 +3307,7 @@ class Polygons(FiniteGeometricObject):
             ax=pg.plot(ax,**kwargs)
             
         if set_lims:
-            if self.nD==2:
-                minx,miny,maxx,maxy=self.bounds        
-                ax.set_xlim(minx,maxx)
-                ax.set_ylim(miny,maxy)
-            elif self.nD==3:
-                minx,miny,minz,maxx,maxy,maxz=self.bounds        
-                ax.set_xlim(minx,maxx)
-                ax.set_ylim(miny,maxy)
-                ax.set_zlim(minz,maxz)
+            ax=self._matplotlib_set_lims(ax)
             
         return ax
             
@@ -3594,5 +3613,5 @@ def get_matplotlib_fig_ax(nD):
     return fig,ax
     
     
-    
+
     
