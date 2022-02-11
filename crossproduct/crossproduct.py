@@ -2658,8 +2658,6 @@ class Polygon(FiniteGeometricObject):
         """Returns True if self intersects in any way with obj
         
         
-        
-        
         """
         if self.nD==2:
             if hasattr(obj,'_shapely'):
@@ -3170,7 +3168,7 @@ class Polygon(FiniteGeometricObject):
     def relative_3D_polygon(self,inner_polygon2D):
         """Given a 2D polygon within a 'relative polygon' returns the 3D polygon.
         
-        Relative to the lowest le:ftmost vertex (2D) and the plane 'x and y' axes.
+        Relative to the lowest leftmost vertex (2D) and the plane 'x and y' axes.
         
         :param polygon2D: A 2D polygon that sits within a 3D polygon.
         :param polygon3D: The 3D polygon.
